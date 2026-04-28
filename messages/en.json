@@ -1,0 +1,130 @@
+{
+  "common": {
+    "appName": "ElAndén",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Try again",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "search": "Search",
+    "noResults": "No results",
+    "updatedAgo": "Updated {seconds}s ago"
+  },
+  "nav": {
+    "home": "Home",
+    "favorites": "Favourites",
+    "alerts": "Alerts",
+    "profile": "Profile"
+  },
+  "home": {
+    "title": "Where are you departing from?",
+    "searchPlaceholder": "Search station...",
+    "useGPS": "Use my location",
+    "nearestStation": "Nearest station",
+    "nearestStationDistance": "{km} km away",
+    "gpsError": "Could not get your location",
+    "gpsPermissionDenied": "Location permission denied",
+    "recentStations": "Recent"
+  },
+  "horarios": {
+    "title": "Upcoming departures",
+    "filterAll": "All",
+    "filterCercanias": "Commuter",
+    "filterMD": "Regional",
+    "onTime": "On time",
+    "delayed": "{minutes} min delay",
+    "cancelled": "Cancelled",
+    "noTrains": "No upcoming trains",
+    "platform": "Platform {number}",
+    "towards": "Towards {destination}",
+    "stale": "Data from {minutes} min ago"
+  },
+  "viaje": {
+    "title": "Train details",
+    "stops": "Stops",
+    "currentPosition": "Current train position",
+    "platform": "Platform {number}",
+    "subscribe": "Subscribe to this train",
+    "unsubscribe": "Unsubscribe",
+    "origin": "Origin",
+    "destination": "Destination",
+    "duration": "Duration",
+    "previousStop": "Previous stop",
+    "nextStop": "Next stop",
+    "trainShort": "Short train",
+    "trainLong": "Full-length train"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Create account",
+    "loginWithGoogle": "Continue with Google",
+    "email": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot your password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "logout": "Log out",
+    "loginSuccess": "Logged in",
+    "registerSuccess": "Account created. Check your email to confirm it.",
+    "loginError": "Incorrect email or password",
+    "registerError": "Error creating account"
+  },
+  "profile": {
+    "title": "My profile",
+    "name": "Name",
+    "email": "Email address",
+    "language": "Language",
+    "languageDescription": "Choose the app language",
+    "saveLanguage": "Save preference",
+    "languageSaved": "Language saved",
+    "notifications": "Notifications",
+    "pushEnabled": "Push notifications enabled",
+    "pushDisabled": "Push notifications disabled",
+    "enablePush": "Enable notifications"
+  },
+  "favorites": {
+    "title": "My favourites",
+    "stations": "Stations",
+    "trips": "Trains",
+    "empty": "No favourites yet",
+    "emptyDescription": "Save stations and trains for quick access",
+    "addStation": "Save station",
+    "removeStation": "Remove station",
+    "addTrip": "Save train",
+    "removeTrip": "Remove train"
+  },
+  "admin": {
+    "title": "Administration",
+    "users": "Users",
+    "totalUsers": "Total users",
+    "role": "Role",
+    "roleUser": "User",
+    "roleAdmin": "Administrator",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "actions": "Actions",
+    "changeRole": "Change role",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "lastSeen": "Last seen",
+    "registeredAt": "Registered",
+    "preferredLocale": "Preferred language"
+  },
+  "pwa": {
+    "installPrompt": "Install ElAndén on your phone",
+    "installDescription": "Quick access from your home screen",
+    "install": "Install",
+    "notNow": "Not now"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "unauthorized": "You don't have permission to access this",
+    "serverError": "Server error. Please try again.",
+    "networkError": "No connection. Check your network.",
+    "stationNotFound": "Station not found"
+  }
+}

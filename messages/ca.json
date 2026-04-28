@@ -1,0 +1,130 @@
+{
+  "common": {
+    "appName": "ElAndén",
+    "loading": "Carregant...",
+    "error": "S'ha produït un error",
+    "retry": "Torna-ho a intentar",
+    "close": "Tanca",
+    "save": "Desa",
+    "cancel": "Cancel·la",
+    "back": "Torna",
+    "search": "Cerca",
+    "noResults": "Sense resultats",
+    "updatedAgo": "Actualitzat fa {seconds}s"
+  },
+  "nav": {
+    "home": "Inici",
+    "favorites": "Preferits",
+    "alerts": "Alertes",
+    "profile": "Perfil"
+  },
+  "home": {
+    "title": "Des d'on surts?",
+    "searchPlaceholder": "Cerca estació...",
+    "useGPS": "Usar la meva ubicació",
+    "nearestStation": "Estació més propera",
+    "nearestStationDistance": "a {km} km",
+    "gpsError": "No s'ha pogut obtenir la teva ubicació",
+    "gpsPermissionDenied": "Permís d'ubicació denegat",
+    "recentStations": "Recents"
+  },
+  "horarios": {
+    "title": "Properes sortides",
+    "filterAll": "Tots",
+    "filterCercanias": "Rodalies",
+    "filterMD": "Mitjana Distància",
+    "onTime": "A temps",
+    "delayed": "Retardat {minutes} min",
+    "cancelled": "Cancel·lat",
+    "noTrains": "No hi ha trens pròxims",
+    "platform": "Via {number}",
+    "towards": "Direcció {destination}",
+    "stale": "Dades de fa {minutes} min"
+  },
+  "viaje": {
+    "title": "Detall del tren",
+    "stops": "Parades",
+    "currentPosition": "Posició actual del comboi",
+    "platform": "Andana {number}",
+    "subscribe": "Subscriure'm a aquest tren",
+    "unsubscribe": "Cancel·lar subscripció",
+    "origin": "Origen",
+    "destination": "Destinació",
+    "duration": "Durada",
+    "previousStop": "Parada anterior",
+    "nextStop": "Pròxima parada",
+    "trainShort": "Comboi curt",
+    "trainLong": "Comboi llarg"
+  },
+  "auth": {
+    "login": "Inicia sessió",
+    "register": "Crea un compte",
+    "loginWithGoogle": "Continua amb Google",
+    "email": "Correu electrònic",
+    "password": "Contrasenya",
+    "confirmPassword": "Confirma la contrasenya",
+    "forgotPassword": "Has oblidat la contrasenya?",
+    "noAccount": "No tens compte?",
+    "hasAccount": "Ja tens compte?",
+    "logout": "Tanca sessió",
+    "loginSuccess": "Sessió iniciada",
+    "registerSuccess": "Compte creat. Revisa el teu correu per confirmar-lo.",
+    "loginError": "Correu o contrasenya incorrectes",
+    "registerError": "Error en crear el compte"
+  },
+  "profile": {
+    "title": "El meu perfil",
+    "name": "Nom",
+    "email": "Correu electrònic",
+    "language": "Idioma",
+    "languageDescription": "Tria l'idioma de l'aplicació",
+    "saveLanguage": "Desa preferència",
+    "languageSaved": "Idioma desat",
+    "notifications": "Notificacions",
+    "pushEnabled": "Notificacions push activades",
+    "pushDisabled": "Notificacions push desactivades",
+    "enablePush": "Activa notificacions"
+  },
+  "favorites": {
+    "title": "Els meus preferits",
+    "stations": "Estacions",
+    "trips": "Trens",
+    "empty": "Encara no tens preferits",
+    "emptyDescription": "Desa estacions i trens per accedir-hi ràpidament",
+    "addStation": "Desa estació",
+    "removeStation": "Elimina estació",
+    "addTrip": "Desa tren",
+    "removeTrip": "Elimina tren"
+  },
+  "admin": {
+    "title": "Administració",
+    "users": "Usuaris",
+    "totalUsers": "Total usuaris",
+    "role": "Rol",
+    "roleUser": "Usuari",
+    "roleAdmin": "Administrador",
+    "status": "Estat",
+    "statusActive": "Actiu",
+    "statusInactive": "Inactiu",
+    "actions": "Accions",
+    "changeRole": "Canvia rol",
+    "deactivate": "Desactiva",
+    "activate": "Activa",
+    "lastSeen": "Darrer accés",
+    "registeredAt": "Registre",
+    "preferredLocale": "Idioma preferit"
+  },
+  "pwa": {
+    "installPrompt": "Instal·la ElAndén al teu mòbil",
+    "installDescription": "Accedeix més ràpid des de la pantalla d'inici",
+    "install": "Instal·la",
+    "notNow": "Ara no"
+  },
+  "errors": {
+    "notFound": "Pàgina no trobada",
+    "unauthorized": "No tens permís per accedir aquí",
+    "serverError": "Error del servidor. Torna-ho a intentar.",
+    "networkError": "Sense connexió. Comprova la teva xarxa.",
+    "stationNotFound": "Estació no trobada"
+  }
+}

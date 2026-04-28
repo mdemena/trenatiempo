@@ -1,0 +1,130 @@
+{
+  "common": {
+    "appName": "ElAndén",
+    "loading": "Cargando...",
+    "error": "Ha ocurrido un error",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "back": "Volver",
+    "search": "Buscar",
+    "noResults": "Sin resultados",
+    "updatedAgo": "Actualizado hace {seconds}s"
+  },
+  "nav": {
+    "home": "Inicio",
+    "favorites": "Favoritos",
+    "alerts": "Alertas",
+    "profile": "Perfil"
+  },
+  "home": {
+    "title": "¿Desde dónde sales?",
+    "searchPlaceholder": "Buscar estación...",
+    "useGPS": "Usar mi ubicación",
+    "nearestStation": "Estación más cercana",
+    "nearestStationDistance": "a {km} km",
+    "gpsError": "No se pudo obtener tu ubicación",
+    "gpsPermissionDenied": "Permiso de ubicación denegado",
+    "recentStations": "Recientes"
+  },
+  "horarios": {
+    "title": "Próximas salidas",
+    "filterAll": "Todos",
+    "filterCercanias": "Cercanías",
+    "filterMD": "Media Distancia",
+    "onTime": "A tiempo",
+    "delayed": "Retrasado {minutes} min",
+    "cancelled": "Cancelado",
+    "noTrains": "No hay trenes próximos",
+    "platform": "Vía {number}",
+    "towards": "Dirección {destination}",
+    "stale": "Datos de hace {minutes} min"
+  },
+  "viaje": {
+    "title": "Detalle del tren",
+    "stops": "Paradas",
+    "currentPosition": "Posición actual del convoy",
+    "platform": "Andén {number}",
+    "subscribe": "Suscribirme a este tren",
+    "unsubscribe": "Cancelar suscripción",
+    "origin": "Origen",
+    "destination": "Destino",
+    "duration": "Duración",
+    "previousStop": "Parada anterior",
+    "nextStop": "Próxima parada",
+    "trainShort": "Convoy corto",
+    "trainLong": "Convoy largo"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "loginWithGoogle": "Continuar con Google",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "logout": "Cerrar sesión",
+    "loginSuccess": "Sesión iniciada",
+    "registerSuccess": "Cuenta creada. Revisa tu correo para confirmarla.",
+    "loginError": "Email o contraseña incorrectos",
+    "registerError": "Error al crear la cuenta"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "language": "Idioma",
+    "languageDescription": "Elige el idioma de la aplicación",
+    "saveLanguage": "Guardar preferencia",
+    "languageSaved": "Idioma guardado",
+    "notifications": "Notificaciones",
+    "pushEnabled": "Notificaciones push activadas",
+    "pushDisabled": "Notificaciones push desactivadas",
+    "enablePush": "Activar notificaciones"
+  },
+  "favorites": {
+    "title": "Mis favoritos",
+    "stations": "Estaciones",
+    "trips": "Trenes",
+    "empty": "Aún no tienes favoritos",
+    "emptyDescription": "Guarda estaciones y trenes para acceder rápidamente",
+    "addStation": "Guardar estación",
+    "removeStation": "Quitar estación",
+    "addTrip": "Guardar tren",
+    "removeTrip": "Quitar tren"
+  },
+  "admin": {
+    "title": "Administración",
+    "users": "Usuarios",
+    "totalUsers": "Total usuarios",
+    "role": "Rol",
+    "roleUser": "Usuario",
+    "roleAdmin": "Administrador",
+    "status": "Estado",
+    "statusActive": "Activo",
+    "statusInactive": "Inactivo",
+    "actions": "Acciones",
+    "changeRole": "Cambiar rol",
+    "deactivate": "Desactivar",
+    "activate": "Activar",
+    "lastSeen": "Último acceso",
+    "registeredAt": "Registro",
+    "preferredLocale": "Idioma preferido"
+  },
+  "pwa": {
+    "installPrompt": "Instala ElAndén en tu móvil",
+    "installDescription": "Accede más rápido desde tu pantalla de inicio",
+    "install": "Instalar",
+    "notNow": "Ahora no"
+  },
+  "errors": {
+    "notFound": "Página no encontrada",
+    "unauthorized": "No tienes permiso para acceder aquí",
+    "serverError": "Error del servidor. Inténtalo de nuevo.",
+    "networkError": "Sin conexión. Comprueba tu red.",
+    "stationNotFound": "Estación no encontrada"
+  }
+}

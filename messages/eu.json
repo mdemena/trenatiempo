@@ -1,0 +1,130 @@
+{
+  "common": {
+    "appName": "ElAndén",
+    "loading": "Kargatzen...",
+    "error": "Errore bat gertatu da",
+    "retry": "Saiatu berriro",
+    "close": "Itxi",
+    "save": "Gorde",
+    "cancel": "Utzi",
+    "back": "Itzuli",
+    "search": "Bilatu",
+    "noResults": "Emaitzarik ez",
+    "updatedAgo": "Orain dela {seconds}s eguneratua"
+  },
+  "nav": {
+    "home": "Hasiera",
+    "favorites": "Gogokoak",
+    "alerts": "Alertak",
+    "profile": "Profila"
+  },
+  "home": {
+    "title": "Nondik irteten zara?",
+    "searchPlaceholder": "Bilatu geltokia...",
+    "useGPS": "Nire kokapena erabili",
+    "nearestStation": "Hurbileko geltokia",
+    "nearestStationDistance": "{km} km-ra",
+    "gpsError": "Ezin izan da zure kokapena lortu",
+    "gpsPermissionDenied": "Kokapenaren baimena ukatua",
+    "recentStations": "Azkenak"
+  },
+  "horarios": {
+    "title": "Hurrengo irteerak",
+    "filterAll": "Guztiak",
+    "filterCercanias": "Aldiriak",
+    "filterMD": "Distantzia Ertaineko",
+    "onTime": "Garaiz",
+    "delayed": "{minutes} min beranduago",
+    "cancelled": "Bertan behera",
+    "noTrains": "Ez dago hurbileko trenik",
+    "platform": "{number} bidea",
+    "towards": "{destination} norabidea",
+    "stale": "Orain dela {minutes} min-ko datuak"
+  },
+  "viaje": {
+    "title": "Trenaren xehetasunak",
+    "stops": "Geltokiak",
+    "currentPosition": "Konboiaren egungo posizioa",
+    "platform": "{number} andena",
+    "subscribe": "Tren honetara harpidetu",
+    "unsubscribe": "Harpidetza utzi",
+    "origin": "Jatorria",
+    "destination": "Helmuga",
+    "duration": "Iraupena",
+    "previousStop": "Aurreko geltokia",
+    "nextStop": "Hurrengo geltokia",
+    "trainShort": "Konboi laburra",
+    "trainLong": "Konboi luzea"
+  },
+  "auth": {
+    "login": "Saioa hasi",
+    "register": "Kontua sortu",
+    "loginWithGoogle": "Google-rekin jarraitu",
+    "email": "Helbide elektronikoa",
+    "password": "Pasahitza",
+    "confirmPassword": "Berretsi pasahitza",
+    "forgotPassword": "Pasahitza ahaztu duzu?",
+    "noAccount": "Ez duzu konturik?",
+    "hasAccount": "Badaukazu konturik?",
+    "logout": "Saioa itxi",
+    "loginSuccess": "Saioa hasita",
+    "registerSuccess": "Kontua sortuta. Egiaztatzeko mezua bidali dizugu.",
+    "loginError": "Helbide elektronikoa edo pasahitza okerra",
+    "registerError": "Errorea kontua sortzean"
+  },
+  "profile": {
+    "title": "Nire profila",
+    "name": "Izena",
+    "email": "Helbide elektronikoa",
+    "language": "Hizkuntza",
+    "languageDescription": "Aukeratu aplikazioaren hizkuntza",
+    "saveLanguage": "Gorde lehentasuna",
+    "languageSaved": "Hizkuntza gordeta",
+    "notifications": "Jakinarazpenak",
+    "pushEnabled": "Push jakinarazpenak aktibatuta",
+    "pushDisabled": "Push jakinarazpenak desaktibatuta",
+    "enablePush": "Aktibatu jakinarazpenak"
+  },
+  "favorites": {
+    "title": "Nire gogokoak",
+    "stations": "Geltokiak",
+    "trips": "Trenak",
+    "empty": "Oraindik ez dituzu gogokoak",
+    "emptyDescription": "Gorde geltokiak eta trenak azkar atzitzeko",
+    "addStation": "Geltokia gorde",
+    "removeStation": "Geltokia kendu",
+    "addTrip": "Trena gorde",
+    "removeTrip": "Trena kendu"
+  },
+  "admin": {
+    "title": "Administrazioa",
+    "users": "Erabiltzaileak",
+    "totalUsers": "Erabiltzaile guztiak",
+    "role": "Rola",
+    "roleUser": "Erabiltzailea",
+    "roleAdmin": "Administratzailea",
+    "status": "Egoera",
+    "statusActive": "Aktibo",
+    "statusInactive": "Inaktibo",
+    "actions": "Ekintzak",
+    "changeRole": "Rola aldatu",
+    "deactivate": "Desaktibatu",
+    "activate": "Aktibatu",
+    "lastSeen": "Azken sarbidea",
+    "registeredAt": "Erregistroa",
+    "preferredLocale": "Hizkuntza hobetsia"
+  },
+  "pwa": {
+    "installPrompt": "Instalatu ElAndén zure mugikorrean",
+    "installDescription": "Sartu azkarrago hasierako pantailatik",
+    "install": "Instalatu",
+    "notNow": "Orain ez"
+  },
+  "errors": {
+    "notFound": "Orria ez da aurkitu",
+    "unauthorized": "Ez duzu hemen sartzeko baimenik",
+    "serverError": "Zerbitzariaren errorea. Saiatu berriro.",
+    "networkError": "Konexiorik gabe. Egiaztatu zure sarea.",
+    "stationNotFound": "Geltokia ez da aurkitu"
+  }
+}

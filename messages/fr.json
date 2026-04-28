@@ -1,0 +1,130 @@
+{
+  "common": {
+    "appName": "ElAndén",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "search": "Rechercher",
+    "noResults": "Aucun résultat",
+    "updatedAgo": "Mis à jour il y a {seconds}s"
+  },
+  "nav": {
+    "home": "Accueil",
+    "favorites": "Favoris",
+    "alerts": "Alertes",
+    "profile": "Profil"
+  },
+  "home": {
+    "title": "D'où partez-vous ?",
+    "searchPlaceholder": "Rechercher une gare...",
+    "useGPS": "Utiliser ma position",
+    "nearestStation": "Gare la plus proche",
+    "nearestStationDistance": "à {km} km",
+    "gpsError": "Impossible d'obtenir votre position",
+    "gpsPermissionDenied": "Permission de localisation refusée",
+    "recentStations": "Récents"
+  },
+  "horarios": {
+    "title": "Prochains départs",
+    "filterAll": "Tous",
+    "filterCercanias": "Banlieue",
+    "filterMD": "Grandes lignes",
+    "onTime": "À l'heure",
+    "delayed": "Retard {minutes} min",
+    "cancelled": "Supprimé",
+    "noTrains": "Aucun train à venir",
+    "platform": "Voie {number}",
+    "towards": "Direction {destination}",
+    "stale": "Données de il y a {minutes} min"
+  },
+  "viaje": {
+    "title": "Détails du train",
+    "stops": "Arrêts",
+    "currentPosition": "Position actuelle du train",
+    "platform": "Quai {number}",
+    "subscribe": "S'abonner à ce train",
+    "unsubscribe": "Se désabonner",
+    "origin": "Départ",
+    "destination": "Destination",
+    "duration": "Durée",
+    "previousStop": "Arrêt précédent",
+    "nextStop": "Prochain arrêt",
+    "trainShort": "Rame courte",
+    "trainLong": "Rame complète"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "Créer un compte",
+    "loginWithGoogle": "Continuer avec Google",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "logout": "Se déconnecter",
+    "loginSuccess": "Connexion réussie",
+    "registerSuccess": "Compte créé. Vérifiez votre e-mail pour le confirmer.",
+    "loginError": "E-mail ou mot de passe incorrect",
+    "registerError": "Erreur lors de la création du compte"
+  },
+  "profile": {
+    "title": "Mon profil",
+    "name": "Nom",
+    "email": "Adresse e-mail",
+    "language": "Langue",
+    "languageDescription": "Choisissez la langue de l'application",
+    "saveLanguage": "Enregistrer la préférence",
+    "languageSaved": "Langue enregistrée",
+    "notifications": "Notifications",
+    "pushEnabled": "Notifications push activées",
+    "pushDisabled": "Notifications push désactivées",
+    "enablePush": "Activer les notifications"
+  },
+  "favorites": {
+    "title": "Mes favoris",
+    "stations": "Gares",
+    "trips": "Trains",
+    "empty": "Pas encore de favoris",
+    "emptyDescription": "Enregistrez des gares et des trains pour y accéder rapidement",
+    "addStation": "Enregistrer la gare",
+    "removeStation": "Supprimer la gare",
+    "addTrip": "Enregistrer le train",
+    "removeTrip": "Supprimer le train"
+  },
+  "admin": {
+    "title": "Administration",
+    "users": "Utilisateurs",
+    "totalUsers": "Total utilisateurs",
+    "role": "Rôle",
+    "roleUser": "Utilisateur",
+    "roleAdmin": "Administrateur",
+    "status": "Statut",
+    "statusActive": "Actif",
+    "statusInactive": "Inactif",
+    "actions": "Actions",
+    "changeRole": "Changer le rôle",
+    "deactivate": "Désactiver",
+    "activate": "Activer",
+    "lastSeen": "Dernière connexion",
+    "registeredAt": "Inscription",
+    "preferredLocale": "Langue préférée"
+  },
+  "pwa": {
+    "installPrompt": "Installez ElAndén sur votre téléphone",
+    "installDescription": "Accès rapide depuis votre écran d'accueil",
+    "install": "Installer",
+    "notNow": "Pas maintenant"
+  },
+  "errors": {
+    "notFound": "Page introuvable",
+    "unauthorized": "Vous n'avez pas accès à cette page",
+    "serverError": "Erreur serveur. Veuillez réessayer.",
+    "networkError": "Pas de connexion. Vérifiez votre réseau.",
+    "stationNotFound": "Gare introuvable"
+  }
+}
