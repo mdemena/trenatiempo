@@ -79,7 +79,10 @@
     "loginSuccess": "Sesión iniciada",
     "registerSuccess": "Conta creada. Revisa o teu correo para confirmala.",
     "loginError": "Email ou contrasinal incorrectos",
-    "registerError": "Erro ao crear a conta"
+    "registerError": "Erro ao crear a conta",
+    "fullName": "Nome completo",
+    "emailConfirmTitle": "Revisa o teu correo",
+    "emailConfirmDescription": "Enviámosche un enlace de confirmación a {email}"
   },
   "profile": {
     "title": "O meu perfil",
@@ -92,7 +95,12 @@
     "notifications": "Notificacións",
     "pushEnabled": "Notificacións push activadas",
     "pushDisabled": "Notificacións push desactivadas",
-    "enablePush": "Activar notificacións"
+    "enablePush": "Activar notificacións",
+    "logoutConfirm": "Seguro que queres pechar sesión?",
+    "comingSoon": "En breve",
+    "favorites": "Favoritos",
+    "savedStations": "Estacións gardadas",
+    "savedTrips": "Trens gardados"
   },
   "favorites": {
     "title": "Os meus favoritos",

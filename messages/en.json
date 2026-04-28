@@ -79,7 +79,10 @@
     "loginSuccess": "Logged in",
     "registerSuccess": "Account created. Check your email to confirm it.",
     "loginError": "Incorrect email or password",
-    "registerError": "Error creating account"
+    "registerError": "Error creating account",
+    "fullName": "Full name",
+    "emailConfirmTitle": "Check your email",
+    "emailConfirmDescription": "We've sent a confirmation link to {email}"
   },
   "profile": {
     "title": "My profile",
@@ -92,7 +95,12 @@
     "notifications": "Notifications",
     "pushEnabled": "Push notifications enabled",
     "pushDisabled": "Push notifications disabled",
-    "enablePush": "Enable notifications"
+    "enablePush": "Enable notifications",
+    "logoutConfirm": "Are you sure you want to sign out?",
+    "comingSoon": "Coming soon",
+    "favorites": "Favourites",
+    "savedStations": "Saved stations",
+    "savedTrips": "Saved trips"
   },
   "favorites": {
     "title": "My favourites",

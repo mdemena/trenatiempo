@@ -79,7 +79,10 @@
     "loginSuccess": "Saioa hasita",
     "registerSuccess": "Kontua sortuta. Egiaztatzeko mezua bidali dizugu.",
     "loginError": "Helbide elektronikoa edo pasahitza okerra",
-    "registerError": "Errorea kontua sortzean"
+    "registerError": "Errorea kontua sortzean",
+    "fullName": "Izen osoa",
+    "emailConfirmTitle": "Egiaztatu zure posta",
+    "emailConfirmDescription": "Baieztapen esteka bat bidali dizugu {email} helbidera"
   },
   "profile": {
     "title": "Nire profila",
@@ -92,7 +95,12 @@
     "notifications": "Jakinarazpenak",
     "pushEnabled": "Push jakinarazpenak aktibatuta",
     "pushDisabled": "Push jakinarazpenak desaktibatuta",
-    "enablePush": "Aktibatu jakinarazpenak"
+    "enablePush": "Aktibatu jakinarazpenak",
+    "logoutConfirm": "Ziur al zaude saioa itxi nahi duzula?",
+    "comingSoon": "Laster",
+    "favorites": "Gogokoak",
+    "savedStations": "Gordetako geltokiak",
+    "savedTrips": "Gordetako trenak"
   },
   "favorites": {
     "title": "Nire gogokoak",

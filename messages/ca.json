@@ -79,7 +79,10 @@
     "loginSuccess": "Sessió iniciada",
     "registerSuccess": "Compte creat. Revisa el teu correu per confirmar-lo.",
     "loginError": "Correu o contrasenya incorrectes",
-    "registerError": "Error en crear el compte"
+    "registerError": "Error en crear el compte",
+    "fullName": "Nom complet",
+    "emailConfirmTitle": "Revisa el teu correu",
+    "emailConfirmDescription": "T'hem enviat un enllaç de confirmació a {email}"
   },
   "profile": {
     "title": "El meu perfil",
@@ -92,7 +95,12 @@
     "notifications": "Notificacions",
     "pushEnabled": "Notificacions push activades",
     "pushDisabled": "Notificacions push desactivades",
-    "enablePush": "Activa notificacions"
+    "enablePush": "Activa notificacions",
+    "logoutConfirm": "Segur que vols tancar sessió?",
+    "comingSoon": "Pròximament",
+    "favorites": "Preferits",
+    "savedStations": "Estacions desades",
+    "savedTrips": "Trens desats"
   },
   "favorites": {
     "title": "Els meus preferits",

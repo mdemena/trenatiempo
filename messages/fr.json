@@ -79,7 +79,10 @@
     "loginSuccess": "Connexion réussie",
     "registerSuccess": "Compte créé. Vérifiez votre e-mail pour le confirmer.",
     "loginError": "E-mail ou mot de passe incorrect",
-    "registerError": "Erreur lors de la création du compte"
+    "registerError": "Erreur lors de la création du compte",
+    "fullName": "Nom complet",
+    "emailConfirmTitle": "Vérifiez votre e-mail",
+    "emailConfirmDescription": "Nous vous avons envoyé un lien de confirmation à {email}"
   },
   "profile": {
     "title": "Mon profil",
@@ -92,7 +95,12 @@
     "notifications": "Notifications",
     "pushEnabled": "Notifications push activées",
     "pushDisabled": "Notifications push désactivées",
-    "enablePush": "Activer les notifications"
+    "enablePush": "Activer les notifications",
+    "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "comingSoon": "Bientôt disponible",
+    "favorites": "Favoris",
+    "savedStations": "Gares enregistrées",
+    "savedTrips": "Trains enregistrés"
   },
   "favorites": {
     "title": "Mes favoris",

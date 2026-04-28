@@ -4,6 +4,7 @@ import { getMessages } from 'next-intl/server'
 import { Syne, DM_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
+import { SessionProvider } from '@/components/auth/SessionProvider'
 import './globals.css'
 
 const syne = Syne({
@@ -54,7 +55,9 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${syne.variable} ${dmSans.variable}`}>
       <body>
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <SessionProvider>
+            {children}
+          </SessionProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -79,7 +79,10 @@
     "loginSuccess": "Sesión iniciada",
     "registerSuccess": "Cuenta creada. Revisa tu correo para confirmarla.",
     "loginError": "Email o contraseña incorrectos",
-    "registerError": "Error al crear la cuenta"
+    "registerError": "Error al crear la cuenta",
+    "fullName": "Nombre completo",
+    "emailConfirmTitle": "Revisa tu correo",
+    "emailConfirmDescription": "Hemos enviado un enlace de confirmación a {email}"
   },
   "profile": {
     "title": "Mi perfil",
@@ -92,7 +95,12 @@
     "notifications": "Notificaciones",
     "pushEnabled": "Notificaciones push activadas",
     "pushDisabled": "Notificaciones push desactivadas",
-    "enablePush": "Activar notificaciones"
+    "enablePush": "Activar notificaciones",
+    "logoutConfirm": "¿Seguro que quieres cerrar sesión?",
+    "comingSoon": "Próximamente",
+    "favorites": "Favoritos",
+    "savedStations": "Estaciones guardadas",
+    "savedTrips": "Trenes guardados"
   },
   "favorites": {
     "title": "Mis favoritos",
