@@ -39,7 +39,8 @@
     "noTrains": "No hay trenes próximos",
     "platform": "Vía {number}",
     "towards": "Dirección {destination}",
-    "stale": "Datos de hace {minutes} min"
+    "stale": "Datos de hace {minutes} min",
+    "reconnecting": "Reconectando..."
   },
   "viaje": {
     "title": "Detalle del tren",

@@ -39,7 +39,8 @@
     "noTrains": "Aucun train à venir",
     "platform": "Voie {number}",
     "towards": "Direction {destination}",
-    "stale": "Données de il y a {minutes} min"
+    "stale": "Données de il y a {minutes} min",
+    "reconnecting": "Reconnexion..."
   },
   "viaje": {
     "title": "Détails du train",

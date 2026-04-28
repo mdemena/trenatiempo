@@ -39,7 +39,8 @@
     "noTrains": "Ez dago hurbileko trenik",
     "platform": "{number} bidea",
     "towards": "{destination} norabidea",
-    "stale": "Orain dela {minutes} min-ko datuak"
+    "stale": "Orain dela {minutes} min-ko datuak",
+    "reconnecting": "Berkonektatzen..."
   },
   "viaje": {
     "title": "Trenaren xehetasunak",

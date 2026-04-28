@@ -124,11 +124,15 @@ export interface FeedResult {
 export interface HorarioEntry {
   tripId: string
   routeId: string
-  salidaProgramada: string     // "HH:MM:SS" en formato GTFS
+  tipo?: TipoServicio           // tagged client-side when fetching 'all'
+  salidaProgramada: string      // "HH:MM:SS" en formato GTFS
   salidaReal?: string
   delaySeg: number
   cancelado: boolean
   anden?: string
+  estado: EstadoTren
+  destino?: string              // final destination name (requires GTFS static join)
+  llegadaFinal?: string         // final arrival time HH:MM:SS (requires GTFS static join)
 }
 
 export interface HorariosResponse {
