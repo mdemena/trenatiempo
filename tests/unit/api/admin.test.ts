@@ -21,8 +21,9 @@ const mockAdminClient = {
   from: vi.fn().mockReturnValue(mockQuery),
 }
 
-const ADMIN_ID = 'aaaaaaaa-0000-0000-0000-aaaaaaaaaaaa'
-const OTHER_ID = 'bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb'
+// Valid RFC 4122 v4 UUIDs (version=4, variant=[89ab])
+const ADMIN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+const OTHER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 
 let mockRequireAdmin = vi.fn()
 
@@ -41,11 +42,14 @@ vi.mock('next/server', async (importOriginal) => {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeRequest(method: string, url: string, body?: unknown): Request {
-  return new Request(url, {
+  // Use a fake request object to avoid Node.js `duplex: 'half'` requirement
+  // for readable body streams in unit tests.
+  return {
+    url,
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : {},
-    body: body ? JSON.stringify(body) : undefined,
-  })
+    headers: new Headers(body ? { 'Content-Type': 'application/json' } : {}),
+    json: async () => body ?? null,
+  } as unknown as Request
 }
 
 function adminGuardOk(requesterId = ADMIN_ID) {

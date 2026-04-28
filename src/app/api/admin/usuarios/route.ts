@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/supabase/admin-guard'
+import type { Database } from '@/types/database'
+
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 const PAGE_SIZE = 25
 
@@ -108,7 +111,7 @@ export async function PATCH(request: Request) {
     }
   }
 
-  const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  const update: ProfileUpdate = { updated_at: new Date().toISOString() }
   if (role !== undefined) update.role = role
   if (active !== undefined) update.active = active
 
