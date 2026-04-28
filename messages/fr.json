@@ -55,7 +55,15 @@
     "previousStop": "Arrêt précédent",
     "nextStop": "Prochain arrêt",
     "trainShort": "Rame courte",
-    "trainLong": "Rame complète"
+    "trainLong": "Rame complète",
+    "stoppedAt": "À l'arrêt à {station}",
+    "stoppedAtPlatform": "À l'arrêt à {station} · Voie {platform}",
+    "inTransitBetween": "Entre {from} et {to}",
+    "previousStops": "Arrêts précédents",
+    "showPreviousStops": "Voir {count} arrêts précédents",
+    "hidePreviousStops": "Masquer les arrêts précédents",
+    "cancelledBanner": "Ce train a été annulé",
+    "noPositionInfo": "Aucune information de position"
   },
   "auth": {
     "login": "Se connecter",

@@ -55,7 +55,15 @@
     "previousStop": "Parada anterior",
     "nextStop": "Pròxima parada",
     "trainShort": "Comboi curt",
-    "trainLong": "Comboi llarg"
+    "trainLong": "Comboi llarg",
+    "stoppedAt": "Aturat a {station}",
+    "stoppedAtPlatform": "Aturat a {station} · Andana {platform}",
+    "inTransitBetween": "Entre {from} i {to}",
+    "previousStops": "Parades anteriors",
+    "showPreviousStops": "Veure {count} parades anteriors",
+    "hidePreviousStops": "Amagar parades anteriors",
+    "cancelledBanner": "Aquest tren ha estat cancel·lat",
+    "noPositionInfo": "Sense informació de posició"
   },
   "auth": {
     "login": "Inicia sessió",

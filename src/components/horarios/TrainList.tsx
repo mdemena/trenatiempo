@@ -56,6 +56,7 @@ interface TrainListProps {
   stale: boolean
   updatedAt: number | null
   onRetry: () => void
+  stopId: string
 }
 
 export function TrainList({
@@ -65,6 +66,7 @@ export function TrainList({
   stale,
   updatedAt,
   onRetry,
+  stopId,
 }: TrainListProps) {
   const t = useTranslations()
   const isInitialLoad = loading && trenes.length === 0
@@ -134,7 +136,7 @@ export function TrainList({
       {!isInitialLoad && trenes.length > 0 && (
         <div className="space-y-2">
           {trenes.map((tren, idx) => (
-            <TrainCard key={tren.tripId} tren={tren} index={idx} />
+            <TrainCard key={tren.tripId} tren={tren} index={idx} stopId={stopId} />
           ))}
         </div>
       )}

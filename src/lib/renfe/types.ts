@@ -140,3 +140,9 @@ export interface HorariosResponse {
   updatedAt: number
   stale: boolean
 }
+
+export interface ViajeResponse {
+  tren: Tren
+  stale: boolean
+  updatedAt: number
+}

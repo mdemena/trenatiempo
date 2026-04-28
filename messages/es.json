@@ -55,7 +55,15 @@
     "previousStop": "Parada anterior",
     "nextStop": "Próxima parada",
     "trainShort": "Convoy corto",
-    "trainLong": "Convoy largo"
+    "trainLong": "Convoy largo",
+    "stoppedAt": "Parado en {station}",
+    "stoppedAtPlatform": "Parado en {station} · Andén {platform}",
+    "inTransitBetween": "Entre {from} y {to}",
+    "previousStops": "Paradas anteriores",
+    "showPreviousStops": "Ver {count} paradas anteriores",
+    "hidePreviousStops": "Ocultar paradas anteriores",
+    "cancelledBanner": "Este tren ha sido cancelado",
+    "noPositionInfo": "Sin información de posición"
   },
   "auth": {
     "login": "Iniciar sesión",

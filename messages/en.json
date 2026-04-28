@@ -55,7 +55,15 @@
     "previousStop": "Previous stop",
     "nextStop": "Next stop",
     "trainShort": "Short train",
-    "trainLong": "Full-length train"
+    "trainLong": "Full-length train",
+    "stoppedAt": "Stopped at {station}",
+    "stoppedAtPlatform": "Stopped at {station} · Platform {platform}",
+    "inTransitBetween": "Between {from} and {to}",
+    "previousStops": "Previous stops",
+    "showPreviousStops": "Show {count} previous stops",
+    "hidePreviousStops": "Hide previous stops",
+    "cancelledBanner": "This train has been cancelled",
+    "noPositionInfo": "No position information available"
   },
   "auth": {
     "login": "Log in",

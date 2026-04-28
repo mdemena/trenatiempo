@@ -55,7 +55,15 @@
     "previousStop": "Aurreko geltokia",
     "nextStop": "Hurrengo geltokia",
     "trainShort": "Konboi laburra",
-    "trainLong": "Konboi luzea"
+    "trainLong": "Konboi luzea",
+    "stoppedAt": "{station}(e)n geratua",
+    "stoppedAtPlatform": "{station}(e)n geratua · {platform}. andena",
+    "inTransitBetween": "{from} eta {to} artean",
+    "previousStops": "Aurreko geltokiak",
+    "showPreviousStops": "{count} aurreko geltoki ikusi",
+    "hidePreviousStops": "Aurreko geltokiak ezkutatu",
+    "cancelledBanner": "Tren hau bertan behera utzi da",
+    "noPositionInfo": "Posizio-informaziorik ez dago"
   },
   "auth": {
     "login": "Saioa hasi",

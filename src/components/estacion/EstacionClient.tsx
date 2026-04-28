@@ -24,6 +24,7 @@ export function EstacionClient({ stopId }: EstacionClientProps) {
         stale={stale}
         updatedAt={updatedAt}
         onRetry={refresh}
+        stopId={stopId}
       />
     </>
   )

@@ -33,9 +33,10 @@ const BADGE_COLOR: Record<TipoServicio, string> = {
 interface TrainCardProps {
   tren: HorarioEntry
   index: number
+  stopId: string
 }
 
-export function TrainCard({ tren, index }: TrainCardProps) {
+export function TrainCard({ tren, index, stopId }: TrainCardProps) {
   const t = useTranslations('horarios')
   const router = useRouter()
   const tipo = resolveType(tren)
@@ -48,7 +49,7 @@ export function TrainCard({ tren, index }: TrainCardProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
-      onClick={() => router.push(`/viaje/${tren.tripId}`)}
+      onClick={() => router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
       className="flex w-full items-center gap-4 rounded-2xl bg-[#0F1E35] px-4 py-4 text-left transition hover:bg-white/5 active:scale-[0.98]"
     >
       {/* Left: departure time */}
