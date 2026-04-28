@@ -63,7 +63,8 @@
     "showPreviousStops": "Show {count} previous stops",
     "hidePreviousStops": "Hide previous stops",
     "cancelledBanner": "This train has been cancelled",
-    "noPositionInfo": "No position information available"
+    "noPositionInfo": "No position information available",
+    "pushDenied": "Notification permission denied"
   },
   "auth": {
     "login": "Log in",
@@ -135,13 +136,25 @@
     "installPrompt": "Install ElAndén on your phone",
     "installDescription": "Quick access from your home screen",
     "install": "Install",
-    "notNow": "Not now"
+    "notNow": "Not now",
+    "iosInstall": "Tap share → Add to home screen"
   },
   "errors": {
     "notFound": "Page not found",
     "unauthorized": "You don't have permission to access this",
     "serverError": "Server error. Please try again.",
     "networkError": "No connection. Check your network.",
-    "stationNotFound": "Station not found"
+    "stationNotFound": "Station not found",
+    "goBack": "Go back",
+    "retry": "Retry"
+  },
+  "alertas": {
+    "title": "Alerts",
+    "mySubscriptions": "My subscriptions",
+    "empty": "No active alerts",
+    "emptyDescription": "Subscribe to a train from its detail page",
+    "unsubscribe": "Remove alert",
+    "train": "Train {id}",
+    "view": "View"
   }
 }

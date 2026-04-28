@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sin conexión — TrenATiempo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0A1628;
+      color: #F8F6F2;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .icon {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 24px;
+      opacity: 0.5;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #F5A623;
+    }
+    p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(248, 246, 242, 0.6);
+      max-width: 320px;
+    }
+    .retry {
+      margin-top: 32px;
+      background: #F5A623;
+      color: #0A1628;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M3 3l18 18M9.354 9.354A3.001 3.001 0 0012 15a3 3 0 002.646-4.354M12 3v1m0 16v1m8-9h-1M4 12H3m15.07-6.07-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707" />
+  </svg>
+  <h1>Sin conexión</h1>
+  <p>Los últimos horarios consultados pueden no estar actualizados. Comprueba tu conexión a internet e inténtalo de nuevo.</p>
+  <button class="retry" onclick="window.location.reload()">Reintentar</button>
+</body>
+</html>

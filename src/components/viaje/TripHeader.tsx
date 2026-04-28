@@ -1,10 +1,11 @@
 'use client'
 
 import { useTranslations, useLocale } from 'next-intl'
-import { Star, Bell, RefreshCw } from 'lucide-react'
+import { Star, RefreshCw } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { Tren, TipoServicio } from '@/lib/renfe/types'
+import { PushPermission } from '@/components/pwa/PushPermission'
 
 // ─── Badge colors (same palette as TrainCard) ─────────────────────────────────
 
@@ -98,17 +99,11 @@ export function TripHeader({ tren, userStopId, stale }: TripHeaderProps) {
           <button
             disabled
             aria-label={t('favorites.addTrip')}
-            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/5 disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/5 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F5A623]"
           >
             <Star className="h-4 w-4 text-rail-cream/50" />
           </button>
-          <button
-            disabled
-            aria-label={t('viaje.subscribe')}
-            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/5 disabled:opacity-30"
-          >
-            <Bell className="h-4 w-4 text-rail-cream/50" />
-          </button>
+          <PushPermission tripCode={tren.id} />
         </div>
       </div>
 

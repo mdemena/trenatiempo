@@ -63,7 +63,8 @@
     "showPreviousStops": "Voir {count} arrêts précédents",
     "hidePreviousStops": "Masquer les arrêts précédents",
     "cancelledBanner": "Ce train a été annulé",
-    "noPositionInfo": "Aucune information de position"
+    "noPositionInfo": "Aucune information de position",
+    "pushDenied": "Permission de notification refusée"
   },
   "auth": {
     "login": "Se connecter",
@@ -135,13 +136,25 @@
     "installPrompt": "Installez ElAndén sur votre téléphone",
     "installDescription": "Accès rapide depuis votre écran d'accueil",
     "install": "Installer",
-    "notNow": "Pas maintenant"
+    "notNow": "Pas maintenant",
+    "iosInstall": "Appuyez sur partager → Ajouter à l écran d accueil"
   },
   "errors": {
     "notFound": "Page introuvable",
     "unauthorized": "Vous n'avez pas accès à cette page",
     "serverError": "Erreur serveur. Veuillez réessayer.",
     "networkError": "Pas de connexion. Vérifiez votre réseau.",
-    "stationNotFound": "Gare introuvable"
+    "stationNotFound": "Gare introuvable",
+    "goBack": "Retour",
+    "retry": "Réessayer"
+  },
+  "alertas": {
+    "title": "Alertes",
+    "mySubscriptions": "Mes abonnements",
+    "empty": "Aucune alerte active",
+    "emptyDescription": "Abonnez-vous à un train depuis sa page de détail",
+    "unsubscribe": "Supprimer l alerte",
+    "train": "Train {id}",
+    "view": "Voir"
   }
 }

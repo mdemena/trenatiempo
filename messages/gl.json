@@ -63,7 +63,8 @@
     "showPreviousStops": "Ver {count} paradas anteriores",
     "hidePreviousStops": "Ocultar paradas anteriores",
     "cancelledBanner": "Este tren foi cancelado",
-    "noPositionInfo": "Sen información de posición"
+    "noPositionInfo": "Sen información de posición",
+    "pushDenied": "Permiso de notificacións denegado"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -135,13 +136,25 @@
     "installPrompt": "Instala ElAndén no teu móbil",
     "installDescription": "Accede máis rápido desde a pantalla de inicio",
     "install": "Instalar",
-    "notNow": "Agora non"
+    "notNow": "Agora non",
+    "iosInstall": "Preme compartir → Engadir á pantalla de inicio"
   },
   "errors": {
     "notFound": "Páxina non atopada",
     "unauthorized": "Non tes permiso para acceder aquí",
     "serverError": "Erro do servidor. Téntao de novo.",
     "networkError": "Sen conexión. Comproba a túa rede.",
-    "stationNotFound": "Estación non atopada"
+    "stationNotFound": "Estación non atopada",
+    "goBack": "Volver",
+    "retry": "Reintentar"
+  },
+  "alertas": {
+    "title": "Alertas",
+    "mySubscriptions": "As miñas subscricións",
+    "empty": "Sen alertas activas",
+    "emptyDescription": "Subscríbete a un tren dende a súa páxina de detalle",
+    "unsubscribe": "Cancelar alerta",
+    "train": "Tren {id}",
+    "view": "Ver"
   }
 }

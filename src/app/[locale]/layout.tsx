@@ -5,6 +5,7 @@ import { Syne, DM_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { SessionProvider } from '@/components/auth/SessionProvider'
+import { GoogleTagManager } from '@/components/analytics/GoogleTagManager'
 import './globals.css'
 
 const syne = Syne({
@@ -25,6 +26,9 @@ export function generateStaticParams() {
 
 export const viewport: Viewport = {
   themeColor: '#0A1628',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export const metadata: Metadata = {
@@ -34,6 +38,14 @@ export const metadata: Metadata = {
   },
   description: 'Horarios de Cercanías y Media Distancia de Renfe en tiempo real',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TrenATiempo',
+  },
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+  },
 }
 
 export default async function LocaleLayout({
@@ -54,6 +66,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={`${syne.variable} ${dmSans.variable}`}>
       <body>
+        <GoogleTagManager />
         <NextIntlClientProvider messages={messages}>
           <SessionProvider>
             {children}

@@ -49,6 +49,7 @@
     "platform": "Andana {number}",
     "subscribe": "Subscriure'm a aquest tren",
     "unsubscribe": "Cancel·lar subscripció",
+    "pushDenied": "Permís de notificacions denegat",
     "origin": "Origen",
     "destination": "Destinació",
     "duration": "Durada",
@@ -135,13 +136,25 @@
     "installPrompt": "Instal·la ElAndén al teu mòbil",
     "installDescription": "Accedeix més ràpid des de la pantalla d'inici",
     "install": "Instal·la",
-    "notNow": "Ara no"
+    "notNow": "Ara no",
+    "iosInstall": "Prem compartir → Afegir a la pantalla d'inici"
+  },
+  "alertas": {
+    "title": "Alertes",
+    "mySubscriptions": "Les meves subscripcions",
+    "empty": "Sense alertes actives",
+    "emptyDescription": "Subscriu-te a un tren des de la seva pàgina de detall",
+    "unsubscribe": "Cancel·lar alerta",
+    "train": "Tren {id}",
+    "view": "Veure"
   },
   "errors": {
     "notFound": "Pàgina no trobada",
     "unauthorized": "No tens permís per accedir aquí",
     "serverError": "Error del servidor. Torna-ho a intentar.",
     "networkError": "Sense connexió. Comprova la teva xarxa.",
-    "stationNotFound": "Estació no trobada"
+    "stationNotFound": "Estació no trobada",
+    "goBack": "Torna enrere",
+    "retry": "Torna-ho a intentar"
   }
 }

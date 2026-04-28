@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -75,7 +75,11 @@ function StopRow({ parada, absoluteIdx, allParadas, posicionActual, isLast, loca
       <div className="relative flex w-4 flex-col items-center">
         {estado === 'actual' ? (
           <motion.span
-            animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+            animate={
+              estado === 'actual'
+                ? { scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }
+                : {}
+            }
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
             className="relative z-10 h-3.5 w-3.5 rounded-full bg-rail-amber"
             data-pulse="true"
@@ -158,6 +162,7 @@ export interface StopTimelineProps {
 export function StopTimeline({ paradas, posicionActual, userStopId }: StopTimelineProps) {
   const t = useTranslations('viaje')
   const locale = useLocale()
+  const shouldReduce = useReducedMotion()
   const [showPrevious, setShowPrevious] = useState(false)
 
   const userIdx = userStopId
@@ -185,7 +190,9 @@ export function StopTimeline({ paradas, posicionActual, userStopId }: StopTimeli
         <div className="mb-3">
           <button
             onClick={() => setShowPrevious((v) => !v)}
-            className="flex items-center gap-1.5 text-xs text-rail-cream/30 transition hover:text-rail-cream/50"
+            aria-expanded={showPrevious}
+            aria-controls="previous-stops-section"
+            className="flex items-center gap-1.5 text-xs text-rail-cream/30 transition hover:text-rail-cream/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F5A623]"
             data-testid="toggle-previous-stops"
           >
             {showPrevious ? (
@@ -205,26 +212,28 @@ export function StopTimeline({ paradas, posicionActual, userStopId }: StopTimeli
             {showPrevious && (
               <motion.div
                 key="prev"
-                initial={{ height: 0, opacity: 0 }}
+                id="previous-stops-section"
+                initial={shouldReduce ? false : { height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                exit={shouldReduce ? {} : { height: 0, opacity: 0 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="overflow-hidden"
                 data-testid="previous-stops-section"
               >
-                <div className="mt-3 opacity-50">
+                <ul role="list" className="mt-3 opacity-50">
                   {previousParadas.map((p, i) => (
-                    <StopRow
-                      key={p.stopId}
-                      parada={p}
-                      absoluteIdx={i}
-                      allParadas={paradas}
-                      posicionActual={posicionActual}
-                      isLast={i === previousParadas.length - 1}
-                      locale={locale}
-                    />
+                    <li key={p.stopId} role="listitem">
+                      <StopRow
+                        parada={p}
+                        absoluteIdx={i}
+                        allParadas={paradas}
+                        posicionActual={posicionActual}
+                        isLast={i === previousParadas.length - 1}
+                        locale={locale}
+                      />
+                    </li>
                   ))}
-                </div>
+                </ul>
               </motion.div>
             )}
           </AnimatePresence>
@@ -232,26 +241,29 @@ export function StopTimeline({ paradas, posicionActual, userStopId }: StopTimeli
       )}
 
       {/* Main stops with stagger entry */}
-      {mainParadas.map((p, i) => {
-        const absoluteIdx = hasPrevious ? userIdx + i : i
-        return (
-          <motion.div
-            key={p.stopId}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.04, duration: 0.22, ease: 'easeOut' }}
-          >
-            <StopRow
-              parada={p}
-              absoluteIdx={absoluteIdx}
-              allParadas={paradas}
-              posicionActual={posicionActual}
-              isLast={absoluteIdx === paradas.length - 1}
-              locale={locale}
-            />
-          </motion.div>
-        )
-      })}
+      <ul role="list">
+        {mainParadas.map((p, i) => {
+          const absoluteIdx = hasPrevious ? userIdx + i : i
+          return (
+            <motion.li
+              key={p.stopId}
+              role="listitem"
+              initial={shouldReduce ? false : { opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: shouldReduce ? 0 : i * 0.04, duration: 0.22, ease: 'easeOut' }}
+            >
+              <StopRow
+                parada={p}
+                absoluteIdx={absoluteIdx}
+                allParadas={paradas}
+                posicionActual={posicionActual}
+                isLast={absoluteIdx === paradas.length - 1}
+                locale={locale}
+              />
+            </motion.li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

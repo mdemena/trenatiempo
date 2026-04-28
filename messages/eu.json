@@ -63,7 +63,8 @@
     "showPreviousStops": "{count} aurreko geltoki ikusi",
     "hidePreviousStops": "Aurreko geltokiak ezkutatu",
     "cancelledBanner": "Tren hau bertan behera utzi da",
-    "noPositionInfo": "Posizio-informaziorik ez dago"
+    "noPositionInfo": "Posizio-informaziorik ez dago",
+    "pushDenied": "Jakinarazpenen baimena ukatua"
   },
   "auth": {
     "login": "Saioa hasi",
@@ -135,13 +136,25 @@
     "installPrompt": "Instalatu ElAndén zure mugikorrean",
     "installDescription": "Sartu azkarrago hasierako pantailatik",
     "install": "Instalatu",
-    "notNow": "Orain ez"
+    "notNow": "Orain ez",
+    "iosInstall": "Sakatu partekatu → Gehitu hasierako pantailara"
   },
   "errors": {
     "notFound": "Orria ez da aurkitu",
     "unauthorized": "Ez duzu hemen sartzeko baimenik",
     "serverError": "Zerbitzariaren errorea. Saiatu berriro.",
     "networkError": "Konexiorik gabe. Egiaztatu zure sarea.",
-    "stationNotFound": "Geltokia ez da aurkitu"
+    "stationNotFound": "Geltokia ez da aurkitu",
+    "goBack": "Atzera",
+    "retry": "Saiatu berriz"
+  },
+  "alertas": {
+    "title": "Alertak",
+    "mySubscriptions": "Nire harpidetzak",
+    "empty": "Alerta aktiborik ez",
+    "emptyDescription": "Harpidetu tren batera bere xehetasun orrialdetik",
+    "unsubscribe": "Alerta bertan behera utzi",
+    "train": "Trena {id}",
+    "view": "Ikusi"
   }
 }
