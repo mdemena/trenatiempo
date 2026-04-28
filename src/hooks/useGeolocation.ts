@@ -2,34 +2,49 @@
 
 import { useState, useCallback } from 'react'
 
-interface GeolocationState {
+export type GeolocationErrorCode =
+  | 'not_supported'
+  | 'permission_denied'
+  | 'position_unavailable'
+  | 'timeout'
+
+export interface GeolocationState {
   loading: boolean
-  error: string | null
+  errorCode: GeolocationErrorCode | null
   coords: { lat: number; lng: number } | null
 }
 
 export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({
     loading: false,
-    error: null,
+    errorCode: null,
     coords: null,
   })
 
   const getLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setState((s) => ({ ...s, error: 'Geolocalización no soportada' }))
+      setState({ loading: false, errorCode: 'not_supported', coords: null })
       return
     }
-    setState((s) => ({ ...s, loading: true, error: null }))
+
+    setState({ loading: true, errorCode: null, coords: null })
+
     navigator.geolocation.getCurrentPosition(
       (pos) =>
         setState({
           loading: false,
-          error: null,
+          errorCode: null,
           coords: { lat: pos.coords.latitude, lng: pos.coords.longitude },
         }),
-      (err) =>
-        setState({ loading: false, error: err.message, coords: null }),
+      (err) => {
+        const errorCode: GeolocationErrorCode =
+          err.code === 1
+            ? 'permission_denied'
+            : err.code === 2
+              ? 'position_unavailable'
+              : 'timeout'
+        setState({ loading: false, errorCode, coords: null })
+      },
       { timeout: 10000, maximumAge: 60000 }
     )
   }, [])

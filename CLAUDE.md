@@ -709,13 +709,6 @@ pnpm install
 # Desarrollo local
 pnpm dev
 
-# Supabase local (requiere Docker)
-supabase start
-supabase db reset   # Aplica migrations + seed
-
-# Generar tipos de Supabase
-supabase gen types typescript --local > src/types/database.ts
-
 # Tests
 pnpm test           # Vitest unit tests
 pnpm test:e2e       # Playwright
@@ -723,6 +716,58 @@ pnpm test:e2e       # Playwright
 # Build producción
 pnpm build
 pnpm start
+```
+
+> **Nota:** La Supabase CLI no se usa en este proyecto (Docker no disponible). Ver sección 12b para el workflow manual.
+
+---
+
+## 12b. Gestión de Base de Datos (Workflow Manual — sin CLI)
+
+La CLI de Supabase (`supabase start`, `supabase db reset`, `supabase gen types`) **no se utiliza** en este proyecto porque Docker no está disponible en el entorno de desarrollo. Todas las operaciones de base de datos se gestionan manualmente a través del **Supabase Dashboard**.
+
+### Reglas para Claude Code
+
+Cuando sea necesario modificar el esquema de base de datos, Claude debe:
+
+1. **Crear o actualizar el fichero SQL** en `supabase/migrations/` con la numeración correlativa (`001_`, `002_`, etc.).
+2. **Proporcionar los pasos exactos** para aplicarlo en el Dashboard de Supabase.
+3. **Actualizar manualmente** `src/types/database.ts` para reflejar los cambios del esquema — la generación automática de tipos **no está disponible**.
+
+### Cómo aplicar una migration en el Dashboard de Supabase
+
+1. Ir a [supabase.com](https://supabase.com) → seleccionar el proyecto.
+2. En el menú lateral: **SQL Editor**.
+3. Hacer clic en **New query**.
+4. Pegar el contenido del fichero de migration (`supabase/migrations/XXX_nombre.sql`).
+5. Revisar el SQL y pulsar **Run** (▶).
+6. Verificar que no hay errores en el panel de resultados.
+7. Comprobar la tabla creada/modificada en **Table Editor**.
+
+### Cómo actualizar los tipos TypeScript tras una migration
+
+Tras aplicar una migration en el Dashboard, actualizar manualmente `src/types/database.ts`:
+
+- Añadir la nueva tabla con su interfaz `Row`, `Insert`, `Update` y `Relationships: []`.
+- Actualizar las tablas existentes si cambian columnas.
+- Mantener los tipos en sincronía con el esquema real de Supabase.
+
+**No ejecutar nunca** `supabase gen types typescript --local` ya que no hay instancia local activa.
+
+### Ficheros de migration actuales
+
+| Fichero | Descripción | Estado |
+|---|---|---|
+| `supabase/migrations/001_initial_schema.sql` | Schema inicial: profiles, stations, favorites, push_subscriptions, trip_reports, adif_cache | Aplicar en Dashboard |
+
+### Variables de entorno necesarias
+
+Obtener del Dashboard de Supabase → **Settings → API**:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon / public key
+SUPABASE_SERVICE_ROLE_KEY=eyJ...       # service_role key — solo backend, NUNCA al cliente
 ```
 
 ---
