@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { StopTimeline } from '@/components/viaje/StopTimeline'
 import type { Parada, PosicionTren } from '@/lib/renfe/types'
 
@@ -168,40 +168,32 @@ describe('StopTimeline', () => {
     })
   })
 
-  describe('collapsible previous stops', () => {
-    it('toggle button is shown when there are stops before userStopId', () => {
+  describe('all stops always visible', () => {
+    it('renders all stops regardless of userStopId', () => {
       render(<StopTimeline paradas={PARADAS} userStopId="C" />)
-      expect(screen.queryByTestId('toggle-previous-stops')).not.toBeNull()
+      for (const p of PARADAS) {
+        expect(screen.getByTestId(`stop-${p.stopId}`)).not.toBeNull()
+      }
     })
 
-    it('previous stops section is hidden by default', () => {
+    it('no toggle button is ever rendered', () => {
       render(<StopTimeline paradas={PARADAS} userStopId="C" />)
-      expect(screen.queryByTestId('previous-stops-section')).toBeNull()
+      expect(screen.queryByTestId('toggle-previous-stops')).toBeNull()
     })
 
-    it('previous stops section appears after clicking toggle', () => {
-      render(<StopTimeline paradas={PARADAS} userStopId="C" />)
-      fireEvent.click(screen.getByTestId('toggle-previous-stops'))
-      expect(screen.queryByTestId('previous-stops-section')).not.toBeNull()
-    })
-
-    it('previous stops section hides again on second click', () => {
-      render(<StopTimeline paradas={PARADAS} userStopId="C" />)
-      const btn = screen.getByTestId('toggle-previous-stops')
-      fireEvent.click(btn)
-      expect(screen.queryByTestId('previous-stops-section')).not.toBeNull()
-      fireEvent.click(btn)
-      expect(screen.queryByTestId('previous-stops-section')).toBeNull()
-    })
-
-    it('toggle button is NOT shown when userStopId is the first stop', () => {
+    it('no toggle button when userStopId is the first stop', () => {
       render(<StopTimeline paradas={PARADAS} userStopId="A" />)
       expect(screen.queryByTestId('toggle-previous-stops')).toBeNull()
     })
 
-    it('toggle button is NOT shown when no userStopId', () => {
+    it('no toggle button when no userStopId', () => {
       render(<StopTimeline paradas={PARADAS} />)
       expect(screen.queryByTestId('toggle-previous-stops')).toBeNull()
+    })
+
+    it('renders all 5 stop rows', () => {
+      render(<StopTimeline paradas={PARADAS} />)
+      expect(screen.getAllByTestId(/^stop-/).length).toBe(PARADAS.length)
     })
   })
 

@@ -100,6 +100,7 @@ function StopDot({
   if (estado === 'actual') {
     return (
       <motion.div
+        data-pulse="true"
         animate={reduce ? {} : { scale: [1, 1.6, 1], opacity: [1, 0.45, 1] }}
         transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         className={cn('rounded-full bg-rail-amber', size, isUser ? 'ring-2 ring-rail-amber/50 ring-offset-[3px] ring-offset-[#0A1628]' : '')}
@@ -185,7 +186,8 @@ function StopRow({
 
   return (
     <div
-      data-stop-id={parada.stopId}
+      data-testid={`stop-${parada.stopId}`}
+      data-estado={estado}
       className="flex items-stretch"
       id={`stop-${parada.stopId}`}
     >

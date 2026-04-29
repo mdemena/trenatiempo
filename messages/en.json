@@ -40,7 +40,8 @@
     "platform": "Platform {number}",
     "towards": "Towards {destination}",
     "stale": "Data from {minutes} min ago",
-    "reconnecting": "Reconnecting..."
+    "reconnecting": "Reconnecting...",
+    "trainNum": "Train {number}"
   },
   "viaje": {
     "title": "Train details",
@@ -64,7 +65,9 @@
     "hidePreviousStops": "Hide previous stops",
     "cancelledBanner": "This train has been cancelled",
     "noPositionInfo": "No position information available",
-    "pushDenied": "Notification permission denied"
+    "pushDenied": "Notification permission denied",
+    "yourStop": "Your stop",
+    "inTransit": "In transit"
   },
   "auth": {
     "login": "Log in",

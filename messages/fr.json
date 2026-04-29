@@ -40,7 +40,8 @@
     "platform": "Voie {number}",
     "towards": "Direction {destination}",
     "stale": "Données de il y a {minutes} min",
-    "reconnecting": "Reconnexion..."
+    "reconnecting": "Reconnexion...",
+    "trainNum": "Train {number}"
   },
   "viaje": {
     "title": "Détails du train",
@@ -64,7 +65,9 @@
     "hidePreviousStops": "Masquer les arrêts précédents",
     "cancelledBanner": "Ce train a été annulé",
     "noPositionInfo": "Aucune information de position",
-    "pushDenied": "Permission de notification refusée"
+    "pushDenied": "Permission de notification refusée",
+    "yourStop": "Votre arrêt",
+    "inTransit": "En transit"
   },
   "auth": {
     "login": "Se connecter",
