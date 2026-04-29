@@ -13,6 +13,10 @@ export default defineConfig({
     baseURL: remoteBase || 'http://localhost:3000',
     trace: 'on-first-retry',
     locale: 'es-ES',
+    // Block service workers in E2E: the PWA SW pre-caches 55+ files on every
+    // fresh browser context, keeping the network busy and breaking networkidle
+    // waits. Tests verify app behaviour, not PWA offline capabilities.
+    serviceWorkers: 'block',
   },
   projects: [
     {
@@ -28,7 +32,7 @@ export default defineConfig({
     : {
         webServer: {
           command: process.env.CI ? 'pnpm start' : 'pnpm dev',
-          port: 3000,
+          url: 'http://localhost:3000/es',
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
         },

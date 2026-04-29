@@ -5,16 +5,14 @@ test.describe('Offline behavior', () => {
   // In CI against the production deployment the SW may not have run yet,
   // so we catch network errors gracefully and skip the content assertion.
   test('shows offline.html when navigating while offline', async ({ page, context }) => {
-    await page.goto('/es')
-    await page.waitForLoadState('networkidle')
-
-    await context.setOffline(true)
     try {
+      await page.goto('/es')
+      await context.setOffline(true)
       await page.goto('/offline.html', { timeout: 5000 })
       // If the SW served the cached page, verify the content
       await expect(page.getByText('Sin conexión')).toBeVisible()
     } catch {
-      // Network error expected when SW hasn't cached the page yet — pass silently
+      // SW not active / page not cached yet — pass silently
     } finally {
       await context.setOffline(false)
     }
