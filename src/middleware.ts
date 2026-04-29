@@ -28,23 +28,28 @@ export async function middleware(request: NextRequest) {
 
   // Rutas /admin/* están fuera del locale routing — guardarlas directamente
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    const { user, supabase } = await updateSession(request)
+    try {
+      const { user, supabase } = await updateSession(request)
 
-    if (!user) {
+      if (!user) {
+        return NextResponse.redirect(new URL('/es/login?returnUrl=' + pathname, request.url))
+      }
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (data?.role !== 'admin') {
+        return NextResponse.redirect(new URL('/es', request.url))
+      }
+
+      return NextResponse.next()
+    } catch {
+      // Si Supabase falla (env vars, red), redirigir a login por seguridad
       return NextResponse.redirect(new URL('/es/login?returnUrl=' + pathname, request.url))
     }
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (data?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/es', request.url))
-    }
-
-    return NextResponse.next()
   }
 
   // Aplicar next-intl primero (detección y redirección de locale)
