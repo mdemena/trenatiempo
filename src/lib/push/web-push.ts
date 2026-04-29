@@ -1,12 +1,17 @@
 import webpush from 'web-push'
 import { createAdminClient } from '@/lib/supabase/server'
 
-// Configure VAPID once at module init
-webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_MAILTO ?? 'admin@example.com'}`,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
-  process.env.VAPID_PRIVATE_KEY ?? ''
-)
+let vapidConfigured = false
+
+function ensureVapid() {
+  if (vapidConfigured) return
+  webpush.setVapidDetails(
+    `mailto:${process.env.VAPID_MAILTO ?? 'admin@example.com'}`,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
+    process.env.VAPID_PRIVATE_KEY ?? ''
+  )
+  vapidConfigured = true
+}
 
 export interface PushPayload {
   title: string
@@ -46,6 +51,7 @@ async function sendWithBackoff(
   payload: string,
   attempt = 0
 ): Promise<void> {
+  ensureVapid()
   try {
     await webpush.sendNotification(sub, payload)
   } catch (err: unknown) {
