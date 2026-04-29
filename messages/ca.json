@@ -40,7 +40,8 @@
     "platform": "Via {number}",
     "towards": "Direcció {destination}",
     "stale": "Dades de fa {minutes} min",
-    "reconnecting": "Reconnectant..."
+    "reconnecting": "Reconnectant...",
+    "trainNum": "Tren {number}"
   },
   "viaje": {
     "title": "Detall del tren",
@@ -64,7 +65,9 @@
     "showPreviousStops": "Veure {count} parades anteriors",
     "hidePreviousStops": "Amagar parades anteriors",
     "cancelledBanner": "Aquest tren ha estat cancel·lat",
-    "noPositionInfo": "Sense informació de posició"
+    "noPositionInfo": "Sense informació de posició",
+    "yourStop": "La teva parada",
+    "inTransit": "En trànsit"
   },
   "auth": {
     "login": "Inicia sessió",

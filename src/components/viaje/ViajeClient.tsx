@@ -4,7 +4,6 @@ import { useTranslations } from 'next-intl'
 import { AlertCircle } from 'lucide-react'
 import { useViaje } from '@/hooks/useViaje'
 import { TripHeader } from './TripHeader'
-import { ConvoyPosition } from './ConvoyPosition'
 import { StopTimeline } from './StopTimeline'
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
@@ -13,15 +12,23 @@ function ViajeLoadingSkeleton() {
   return (
     <div className="animate-pulse space-y-4 px-4 py-6">
       <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-12 rounded-md bg-white/10" />
+          <div className="h-4 w-20 rounded bg-white/8" />
+        </div>
         <div className="h-4 w-3/4 rounded bg-white/8" />
-        <div className="h-6 w-1/2 rounded bg-white/8" />
       </div>
-      <div className="h-12 rounded-2xl bg-white/6" />
-      <div className="mt-4 space-y-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className="mt-6 space-y-4">
+        {Array.from({ length: 7 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4">
-            <div className="h-3 w-3 rounded-full bg-white/10" />
-            <div className="h-3 flex-1 rounded bg-white/8" />
+            <div className="flex w-10 shrink-0 flex-col items-center gap-1">
+              <div className={`rounded-full bg-white/10 ${i === 0 ? 'h-4 w-4' : 'h-3 w-3'}`} />
+              {i < 6 && <div className="h-8 w-px bg-white/6" />}
+            </div>
+            <div className="flex-1 space-y-1">
+              <div className={`h-3 rounded bg-white/10 ${i === 0 ? 'w-32' : 'w-24'}`} />
+              <div className="h-2.5 w-10 rounded bg-white/6" />
+            </div>
           </div>
         ))}
       </div>
@@ -83,10 +90,7 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
         updatedAt={updatedAt}
       />
 
-      {tren.posicionActual && (
-        <ConvoyPosition posicion={tren.posicionActual} paradas={tren.paradas} />
-      )}
-
+      {/* StopTimeline now embeds the train's position directly in the stop list */}
       <StopTimeline
         paradas={tren.paradas}
         posicionActual={tren.posicionActual}

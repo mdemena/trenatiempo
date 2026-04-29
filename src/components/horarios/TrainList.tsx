@@ -136,7 +136,7 @@ export function TrainList({
       {!isInitialLoad && trenes.length > 0 && (
         <div className="space-y-2">
           {trenes.map((tren, idx) => (
-            <TrainCard key={tren.tripId} tren={tren} index={idx} stopId={stopId} />
+            <TrainCard key={`${tren.tripId}-${tren.salidaProgramada}`} tren={tren} index={idx} stopId={stopId} />
           ))}
         </div>
       )}

@@ -81,7 +81,16 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
           throw new Error('All feeds failed')
         }
 
-        merged = ok.sort((a, b) => a.salidaProgramada.localeCompare(b.salidaProgramada))
+        // Dedup by tripId: the same train can appear in both cercanías and MD responses
+        // when gtfs_stop_times contains cercanías data only (MD not yet seeded).
+        const seenTripIds = new Set<string>()
+        merged = ok
+          .sort((a, b) => a.salidaProgramada.localeCompare(b.salidaProgramada))
+          .filter((t) => {
+            if (seenTripIds.has(t.tripId)) return false
+            seenTripIds.add(t.tripId)
+            return true
+          })
         updatedAt = latestAt
         stale = isStale
       } else {

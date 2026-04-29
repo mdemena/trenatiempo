@@ -4,18 +4,9 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Star, RefreshCw } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import type { Tren, TipoServicio } from '@/lib/renfe/types'
+import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
+import type { Tren } from '@/lib/renfe/types'
 import { PushPermission } from '@/components/pwa/PushPermission'
-
-// ─── Badge colors (same palette as TrainCard) ─────────────────────────────────
-
-const BADGE_COLOR: Record<TipoServicio, string> = {
-  cercanias: 'bg-rail-amber/20 text-rail-amber',
-  md: 'bg-blue-400/20 text-blue-300',
-  ave: 'bg-purple-400/20 text-purple-300',
-  regional: 'bg-green-400/20 text-green-300',
-  ld: 'bg-white/10 text-rail-cream/60',
-}
 
 // ─── TripHeader ───────────────────────────────────────────────────────────────
 
@@ -38,40 +29,31 @@ export function TripHeader({ tren, userStopId, stale }: TripHeaderProps) {
 
   const delayMin = Math.round((tren.retrasoSegundos ?? 0) / 60)
 
-  // Duration: first departure → last arrival (in minutes)
   const firstDep = origin?.salidaReal ?? origin?.salidaProgramada
   const lastArr = destination?.llegadaReal ?? destination?.llegadaProgramada
   const durationMin =
     firstDep && lastArr ? Math.round((lastArr - firstDep) / 60) : null
 
-  // User's departure from their station
   const userDepTs = userStop?.salidaReal ?? userStop?.salidaProgramada
   const userDepTime = userDepTs ? formatTime(userDepTs, locale) : null
+
+  // Official line badge colors
+  const { bg: badgeBg, text: badgeText } = getRouteColors(tren.routeId)
+  const shortName = routeShortName(tren.routeId)
 
   return (
     <div className="space-y-3 border-b border-white/5 px-4 py-4">
       {/* Origin → Destination */}
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-1.5 text-sm text-rail-cream/45">
-            <span className="max-w-[35%] truncate">
-              {origin?.nombre || origin?.stopId || '–'}
-            </span>
-            <span className="shrink-0 text-rail-cream/25">→</span>
-            <span className="min-w-0 flex-1 truncate font-medium text-rail-cream/70">
-              {destination?.nombre || destination?.stopId || '–'}
-            </span>
-          </div>
-
-          {/* Route badge + status */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Route + status row */}
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            {/* Colored line badge — matches TrainCard LineBadge */}
             <span
-              className={cn(
-                'rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-                BADGE_COLOR[tren.tipo]
-              )}
+              className="inline-flex min-w-[2.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[11px] font-bold leading-none tracking-wide"
+              style={{ backgroundColor: badgeBg, color: badgeText }}
             >
-              {tren.routeId}
+              {shortName || tren.routeId}
             </span>
 
             {tren.estado === 'cancelado' ? (
@@ -91,6 +73,17 @@ export function TripHeader({ tren, userStopId, stale }: TripHeaderProps) {
                 <span className="text-rail-green/80">{t('horarios.onTime')}</span>
               </span>
             )}
+          </div>
+
+          {/* Origin → Destination names */}
+          <div className="flex items-center gap-1.5 text-sm">
+            <span className="max-w-[40%] truncate text-rail-cream/45">
+              {origin?.nombre || origin?.stopId || '–'}
+            </span>
+            <span className="shrink-0 text-rail-cream/20">→</span>
+            <span className="min-w-0 flex-1 truncate font-medium text-rail-cream/75">
+              {destination?.nombre || destination?.stopId || '–'}
+            </span>
           </div>
         </div>
 
@@ -120,7 +113,9 @@ export function TripHeader({ tren, userStopId, stale }: TripHeaderProps) {
             <div>
               <span className="uppercase tracking-wide">{t('viaje.duration')}</span>
               <span className="ml-2 font-mono text-rail-cream/65">
-                {Math.floor(durationMin / 60)}h {durationMin % 60}m
+                {Math.floor(durationMin / 60) > 0
+                  ? `${Math.floor(durationMin / 60)}h ${durationMin % 60}m`
+                  : `${durationMin} min`}
               </span>
             </div>
           )}

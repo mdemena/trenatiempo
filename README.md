@@ -132,6 +132,29 @@ pnpm test:e2e     # Tests E2E (Playwright)
 pnpm typecheck    # TypeScript check
 ```
 
+## Mantenimiento de datos
+
+### Importar estaciones (`pnpm seed:stations`)
+
+Descarga los feeds GTFS oficiales de Renfe y puebla la tabla `stations` en Supabase. Necesario la primera vez y cada vez que Renfe publique una actualización del GTFS.
+
+```bash
+pnpm seed:stations
+```
+
+**Requisitos previos:**
+- `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en `.env.local`
+- `curl` y `unzip` instalados en el sistema
+
+**Qué hace:**
+
+| Feed | Fuente | Tipos asignados |
+|---|---|---|
+| Cercanías | `ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip` | `cercanias` |
+| AV/LD/MD | `ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip` | `ave`, `ld`, `md`, `regional` (clasificados por nombre de ruta) |
+
+Las estaciones que aparecen en ambos feeds acumulan todos sus tipos (ej. Madrid-Atocha → `['cercanias', 'ave', 'ld']`). El comando es idempotente: se puede ejecutar más de una vez sin duplicar datos.
+
 ## Contribuir
 
 1. Fork el repositorio

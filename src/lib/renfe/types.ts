@@ -133,6 +133,7 @@ export interface HorarioEntry {
   estado: EstadoTren
   destino?: string              // final destination name (requires GTFS static join)
   llegadaFinal?: string         // final arrival time HH:MM:SS (requires GTFS static join)
+  numTren?: string              // numeric train identifier extracted from tripId (between X and line code)
 }
 
 export interface HorariosResponse {

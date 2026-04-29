@@ -5,30 +5,33 @@ import { motion } from 'motion/react'
 import { ChevronRight } from 'lucide-react'
 import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
-import type { HorarioEntry, TipoServicio } from '@/lib/renfe/types'
+import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
+import type { HorarioEntry } from '@/lib/renfe/types'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function gtfsToHHMM(time: string): string {
-  return time.slice(0, 5) // "HH:MM" from "HH:MM:SS"
+  return time.slice(0, 5) // "HH:MM:SS" → "HH:MM"
 }
 
-function resolveType(tren: HorarioEntry): TipoServicio {
-  if (tren.tipo) return tren.tipo
-  return tren.routeId.startsWith('C') ? 'cercanias' : 'md'
+// ─── Line badge ───────────────────────────────────────────────────────────────
+
+function LineBadge({ routeId }: { routeId: string }) {
+  const short = routeShortName(routeId)
+  const { bg, text } = getRouteColors(routeId)
+
+  return (
+    <span
+      className="inline-flex min-w-[2.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[11px] font-bold leading-none tracking-wide"
+      style={{ backgroundColor: bg, color: text }}
+      aria-label={`Línea ${short}`}
+    >
+      {short || '—'}
+    </span>
+  )
 }
 
-// ─── Badge colors ─────────────────────────────────────────────────────────────
-
-const BADGE_COLOR: Record<TipoServicio, string> = {
-  cercanias: 'bg-rail-amber/20 text-rail-amber',
-  md: 'bg-blue-400/20 text-blue-300',
-  ave: 'bg-purple-400/20 text-purple-300',
-  regional: 'bg-green-400/20 text-green-300',
-  ld: 'bg-white/10 text-rail-cream/60',
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── TrainCard ────────────────────────────────────────────────────────────────
 
 interface TrainCardProps {
   tren: HorarioEntry
@@ -39,8 +42,10 @@ interface TrainCardProps {
 export function TrainCard({ tren, index, stopId }: TrainCardProps) {
   const t = useTranslations('horarios')
   const router = useRouter()
-  const tipo = resolveType(tren)
+
   const delayMin = Math.round(tren.delaySeg / 60)
+
+  // Show real departure if delayed, strike-through the scheduled one
   const displayTime = gtfsToHHMM(tren.salidaReal ?? tren.salidaProgramada)
   const originalTime = tren.salidaReal ? gtfsToHHMM(tren.salidaProgramada) : null
 
@@ -50,65 +55,63 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
       onClick={() => router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
-      className="flex w-full items-center gap-4 rounded-2xl bg-[#0F1E35] px-4 py-4 text-left transition hover:bg-white/5 active:scale-[0.98]"
+      className="flex w-full items-center gap-3 rounded-2xl bg-[#0F1E35] px-4 py-3.5 text-left transition hover:bg-white/5 active:scale-[0.98]"
     >
-      {/* Left: departure time */}
-      <div className="flex min-w-[3.5rem] flex-col items-center">
+      {/* Line badge + train number stacked */}
+      <div className="flex shrink-0 flex-col items-start gap-1">
+        <LineBadge routeId={tren.routeId} />
+        {tren.numTren && (
+          <span className="text-[10px] tabular-nums text-rail-cream/25">
+            {t('trainNum', { number: tren.numTren })}
+          </span>
+        )}
+      </div>
+
+      {/* Departure time */}
+      <div className="flex min-w-[3rem] flex-col items-end">
         <span
           className={cn(
-            'font-display text-2xl font-bold leading-tight',
-            tren.cancelado && 'text-rail-cream/30 line-through'
+            'font-display text-xl font-bold leading-tight tabular-nums',
+            tren.cancelado ? 'text-rail-cream/30 line-through' : 'text-rail-cream'
           )}
         >
           {displayTime}
         </span>
         {originalTime && !tren.cancelado && (
-          <span className="text-[10px] text-rail-cream/35 line-through">
+          <span className="text-[10px] tabular-nums text-rail-cream/35 line-through">
             {originalTime}
-          </span>
-        )}
-        {tren.anden && (
-          <span className="mt-0.5 text-[10px] text-rail-cream/35">
-            {t('platform', { number: tren.anden })}
           </span>
         )}
       </div>
 
-      {/* Center: badge + status + destination */}
+      {/* Status + destination + platform */}
       <div className="min-w-0 flex-1">
-        <div className="mb-1 flex items-center gap-2">
-          <span
-            className={cn(
-              'rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-              BADGE_COLOR[tipo]
-            )}
-          >
-            {tren.routeId || tipo.toUpperCase()}
+        {/* Status row */}
+        {tren.cancelado ? (
+          <span className="text-xs font-medium text-red-400">{t('cancelled')}</span>
+        ) : tren.delaySeg > 60 ? (
+          <span className="flex items-center gap-1.5 text-xs">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rail-amber" />
+            <span className="text-rail-amber">{t('delayed', { minutes: delayMin })}</span>
           </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-xs">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rail-green" />
+            <span className="text-rail-green/80">{t('onTime')}</span>
+          </span>
+        )}
 
-          {tren.cancelado ? (
-            <span className="text-xs text-red-400">{t('cancelled')}</span>
-          ) : tren.delaySeg > 60 ? (
-            <span className="flex items-center gap-1.5 text-xs">
-              <span className="h-1.5 w-1.5 rounded-full bg-rail-amber" />
-              <span className="text-rail-amber">{t('delayed', { minutes: delayMin })}</span>
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5 text-xs">
-              <span className="h-1.5 w-1.5 rounded-full bg-rail-green" />
-              <span className="text-rail-green/80">{t('onTime')}</span>
-            </span>
-          )}
-        </div>
-
+        {/* Destination */}
         {tren.destino && (
-          <div className="truncate text-sm text-rail-cream/60">
+          <div className="mt-0.5 truncate text-[12px] font-medium text-rail-cream/65">
             {t('towards', { destination: tren.destino })}
           </div>
         )}
-        {tren.llegadaFinal && (
-          <div className="mt-0.5 text-xs text-rail-cream/35">
-            → {gtfsToHHMM(tren.llegadaFinal)}
+
+        {/* Platform */}
+        {tren.anden && (
+          <div className="mt-0.5 text-[11px] text-rail-cream/35">
+            {t('platform', { number: tren.anden })}
           </div>
         )}
       </div>
