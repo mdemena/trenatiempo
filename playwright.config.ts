@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// Non-empty remote URL → test against deployed app, no local server needed.
+const remoteBase = process.env.PLAYWRIGHT_BASE_URL || ''
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -7,7 +10,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',
+    baseURL: remoteBase || 'http://localhost:3000',
     trace: 'on-first-retry',
     locale: 'es-ES',
   },
@@ -17,10 +20,15 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
   ],
-  webServer: {
-    command: 'pnpm dev',
-    port: 3000,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  // Start a local dev server only when not pointing at a remote deployment.
+  ...(remoteBase
+    ? {}
+    : {
+        webServer: {
+          command: 'pnpm dev',
+          port: 3000,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
+      }),
 })
