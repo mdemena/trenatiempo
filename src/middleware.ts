@@ -70,7 +70,23 @@ export async function middleware(request: NextRequest) {
   }
 
   const localeSegment = pathname.split('/')[1] ?? 'es'
-  const { user, supabase, supabaseResponse } = await updateSession(request)
+
+  let sessionResult: Awaited<ReturnType<typeof updateSession>> | null = null
+  try {
+    sessionResult = await updateSession(request)
+  } catch {
+    // Supabase inaccesible o env vars no configuradas:
+    // - rutas protegidas → redirigir a login
+    // - rutas de auth (login/registro) → dejar pasar para que rendericen
+    if (requiresAuth || requiresAdmin) {
+      const loginUrl = new URL(`/${localeSegment}/login`, request.url)
+      loginUrl.searchParams.set('returnUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+    return intlResponse
+  }
+
+  const { user, supabase, supabaseResponse } = sessionResult
 
   // Usuario ya autenticado intenta acceder a login/registro → redirigir a home
   if (isAuthRoute && user) {
