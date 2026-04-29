@@ -18,6 +18,12 @@ function matchesLocaleRoute(pathname: string, routes: string[]): boolean {
   )
 }
 
+// Supabase stores session tokens as sb-* cookies.
+// If none exist, the user is definitively unauthenticated — no Supabase network call needed.
+function hasSessionCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -28,6 +34,9 @@ export async function middleware(request: NextRequest) {
 
   // Rutas /admin/* están fuera del locale routing — guardarlas directamente
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    if (!hasSessionCookie(request)) {
+      return NextResponse.redirect(new URL('/es/login?returnUrl=' + pathname, request.url))
+    }
     try {
       const { user, supabase } = await updateSession(request)
 
@@ -55,7 +64,7 @@ export async function middleware(request: NextRequest) {
   // Aplicar next-intl primero (detección y redirección de locale)
   const intlResponse = intlMiddleware(request)
 
-  // Si next-intl redirige (e.g., /es → /), respetar la redirección
+  // Si next-intl redirige (e.g., / → /es), respetar la redirección
   if (intlResponse.status !== 200) {
     return intlResponse
   }
@@ -71,13 +80,23 @@ export async function middleware(request: NextRequest) {
 
   const localeSegment = pathname.split('/')[1] ?? 'es'
 
+  // Sin cookies de sesión → usuario no autenticado de forma segura, sin llamada a Supabase
+  if (!hasSessionCookie(request)) {
+    if (requiresAuth || requiresAdmin) {
+      const loginUrl = new URL(`/${localeSegment}/login`, request.url)
+      loginUrl.searchParams.set('returnUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+    // Rutas de auth (login/registro) → renderizar normalmente
+    return intlResponse
+  }
+
+  // Hay cookies de sesión → verificar con Supabase
   let sessionResult: Awaited<ReturnType<typeof updateSession>> | null = null
   try {
     sessionResult = await updateSession(request)
   } catch {
-    // Supabase inaccesible o env vars no configuradas:
-    // - rutas protegidas → redirigir a login
-    // - rutas de auth (login/registro) → dejar pasar para que rendericen
+    // Supabase inaccesible o env vars no configuradas
     if (requiresAuth || requiresAdmin) {
       const loginUrl = new URL(`/${localeSegment}/login`, request.url)
       loginUrl.searchParams.set('returnUrl', pathname)
@@ -93,7 +112,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${localeSegment}`, request.url))
   }
 
-  // Rutas protegidas sin sesión → redirigir a login con returnUrl
+  // Rutas protegidas sin sesión válida → redirigir a login con returnUrl
   if ((requiresAuth || requiresAdmin) && !user) {
     const loginUrl = new URL(`/${localeSegment}/login`, request.url)
     loginUrl.searchParams.set('returnUrl', pathname)
