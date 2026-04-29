@@ -20,12 +20,14 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
   ],
-  // Start a local dev server only when not pointing at a remote deployment.
+  // Start a local server only when not pointing at a remote deployment.
+  // In CI: use the production build (pnpm start) — the E2E job builds first.
+  // Locally: reuse whatever is already running on port 3000 (dev server).
   ...(remoteBase
     ? {}
     : {
         webServer: {
-          command: 'pnpm dev',
+          command: process.env.CI ? 'pnpm start' : 'pnpm dev',
           port: 3000,
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
