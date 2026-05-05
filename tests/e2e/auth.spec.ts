@@ -7,7 +7,8 @@ async function goToHome(page: Page) {
 }
 
 async function goToLogin(page: Page) {
-  await page.goto('/es/login')
+  await page.goto('/es/login', { waitUntil: 'domcontentloaded' })
+  await page.waitForSelector('form', { state: 'visible', timeout: 15000 })
 }
 
 // ─── Unauthenticated access ───────────────────────────────────────────────────
@@ -22,11 +23,13 @@ test.describe('Unauthenticated user', () => {
   test('can access the login page', async ({ page }) => {
     await goToLogin(page)
     await expect(page).toHaveURL(/\/es\/login/)
+    await expect(page.locator('input[type="email"]')).toBeVisible()
   })
 
   test('can access the registro page', async ({ page }) => {
-    await page.goto('/es/registro')
+    await page.goto('/es/registro', { waitUntil: 'domcontentloaded' })
     await expect(page).toHaveURL(/\/es\/registro/)
+    await page.waitForSelector('form', { state: 'visible', timeout: 15000 })
   })
 
   test('redirects /es/perfil to login and preserves returnUrl', async ({ page }) => {
@@ -72,15 +75,14 @@ test.describe('Login page', () => {
   test('shows inline error for invalid email', async ({ page }) => {
     await page.fill('input[type="email"]', 'notanemail')
     await page.fill('input[type="password"]', 'somepassword')
-    await page.getByRole('button', { name: /iniciar sesión|inicia sessió|iniciar sesión/i }).click()
-    // Zod validation triggers before any network call
+    await page.getByRole('button', { name: /iniciar sesión|iniciar sesion/i }).click()
     await expect(page.locator('form p.text-red-400').first()).toBeVisible()
   })
 
   test('shows inline error for short password', async ({ page }) => {
     await page.fill('input[type="email"]', 'valid@email.com')
     await page.fill('input[type="password"]', 'short')
-    await page.getByRole('button', { name: /iniciar sesión/i }).click()
+    await page.getByRole('button', { name: /iniciar sesión|iniciar sesion/i }).click()
     await expect(page.locator('form p.text-red-400').first()).toBeVisible()
   })
 })
@@ -89,19 +91,19 @@ test.describe('Login page', () => {
 
 test.describe('Registro page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/es/registro')
+    await page.goto('/es/registro', { waitUntil: 'domcontentloaded' })
+    await page.waitForSelector('form', { state: 'visible', timeout: 15000 })
   })
 
   test('shows all registration fields', async ({ page }) => {
     await expect(page.locator('input[autocomplete="name"]')).toBeVisible()
     await expect(page.locator('input[type="email"]')).toBeVisible()
-    // Two password fields
     const passwordFields = page.locator('input[type="password"]')
     await expect(passwordFields).toHaveCount(2)
   })
 
   test('shows link to login page', async ({ page }) => {
-    await expect(page.getByRole('link', { name: /iniciar sesión/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /iniciar sesión|iniciar sesion/i })).toBeVisible()
   })
 
   test('shows inline error when passwords do not match', async ({ page }) => {
@@ -115,7 +117,6 @@ test.describe('Registro page', () => {
   })
 
   test('admin role cannot be set via the public registration form', async ({ page }) => {
-    // The register form only sends fullName — no role field exposed
     await expect(page.locator('input[name="role"]')).toHaveCount(0)
     await expect(page.locator('input[value="admin"]')).toHaveCount(0)
   })
@@ -125,11 +126,7 @@ test.describe('Registro page', () => {
 
 test.describe('Normal user access control', () => {
   test('non-admin user redirected from /admin to home', async ({ page, context }) => {
-    // Set a fake session cookie for a 'user' role — middleware will check DB,
-    // but without a real Supabase, the getUser call will fail and redirect to login.
-    // This verifies the redirect path exists.
     await page.goto('/es/admin')
-    // Should not reach admin — redirect to login (no session) or home (wrong role)
     await expect(page).not.toHaveURL(/\/es\/admin$/)
   })
 })
