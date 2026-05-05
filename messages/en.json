@@ -20,13 +20,36 @@
   },
   "home": {
     "title": "Where are you departing from?",
+    "subtitle": "Real-time schedules for Commuter and Regional trains. No unnecessary waits, no surprises.",
     "searchPlaceholder": "Search station...",
     "useGPS": "Use my location",
     "nearestStation": "Nearest station",
     "nearestStationDistance": "{km} km away",
     "gpsError": "Could not get your location",
     "gpsPermissionDenied": "Location permission denied",
-    "recentStations": "Recent"
+    "recentStations": "Recent",
+    "startSearching": "Where are you departing from?",
+    "features": {
+      "title": "Why TrenATiempo?",
+      "realtime": {
+        "title": "True real-time data",
+        "description": "Data directly from Renfe every 20 seconds. Delays, cancellations and train position instantly."
+      },
+      "gps": {
+        "title": "Your station when you open the app",
+        "description": "Detects your nearest station via GPS. No searching, no typing. Open and go."
+      },
+      "alerts": {
+        "title": "Push alerts",
+        "description": "Subscribe to a train and get a notification if it's delayed or cancelled. No native apps needed."
+      },
+      "offline": {
+        "title": "Works without signal",
+        "description": "The last schedules you checked stay cached. Useful when the station has no reception."
+      }
+    },
+    "cta": "Get started — it's free",
+    "footer": "Open data from Renfe · CC BY 4.0 License"
   },
   "horarios": {
     "title": "Upcoming departures",

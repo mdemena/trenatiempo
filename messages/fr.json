@@ -20,13 +20,36 @@
   },
   "home": {
     "title": "D'où partez-vous ?",
+    "subtitle": "Horaires en temps réel des trains de banlieue et grandes lignes. Pas d'attente inutile, pas de surprises.",
     "searchPlaceholder": "Rechercher une gare...",
     "useGPS": "Utiliser ma position",
     "nearestStation": "Gare la plus proche",
     "nearestStationDistance": "à {km} km",
     "gpsError": "Impossible d'obtenir votre position",
     "gpsPermissionDenied": "Permission de localisation refusée",
-    "recentStations": "Récents"
+    "recentStations": "Récents",
+    "startSearching": "D'où partez-vous ?",
+    "features": {
+      "title": "Pourquoi TrenATiempo ?",
+      "realtime": {
+        "title": "Véritable temps réel",
+        "description": "Données directement de Renfe toutes les 20 secondes. Retards, annulations et position du train instantanément."
+      },
+      "gps": {
+        "title": "Votre gare à l'ouverture de l'app",
+        "description": "Détecte votre gare la plus proche par GPS. Pas de recherche, pas de saisie. Ouvrez et c'est parti."
+      },
+      "alerts": {
+        "title": "Alertes push",
+        "description": "Abonnez-vous à un train et recevez une notification en cas de retard ou d'annulation. Aucune app native nécessaire."
+      },
+      "offline": {
+        "title": "Fonctionne sans réseau",
+        "description": "Les derniers horaires consultés restent en cache. Utile quand la gare n'a pas de signal."
+      }
+    },
+    "cta": "Commencez maintenant — c'est gratuit",
+    "footer": "Données ouvertes de Renfe · Licence CC BY 4.0"
   },
   "horarios": {
     "title": "Prochains départs",
