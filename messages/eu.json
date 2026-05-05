@@ -19,14 +19,37 @@
     "profile": "Profila"
   },
   "home": {
-    "title": "Nondik irteten zara?",
+    "title": "Zure trena, garaiz.",
+    "subtitle": "Aldiriak eta Distantzia Ertaineko ordutegiak denbora errealean. Itxaron alferrik gabe, sorpresa gabe.",
     "searchPlaceholder": "Bilatu geltokia...",
     "useGPS": "Nire kokapena erabili",
     "nearestStation": "Hurbileko geltokia",
     "nearestStationDistance": "{km} km-ra",
     "gpsError": "Ezin izan da zure kokapena lortu",
     "gpsPermissionDenied": "Kokapenaren baimena ukatua",
-    "recentStations": "Azkenak"
+    "recentStations": "Azkenak",
+    "startSearching": "Nondik irteten zara?",
+    "features": {
+      "title": "Zergatik TrenATiempo?",
+      "realtime": {
+        "title": "Denbora erreala benetan",
+        "description": "Datuak zuzenean Renfetik 20 segunduro. Atzerapenak, bertan beherakoak eta konboiaren posizioa berehala."
+      },
+      "gps": {
+        "title": "Zure geltokia app irekitzean",
+        "description": "Zure hurbileko geltokia GPS bidez detektatzen du. Bilatu gabe, idatzi gabe. Ireki eta listo."
+      },
+      "alerts": {
+        "title": "Push alertak",
+        "description": "Harpidetu tren batera eta jasoko duzu jakinarazpen bat atzeratzen edo bertan behera uzten bada. App natiborik gabe."
+      },
+      "offline": {
+        "title": "Kobertura gabe funtzionatzen du",
+        "description": "Azken kontsultatutako ordutegiak cachean geratzen dira. Erabilgarri geltokiak seinalerik ez duenean."
+      }
+    },
+    "cta": "Hasi orain — doan da",
+    "footer": "Renferen datu irekiak · CC BY 4.0 lizentzia"
   },
   "horarios": {
     "title": "Hurrengo irteerak",

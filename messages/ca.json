@@ -19,14 +19,37 @@
     "profile": "Perfil"
   },
   "home": {
-    "title": "Des d'on surts?",
+    "title": "El teu tren, a l'hora.",
+    "subtitle": "Horaris en temps real de Rodalies i Mitjana Distància. Sense esperes innecessàries, sense sorpreses.",
     "searchPlaceholder": "Cerca estació...",
     "useGPS": "Usar la meva ubicació",
     "nearestStation": "Estació més propera",
     "nearestStationDistance": "a {km} km",
     "gpsError": "No s'ha pogut obtenir la teva ubicació",
     "gpsPermissionDenied": "Permís d'ubicació denegat",
-    "recentStations": "Recents"
+    "recentStations": "Recents",
+    "startSearching": "Des d'on surts?",
+    "features": {
+      "title": "Per què TrenATiempo?",
+      "realtime": {
+        "title": "Temps real de veritat",
+        "description": "Dades directament de Renfe cada 20 segons. Retards, cancel·lacions i posició del comboi a l'instant."
+      },
+      "gps": {
+        "title": "La teva estació en obrir l'app",
+        "description": "Detecta la teva estació més propera per GPS. Sense buscar, sense escriure. Obre i punt."
+      },
+      "alerts": {
+        "title": "Alertes push",
+        "description": "Subscriu-te a un tren i rep una notificació si es retarda o cancel·la. Sense apps natives."
+      },
+      "offline": {
+        "title": "Funciona sense cobertura",
+        "description": "Els darrers horaris consultats es queden en caché. Útil quan l'estació no té senyal."
+      }
+    },
+    "cta": "Comença ara — és gratis",
+    "footer": "Dades obertes de Renfe · Llicència CC BY 4.0"
   },
   "horarios": {
     "title": "Properes sortides",

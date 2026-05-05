@@ -19,14 +19,37 @@
     "profile": "Perfil"
   },
   "home": {
-    "title": "¿Desde dónde sales?",
+    "title": "Tu tren, a tiempo.",
+    "subtitle": "Horarios en tiempo real de Cercanías y Media Distancia. Sin esperas innecesarias, sin sorpresas.",
     "searchPlaceholder": "Buscar estación...",
     "useGPS": "Usar mi ubicación",
     "nearestStation": "Estación más cercana",
     "nearestStationDistance": "a {km} km",
     "gpsError": "No se pudo obtener tu ubicación",
     "gpsPermissionDenied": "Permiso de ubicación denegado",
-    "recentStations": "Recientes"
+    "recentStations": "Recientes",
+    "startSearching": "¿Desde dónde sales?",
+    "features": {
+      "title": "¿Por qué TrenATiempo?",
+      "realtime": {
+        "title": "Tiempo real de verdad",
+        "description": "Datos directamente de Renfe cada 20 segundos. Retrasos, cancelaciones y posición del convoy al instante."
+      },
+      "gps": {
+        "title": "Tu estación al abrir la app",
+        "description": "Detecta tu estación más cercana por GPS. Sin buscar, sin escribir. Abre y listo."
+      },
+      "alerts": {
+        "title": "Alertas push",
+        "description": "Suscríbete a un tren y recibe una notificación si se retrasa o cancela. Sin apps nativas."
+      },
+      "offline": {
+        "title": "Funciona sin cobertura",
+        "description": "Los últimos horarios consultados se quedan en caché. Útil cuando la estación no tiene señal."
+      }
+    },
+    "cta": "Empieza ahora — es gratis",
+    "footer": "Datos abiertos de Renfe · Licencia CC BY 4.0"
   },
   "horarios": {
     "title": "Próximas salidas",
