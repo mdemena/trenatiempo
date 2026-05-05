@@ -1,0 +1,15 @@
+name: Cron — Cleanup
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # cada hora
+  workflow_dispatch:      # trigger manual
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger cleanup endpoint
+        run: |
+          curl -sf -X POST "${{ secrets.NEXT_PUBLIC_APP_URL }}/api/cron/cleanup" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
