@@ -3,6 +3,7 @@ import { defineRouting } from 'next-intl/routing'
 export const routing = defineRouting({
   locales: ['es', 'ca', 'gl', 'eu', 'en', 'fr'],
   defaultLocale: 'es',
+  localePrefix: 'always',
 })
 
 export type Locale = (typeof routing.locales)[number]

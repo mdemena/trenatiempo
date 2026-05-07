@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
   title: 'TrenATiempo',
@@ -11,5 +10,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  redirect('/es')
+  return children
 }
