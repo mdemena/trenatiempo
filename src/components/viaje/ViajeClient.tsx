@@ -10,7 +10,7 @@ import { StopTimeline } from './StopTimeline'
 
 function ViajeLoadingSkeleton() {
   return (
-    <div className="animate-pulse space-y-4 px-4 py-6">
+    <div className="w-full animate-pulse space-y-4 px-4 py-6">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <div className="h-6 w-12 rounded-md bg-white/10" />
@@ -75,28 +75,28 @@ interface ViajeClientProps {
 export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
   const { tren, loading, error, stale, updatedAt, refresh } = useViaje(tripId)
 
-  if (loading && !tren) return <ViajeLoadingSkeleton />
-  if (error && !tren) return <ViajeError onRetry={refresh} />
+  if (loading && !tren) return <div className="flex min-h-0 flex-1"><ViajeLoadingSkeleton /></div>
+  if (error && !tren) return <div className="flex min-h-0 flex-1"><ViajeError onRetry={refresh} /></div>
   if (!tren) return null
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className="sticky top-0 z-10 bg-rail-navy">
-        {tren.estado === 'cancelado' && <CancelledBanner />}
+    <div className="flex min-h-0 flex-1 flex-col">
+      {tren.estado === 'cancelado' && <CancelledBanner />}
 
-        <TripHeader
-          tren={tren}
+      <TripHeader
+        tren={tren}
+        userStopId={userStopId}
+        stale={stale}
+        updatedAt={updatedAt}
+      />
+
+      <div className="flex-1 overflow-y-auto">
+        <StopTimeline
+          paradas={tren.paradas}
+          posicionActual={tren.posicionActual}
           userStopId={userStopId}
-          stale={stale}
-          updatedAt={updatedAt}
         />
       </div>
-
-      <StopTimeline
-        paradas={tren.paradas}
-        posicionActual={tren.posicionActual}
-        userStopId={userStopId}
-      />
     </div>
   )
 }

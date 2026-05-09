@@ -15,17 +15,19 @@ export function EstacionClient({ stopId }: EstacionClientProps) {
   const { trenes, loading, error, stale, updatedAt, refresh } = useHorarios(stopId, tipo)
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <FilterBar value={tipo} onChange={setTipo} />
-      <TrainList
-        trenes={trenes}
-        loading={loading}
-        error={error}
-        stale={stale}
-        updatedAt={updatedAt}
-        onRetry={refresh}
-        stopId={stopId}
-      />
-    </>
+      <div className="flex-1 overflow-y-auto">
+        <TrainList
+          trenes={trenes}
+          loading={loading}
+          error={error}
+          stale={stale}
+          updatedAt={updatedAt}
+          onRetry={refresh}
+          stopId={stopId}
+        />
+      </div>
+    </div>
   )
 }
