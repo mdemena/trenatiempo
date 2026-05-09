@@ -115,10 +115,14 @@ describe('signUpWithEmail', () => {
 })
 
 describe('signOut', () => {
-  it('calls supabase.auth.signOut', async () => {
+  it('calls the signout API endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal('fetch', fetchMock)
     mockSignOut.mockResolvedValue({ error: null })
     await signOut()
-    expect(mockSignOut).toHaveBeenCalledOnce()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/signout', { method: 'POST' })
+    vi.unstubAllGlobals()
   })
 
   it('clears the Zustand user store', async () => {
@@ -127,9 +131,9 @@ describe('signOut', () => {
     expect(mockClearUser).toHaveBeenCalledOnce()
   })
 
-  it('throws when supabase returns an error', async () => {
+  it('does not throw when API call fails (handles error gracefully)', async () => {
     mockSignOut.mockResolvedValue({ error: new Error('Network') })
-    await expect(signOut()).rejects.toThrow('Network')
+    await expect(signOut()).resolves.toBeUndefined()
   })
 })
 

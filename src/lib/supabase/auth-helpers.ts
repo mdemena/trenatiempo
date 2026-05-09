@@ -50,10 +50,13 @@ export async function signInWithGoogle(returnUrl?: string) {
 // ─── Sign out ─────────────────────────────────────────────────────────────────
 
 export async function signOut() {
-  const supabase = createClient()
-  await supabase.auth.signOut()
-  // Clear server httpOnly cookies
-  await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
+  // Primero limpiar cookies httpOnly vía API (solo esto cuenta para sb-*)
+  try {
+    await fetch('/api/auth/signout', { method: 'POST' })
+  } catch {
+    // fallback: si la API falla (offline, error server), el usuario
+    // no quedará atrapado — la store se limpia igual
+  }
   useUserStore.getState().clearUser()
 }
 

@@ -7,6 +7,7 @@ import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
 import type { HorarioEntry } from '@/lib/renfe/types'
+import { TrainTypeIcon } from './TrainTypeIcon'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -57,9 +58,10 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
       onClick={() => router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
       className="flex w-full items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3.5 text-left transition hover:bg-white/5 active:scale-[0.98] light:hover:bg-black/5"
     >
-      {/* Line badge + train number stacked */}
+      {/* Line badge + type badge + train number stacked */}
       <div className="flex shrink-0 flex-col items-start gap-1">
         <LineBadge routeId={tren.routeId} />
+        <TrainTypeIcon tipo={tren.tipo} />
         {tren.numTren && (
           <span className="text-[10px] tabular-nums text-rail-cream/25">
             {t('trainNum', { number: tren.numTren })}

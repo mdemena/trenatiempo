@@ -6,12 +6,12 @@ import { cn } from '@/lib/utils'
 import type { Locale } from '@/types/database'
 
 const LOCALES: { code: Locale; label: string; flag: string }[] = [
-  { code: 'es', label: 'Castellano', flag: '🇪🇸' },
-  { code: 'ca', label: 'Català', flag: '🏴' },
-  { code: 'gl', label: 'Galego', flag: '🏴' },
-  { code: 'eu', label: 'Euskera', flag: '🏴' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'es', label: 'Castellano', flag: 'es' },
+  { code: 'ca', label: 'Català', flag: 'es-ct' },
+  { code: 'gl', label: 'Galego', flag: 'es-ga' },
+  { code: 'eu', label: 'Euskera', flag: 'es-pv' },
+  { code: 'en', label: 'English', flag: 'gb' },
+  { code: 'fr', label: 'Français', flag: 'fr' },
 ]
 
 export function LocaleSwitcher() {
@@ -27,7 +27,7 @@ export function LocaleSwitcher() {
             key={code}
             role="radio"
             aria-checked={active}
-            onClick={() => changeLocale(code)}
+            onClick={async () => { await changeLocale(code) }}
             className={cn(
               'flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition',
               active
@@ -35,7 +35,7 @@ export function LocaleSwitcher() {
                 : 'bg-rail-surface text-rail-cream/60 hover:bg-white/8 light:hover:bg-black/8 hover:text-rail-cream/80'
             )}
           >
-            <span aria-hidden="true">{flag}</span>
+            <span aria-hidden="true" className={`fi fi-${flag} rounded-sm`} />
             <span>{label}</span>
           </button>
         )

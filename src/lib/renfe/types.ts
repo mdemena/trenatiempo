@@ -124,7 +124,7 @@ export interface FeedResult {
 export interface HorarioEntry {
   tripId: string
   routeId: string
-  tipo?: TipoServicio           // tagged client-side when fetching 'all'
+  tipo: TipoServicio
   salidaProgramada: string      // "HH:MM:SS" en formato GTFS
   salidaReal?: string
   delaySeg: number

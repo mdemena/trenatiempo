@@ -39,8 +39,8 @@ export default async function ViajePage({
 
   return (
     <div className="flex min-h-dvh flex-col bg-rail-navy">
-      {/* Header */}
-      <header className="flex items-center gap-3 border-b border-rail-border bg-rail-navy/95 px-4 py-3">
+      {/* Sticky header — always visible */}
+      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-rail-border bg-rail-navy/95 px-4 py-3">
         <Link
           href={stopId ? `/estacion/${stopId}` : '/'}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition hover:bg-white/5"

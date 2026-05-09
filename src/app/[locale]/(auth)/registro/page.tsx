@@ -19,7 +19,7 @@ export default async function RegistroPage() {
   const t = await getTranslations('auth')
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#0A1628] px-6 py-12">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-rail-navy px-6 py-12">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">

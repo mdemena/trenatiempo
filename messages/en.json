@@ -138,7 +138,9 @@
     "addStation": "Save station",
     "removeStation": "Remove station",
     "addTrip": "Save train",
-    "removeTrip": "Remove train"
+    "removeTrip": "Remove train",
+    "authRequired": "Sign in to save favourites",
+    "authRequiredDescription": "To save {name} as a favourite, sign in or create an account"
   },
   "admin": {
     "title": "Administration",

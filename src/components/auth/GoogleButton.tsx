@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { signInWithGoogle } from '@/lib/supabase/auth-helpers'
+import { Spinner } from '@/components/ui/Spinner'
 
 interface GoogleButtonProps {
   returnUrl?: string
@@ -30,7 +31,7 @@ export function GoogleButton({ returnUrl }: GoogleButtonProps) {
       className="flex w-full items-center justify-center gap-3 rounded-2xl bg-rail-surface px-4 py-3 text-sm font-medium text-rail-cream/80 transition hover:bg-white/12 light:hover:bg-black/10 active:scale-[0.98] disabled:opacity-50"
     >
       {loading ? (
-        <span className="h-5 w-5 animate-spin rounded-full border-2 border-rail-cream/30 border-t-rail-cream/70" />
+        <Spinner size="sm" className="border-rail-cream/30 [border-top-color:#F8F6F2]" />
       ) : (
         <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
           <path

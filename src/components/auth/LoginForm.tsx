@@ -7,6 +7,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { z } from 'zod'
 import { signInWithEmail } from '@/lib/supabase/auth-helpers'
 import { cn } from '@/lib/utils'
+import { Spinner } from '@/components/ui/Spinner'
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ export function LoginForm({ returnUrl }: LoginFormProps) {
         className="flex w-full items-center justify-center rounded-2xl bg-rail-amber px-4 py-3 text-sm font-semibold text-rail-navy transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
       >
         {loading ? (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-rail-navy/30 border-t-rail-navy/80" />
+          <Spinner size="sm" variant="navy" />
         ) : (
           t('login')
         )}

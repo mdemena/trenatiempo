@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Bell, BellOff, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { Spinner } from '@/components/ui/Spinner'
 
 interface Subscription {
   id: string
@@ -59,8 +60,8 @@ export default function AlertasPage() {
         <h1 className="mb-6 text-xl font-bold text-rail-cream">{t('title')}</h1>
 
         {loading ? (
-            <div className="flex justify-center pt-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-rail-cream/20 border-t-rail-cream/60" />
+          <div className="flex justify-center pt-16">
+            <Spinner size="lg" />
           </div>
         ) : subs.length === 0 ? (
           <EmptyState />

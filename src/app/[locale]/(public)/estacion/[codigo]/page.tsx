@@ -1,10 +1,11 @@
 import { getTranslations } from 'next-intl/server'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Star } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { getStationById } from '@/lib/renfe/gtfs-static'
 import { EstacionClient } from '@/components/estacion/EstacionClient'
+import { FavoriteButton } from '@/components/favorites/FavoriteButton'
 
 export async function generateMetadata({
   params,
@@ -49,14 +50,7 @@ export default async function EstacionPage({
           </h1>
         </div>
 
-        {/* Favorite slot — no functionality yet */}
-        <button
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition hover:bg-white/5"
-          aria-label="Añadir a favoritos"
-          disabled
-        >
-          <Star className="h-5 w-5 text-rail-cream/25" />
-        </button>
+        <FavoriteButton type="station" id={station.id} name={station.name} />
       </header>
 
       {/* Client section: FilterBar + TrainList */}

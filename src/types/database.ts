@@ -238,6 +238,38 @@ export interface Database {
         }
         Relationships: []
       }
+      gtfs_stop_times: {
+        Row: {
+          id: number
+          trip_id: string
+          route_id: string | null
+          stop_id: string
+          stop_sequence: number
+          departure_time: string
+          service_date: string
+          feed_source: string
+        }
+        Insert: {
+          id?: number
+          trip_id: string
+          route_id?: string | null
+          stop_id: string
+          stop_sequence: number
+          departure_time: string
+          service_date: string
+          feed_source?: string
+        }
+        Update: {
+          trip_id?: string
+          route_id?: string | null
+          stop_id?: string
+          stop_sequence?: number
+          departure_time?: string
+          service_date?: string
+          feed_source?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

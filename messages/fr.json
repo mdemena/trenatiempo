@@ -138,7 +138,9 @@
     "addStation": "Enregistrer la gare",
     "removeStation": "Supprimer la gare",
     "addTrip": "Enregistrer le train",
-    "removeTrip": "Supprimer le train"
+    "removeTrip": "Supprimer le train",
+    "authRequired": "Connectez-vous pour enregistrer des favoris",
+    "authRequiredDescription": "Pour enregistrer {name} comme favori, connectez-vous ou créez un compte"
   },
   "admin": {
     "title": "Administration",

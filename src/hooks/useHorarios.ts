@@ -68,12 +68,12 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
         let isStale = false
 
         if (cerRes.status === 'fulfilled') {
-          ok.push(...cerRes.value.horarios.map((h) => ({ ...h, tipo: 'cercanias' as const })))
+          ok.push(...cerRes.value.horarios)
           latestAt = Math.max(latestAt, cerRes.value.updatedAt)
           isStale = isStale || cerRes.value.stale
         }
         if (mdRes.status === 'fulfilled') {
-          ok.push(...mdRes.value.horarios.map((h) => ({ ...h, tipo: 'md' as const })))
+          ok.push(...mdRes.value.horarios)
           latestAt = Math.max(latestAt, mdRes.value.updatedAt)
           isStale = isStale || mdRes.value.stale
         }
@@ -95,7 +95,7 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
         stale = isStale
       } else {
         const data = await apiFetch(stopId, tipo)
-        merged = data.horarios.map((h) => ({ ...h, tipo }))
+        merged = data.horarios
         updatedAt = data.updatedAt
         stale = data.stale
       }

@@ -138,7 +138,9 @@
     "addStation": "Geltokia gorde",
     "removeStation": "Geltokia kendu",
     "addTrip": "Trena gorde",
-    "removeTrip": "Trena kendu"
+    "removeTrip": "Trena kendu",
+    "authRequired": "Hasi saioa gogokoak gordetzeko",
+    "authRequiredDescription": "{name} gogoko gisa gordetzeko, hasi saioa edo sortu kontu bat"
   },
   "admin": {
     "title": "Administrazioa",

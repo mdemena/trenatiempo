@@ -138,7 +138,9 @@
     "addStation": "Guardar estación",
     "removeStation": "Quitar estación",
     "addTrip": "Guardar tren",
-    "removeTrip": "Quitar tren"
+    "removeTrip": "Quitar tren",
+    "authRequired": "Inicia sesión para guardar favoritos",
+    "authRequiredDescription": "Para guardar {name} como favorito, inicia sesión o crea una cuenta"
   },
   "admin": {
     "title": "Administración",

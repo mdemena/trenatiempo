@@ -80,17 +80,18 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
   if (!tren) return null
 
   return (
-    <div>
-      {tren.estado === 'cancelado' && <CancelledBanner />}
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div className="sticky top-0 z-10 bg-rail-navy">
+        {tren.estado === 'cancelado' && <CancelledBanner />}
 
-      <TripHeader
-        tren={tren}
-        userStopId={userStopId}
-        stale={stale}
-        updatedAt={updatedAt}
-      />
+        <TripHeader
+          tren={tren}
+          userStopId={userStopId}
+          stale={stale}
+          updatedAt={updatedAt}
+        />
+      </div>
 
-      {/* StopTimeline now embeds the train's position directly in the stop list */}
       <StopTimeline
         paradas={tren.paradas}
         posicionActual={tren.posicionActual}

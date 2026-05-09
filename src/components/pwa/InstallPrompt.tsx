@@ -112,7 +112,7 @@ export function InstallPrompt() {
               </button>
               <button
                 onClick={handleInstall}
-                className="flex-1 rounded-xl bg-[#F5A623] py-2 text-sm font-semibold text-[#0A1628] hover:bg-[#f5b84a]"
+                className="flex-1 rounded-xl bg-rail-amber py-2 text-sm font-semibold text-rail-navy hover:brightness-110"
               >
                 {t('install')}
               </button>
@@ -141,7 +141,7 @@ export function InstallPrompt() {
             </div>
             <p className="flex items-center gap-2 text-xs text-white/50">
               <span>{t('iosInstall')}</span>
-              <Share className="h-3.5 w-3.5 shrink-0 text-[#F5A623]" aria-hidden />
+              <Share className="h-3.5 w-3.5 shrink-0 text-rail-amber" aria-hidden />
             </p>
           </div>
         </motion.div>

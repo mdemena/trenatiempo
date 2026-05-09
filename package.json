@@ -20,6 +20,7 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.49.4",
     "clsx": "^2.1.1",
+    "flag-icons": "^7.5.0",
     "lucide-react": "^0.511.0",
     "motion": "^12.10.5",
     "next": "^15.3.1",

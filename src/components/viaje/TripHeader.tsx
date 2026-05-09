@@ -1,12 +1,13 @@
 'use client'
 
 import { useTranslations, useLocale } from 'next-intl'
-import { Star, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
 import type { Tren } from '@/lib/renfe/types'
 import { PushPermission } from '@/components/pwa/PushPermission'
+import { FavoriteButton } from '@/components/favorites/FavoriteButton'
 
 // ─── TripHeader ───────────────────────────────────────────────────────────────
 
@@ -89,13 +90,7 @@ export function TripHeader({ tren, userStopId, stale }: TripHeaderProps) {
 
         {/* Action slots */}
         <div className="flex shrink-0 gap-1">
-          <button
-            disabled
-            aria-label={t('favorites.addTrip')}
-            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/5 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-amber"
-          >
-            <Star className="h-4 w-4 text-rail-cream/50" />
-          </button>
+          <FavoriteButton type="trip" id={tren.id} lineName={tren.routeId} />
           <PushPermission tripCode={tren.id} />
         </div>
       </div>

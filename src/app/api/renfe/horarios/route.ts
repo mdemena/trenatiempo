@@ -147,18 +147,26 @@ export async function GET(request: Request) {
   const db = supabaseAdmin as unknown as DB
 
   // Fetch GTFS-RT and static schedule in parallel
+  let query = db
+    .from('gtfs_stop_times')
+    .select('trip_id, departure_time, stop_sequence, route_id, feed_source')
+    .eq('stop_id', stopId)
+    .eq('service_date', today)
+    .gte('departure_time', nowGtfsTime())
+
+  // Filtrar por tipo según el feed_source de cada viaje:
+  //   cercanias → feed del GTFS de Cercanías (incluye Rodalies R-prefixed)
+  //   md        → feed del GTFS de AV/LD/MD (incluye Regionales R-prefixed)
+  if (tipo === 'cercanias') {
+    query = query.eq('feed_source', 'cercanias')
+  } else if (tipo === 'md') {
+    query = query.eq('feed_source', 'md')
+  }
+
   const [tripResult, vehicleResult, staticResult] = await Promise.allSettled([
     fetchTripUpdates(tipo),
     fetchVehiclePositions(tipo),
-    db
-      .from('gtfs_stop_times')
-      .select('trip_id, departure_time, stop_sequence, route_id')
-      .eq('stop_id', stopId)
-      .eq('service_date', today)
-      .gte('departure_time', nowGtfsTime())
-      .order('departure_time')
-      .order('stop_sequence')
-      .limit(60),
+    query.order('departure_time').order('stop_sequence').limit(60),
   ])
 
   const tripFeedResult = tripResult.status === 'fulfilled' ? tripResult.value : null
@@ -212,6 +220,7 @@ export async function GET(request: Request) {
       return {
         tripId: st.trip_id,
         routeId: st.route_id ?? rt?.trip.routeId ?? '',
+        tipo,
         salidaProgramada: st.departure_time,
         salidaReal,
         delaySeg,
@@ -251,6 +260,7 @@ export async function GET(request: Request) {
       horarios.push({
         tripId: tu.trip.tripId,
         routeId: tu.trip.routeId ?? '',
+        tipo,
         salidaProgramada,
         salidaReal,
         delaySeg,

@@ -8,6 +8,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { signOut } from '@/lib/supabase/auth-helpers'
 import { useUserStore } from '@/store/userStore'
+import { Spinner } from '@/components/ui/Spinner'
 import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -79,7 +80,7 @@ function SignOutButton() {
             className="flex flex-1 items-center justify-center rounded-xl bg-red-500/15 py-2.5 text-sm font-medium text-red-400 transition hover:bg-red-500/25 disabled:opacity-50"
           >
             {loading ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
+              <Spinner size="sm" />
             ) : (
               t('auth.logout')
             )}

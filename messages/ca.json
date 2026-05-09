@@ -138,7 +138,9 @@
     "addStation": "Desa estació",
     "removeStation": "Elimina estació",
     "addTrip": "Desa tren",
-    "removeTrip": "Elimina tren"
+    "removeTrip": "Elimina tren",
+    "authRequired": "Inicia sessió per desar preferits",
+    "authRequiredDescription": "Per desar {name} com a preferit, inicia sessió o crea un compte"
   },
   "admin": {
     "title": "Administració",

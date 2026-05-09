@@ -13,6 +13,7 @@ function makeTren(
   return {
     tripId: `trip-${salidaProgramada}`,
     routeId: 'C1',
+    tipo: 'cercanias',
     salidaProgramada,
     delaySeg: 0,
     cancelado: false,
@@ -149,8 +150,8 @@ describe('useHorarios', () => {
         const tipo = new URL(url, 'http://x').searchParams.get('tipo')
         const tren =
           tipo === 'cercanias'
-            ? makeTren('16:00:00', { routeId: 'C1' })
-            : makeTren('14:00:00', { routeId: 'MD1' })
+            ? makeTren('16:00:00', { routeId: 'C1', tipo: 'cercanias' })
+            : makeTren('14:00:00', { routeId: 'MD1', tipo: 'md' })
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(makeResponse([tren])),
@@ -171,8 +172,8 @@ describe('useHorarios', () => {
     it('tags entries with tipo when fetching all', async () => {
       vi.setSystemTime(new Date(2024, 0, 15, 12, 0, 0))
       mockFetch({
-        cercanias: makeResponse([makeTren('15:00:00', { routeId: 'C1' })]),
-        md: makeResponse([makeTren('16:00:00', { routeId: 'MD1' })]),
+        cercanias: makeResponse([makeTren('15:00:00', { routeId: 'C1', tipo: 'cercanias' })]),
+        md: makeResponse([makeTren('16:00:00', { routeId: 'MD1', tipo: 'md' })]),
       })
 
       const { result } = renderHook(() => useHorarios('60000', 'all'))

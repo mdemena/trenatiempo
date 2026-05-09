@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { useUserStore } from '@/store/userStore'
 import { cn } from '@/lib/utils'
+import { Spinner } from '@/components/ui/Spinner'
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -103,7 +104,7 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
       aria-label={isDenied ? t('pushDenied') : isSubscribed ? t('unsubscribe') : t('subscribe')}
       aria-pressed={isSubscribed}
       className={cn(
-        'flex h-9 w-9 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F5A623] disabled:cursor-not-allowed',
+        'flex h-9 w-9 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-amber disabled:cursor-not-allowed',
         isSubscribed
           ? 'hover:bg-rail-amber/10'
           : 'hover:bg-white/5',
@@ -112,9 +113,9 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
       )}
     >
       {isLoading ? (
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+        <Spinner size="sm" variant="cream" />
       ) : isSubscribed ? (
-        <BellRing className="h-4 w-4 text-[#F5A623]" />
+        <BellRing className="h-4 w-4 text-rail-amber" />
       ) : isDenied ? (
         <BellOff className="h-4 w-4 text-rail-cream/30" />
       ) : (
