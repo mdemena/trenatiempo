@@ -191,7 +191,7 @@ export function StationSearch({ onSelect }: StationSearchProps) {
             onFocus={() => currentItems.length > 0 && setIsOpen(true)}
             onBlur={() => setTimeout(() => setIsOpen(false), 150)}
             placeholder={t('home.searchPlaceholder')}
-            className="w-full rounded-2xl bg-white/8 py-3.5 pl-10 pr-10 text-rail-cream placeholder:text-rail-cream/30 outline-none ring-1 ring-white/10 transition focus:ring-2 focus:ring-rail-amber/50"
+            className="w-full rounded-2xl bg-white/8 py-3.5 pl-10 pr-10 text-rail-cream placeholder:text-rail-cream/30 outline-none ring-1 ring-white/10 transition focus:ring-2 focus:ring-rail-amber/50 light:bg-black/5 light:ring-black/10"
             aria-label={t('home.searchPlaceholder')}
             aria-autocomplete="list"
             aria-expanded={isOpen}
@@ -201,6 +201,72 @@ export function StationSearch({ onSelect }: StationSearchProps) {
           {isLoading && (
             <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-rail-amber/60" />
           )}
+
+          {/* Results dropdown — inside input wrapper to match input width */}
+          <AnimatePresence>
+            {isOpen && currentItems.length > 0 && (
+              <motion.ul
+                id="station-listbox"
+                role="listbox"
+                initial={{ opacity: 0, y: -6, scaleY: 0.97 }}
+                animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                exit={{ opacity: 0, y: -6, scaleY: 0.97 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                style={{ transformOrigin: 'top' }}
+                className="absolute left-0 right-0 z-50 mt-2 list-none overflow-hidden rounded-2xl bg-rail-surface shadow-2xl ring-1 ring-rail-border"
+              >
+                {isGpsMode && (
+                  <li className="flex items-center gap-1.5 border-b border-rail-border px-4 py-2 text-[11px] font-medium uppercase tracking-widest text-rail-cream/30">
+                    <MapPin className="h-3 w-3" />
+                    {t('home.nearestStation')}
+                  </li>
+                )}
+                {currentItems.slice(0, 8).map((station, idx) => {
+                  const hasDistance = 'distanciaKm' in station
+                  return (
+                    <li
+                      key={station.id}
+                      role="option"
+                      aria-selected={idx === activeIndex}
+                  className={cn(
+                    'flex cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition',
+                        idx === activeIndex ? 'bg-rail-amber/10' : 'hover:bg-white/5 light:hover:bg-black/5',
+                        idx !== 0 && 'border-t border-rail-border'
+                      )}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleSelect(station)
+                      }}
+                    >
+                      <MapPin className="h-4 w-4 shrink-0 text-rail-amber/40" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-base font-semibold text-rail-cream">
+                          {!isGpsMode ? (
+                            <HighlightText text={station.name} query={query} />
+                          ) : (
+                            station.name
+                          )}
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {station.types.slice(0, 3).map((type) => (
+                            <ServiceBadge key={type} type={type} />
+                          ))}
+                          {hasDistance && (
+                            <span className="text-[11px] text-rail-cream/35">
+                              {t('home.nearestStationDistance', {
+                                km: (station as EstacionConDistancia).distanciaKm.toFixed(1),
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  )
+                })}
+              </motion.ul>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* GPS button with pulse animation while loading */}
@@ -264,72 +330,6 @@ export function StationSearch({ onSelect }: StationSearchProps) {
               </button>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Results dropdown */}
-      <AnimatePresence>
-        {isOpen && currentItems.length > 0 && (
-          <motion.ul
-            id="station-listbox"
-            role="listbox"
-            initial={{ opacity: 0, y: -6, scaleY: 0.97 }}
-            animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: -6, scaleY: 0.97 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            style={{ transformOrigin: 'top' }}
-            className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl bg-[#0D1D38] shadow-2xl ring-1 ring-white/10"
-          >
-            {isGpsMode && (
-              <li className="flex items-center gap-1.5 border-b border-white/5 px-4 py-2 text-[11px] font-medium uppercase tracking-widest text-rail-cream/30">
-                <MapPin className="h-3 w-3" />
-                {t('home.nearestStation')}
-              </li>
-            )}
-            {currentItems.slice(0, 8).map((station, idx) => {
-              const hasDistance = 'distanciaKm' in station
-              return (
-                <li
-                  key={station.id}
-                  role="option"
-                  aria-selected={idx === activeIndex}
-                  className={cn(
-                    'flex cursor-pointer items-center gap-3 px-4 py-3.5 transition',
-                    idx === activeIndex ? 'bg-rail-amber/10' : 'hover:bg-white/5',
-                    idx !== 0 && 'border-t border-white/5'
-                  )}
-                  onMouseEnter={() => setActiveIndex(idx)}
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    handleSelect(station)
-                  }}
-                >
-                  <MapPin className="h-4 w-4 shrink-0 text-rail-amber/40" />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm text-rail-cream">
-                      {!isGpsMode ? (
-                        <HighlightText text={station.name} query={query} />
-                      ) : (
-                        station.name
-                      )}
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {station.types.slice(0, 3).map((type) => (
-                        <ServiceBadge key={type} type={type} />
-                      ))}
-                      {hasDistance && (
-                        <span className="text-[11px] text-rail-cream/35">
-                          {t('home.nearestStationDistance', {
-                            km: (station as EstacionConDistancia).distanciaKm.toFixed(1),
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-          </motion.ul>
         )}
       </AnimatePresence>
     </div>

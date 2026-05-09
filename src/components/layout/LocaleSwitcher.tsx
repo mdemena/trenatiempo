@@ -32,7 +32,7 @@ export function LocaleSwitcher() {
               'flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition',
               active
                 ? 'bg-rail-amber/15 font-medium text-rail-amber ring-1 ring-rail-amber/30'
-                : 'bg-white/5 text-rail-cream/60 hover:bg-white/8 hover:text-rail-cream/80'
+                : 'bg-rail-surface text-rail-cream/60 hover:bg-white/8 light:hover:bg-black/8 hover:text-rail-cream/80'
             )}
           >
             <span aria-hidden="true">{flag}</span>

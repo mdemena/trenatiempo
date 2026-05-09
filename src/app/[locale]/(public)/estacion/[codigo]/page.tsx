@@ -5,7 +5,6 @@ import { ArrowLeft, Star } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { getStationById } from '@/lib/renfe/gtfs-static'
 import { EstacionClient } from '@/components/estacion/EstacionClient'
-import { BottomNav } from '@/components/layout/BottomNav'
 
 export async function generateMetadata({
   params,
@@ -30,9 +29,9 @@ export default async function EstacionPage({
   if (!station) notFound()
 
   return (
-    <div className="flex min-h-dvh flex-col bg-rail-navy pb-20">
-      {/* Sticky header */}
-      <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-white/5 bg-rail-navy/95 px-4 py-3 backdrop-blur-sm">
+    <div className="flex min-h-dvh flex-col bg-rail-navy">
+      {/* Header */}
+      <header className="flex items-center gap-3 border-b border-rail-border bg-rail-navy/95 px-4 py-3">
         <Link
           href="/"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition hover:bg-white/5"
@@ -62,8 +61,6 @@ export default async function EstacionPage({
 
       {/* Client section: FilterBar + TrainList */}
       <EstacionClient stopId={station.id} />
-
-      <BottomNav />
     </div>
   )
 }

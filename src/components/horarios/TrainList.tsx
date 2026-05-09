@@ -11,7 +11,7 @@ import type { HorarioEntry } from '@/lib/renfe/types'
 
 function SkeletonCard() {
   return (
-    <div className="flex animate-pulse items-center gap-4 rounded-2xl bg-[#0F1E35] px-4 py-4">
+    <div className="flex animate-pulse items-center gap-4 rounded-2xl bg-rail-surface px-4 py-4">
       <div className="h-8 w-14 rounded bg-white/10" />
       <div className="flex-1 space-y-2">
         <div className="flex gap-2">

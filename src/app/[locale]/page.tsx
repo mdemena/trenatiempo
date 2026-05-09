@@ -65,7 +65,7 @@ export default function HomePage() {
             return (
               <div
                 key={feat.title}
-                className="group rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 transition hover:border-rail-amber/20 hover:bg-white/[0.05]"
+                className="group rounded-2xl border border-rail-border bg-rail-surface/40 p-5 transition hover:border-rail-amber/20 hover:bg-rail-surface/60"
               >
                 <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rail-amber/10 text-rail-amber transition group-hover:bg-rail-amber/15">
                   <Icon className="h-4 w-4" />
@@ -83,7 +83,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────── */}
-      <footer className="mt-auto border-t border-white/[0.06] px-5 py-6 text-center">
+      <footer className="mt-auto border-t border-rail-border px-5 py-6 text-center">
         <p className="text-xs text-rail-cream/25">
           {t('footer')}
         </p>

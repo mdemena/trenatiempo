@@ -7,6 +7,7 @@ import { User, Globe, Bell, Star, LogOut } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { signOut } from '@/lib/supabase/auth-helpers'
+import { useUserStore } from '@/store/userStore'
 import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -35,9 +36,9 @@ function Section({
 function ComingSoonSlot({ label }: { label: string }) {
   const t = useTranslations('profile')
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-white/4 px-4 py-3">
+    <div className="flex items-center justify-between rounded-2xl bg-rail-surface/40 px-4 py-3">
       <span className="text-sm text-rail-cream/40">{label}</span>
-      <span className="rounded-full bg-white/8 px-2.5 py-0.5 text-[10px] font-medium text-rail-cream/30">
+      <span className="rounded-full bg-rail-surface px-2.5 py-0.5 text-[10px] font-medium text-rail-cream/30">
         {t('comingSoon')}
       </span>
     </div>
@@ -59,7 +60,7 @@ function SignOutButton() {
         <div className="flex gap-2">
           <button
             onClick={() => setConfirming(false)}
-            className="flex-1 rounded-xl bg-white/8 py-2.5 text-sm text-rail-cream/60 transition hover:bg-white/12"
+            className="flex-1 rounded-xl bg-rail-surface py-2.5 text-sm text-rail-cream/60 transition hover:bg-white/12 light:hover:bg-black/10"
           >
             {t('common.cancel')}
           </button>
@@ -68,10 +69,11 @@ function SignOutButton() {
               setLoading(true)
               try {
                 await signOut()
-                router.replace('/')
-              } finally {
-                setLoading(false)
+              } catch {
+                // Even if signOut fails locally, clear store and navigate
+                useUserStore.getState().clearUser()
               }
+              router.replace('/')
             }}
             disabled={loading}
             className="flex flex-1 items-center justify-center rounded-xl bg-red-500/15 py-2.5 text-sm font-medium text-red-400 transition hover:bg-red-500/25 disabled:opacity-50"
@@ -90,7 +92,7 @@ function SignOutButton() {
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="flex w-full items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm text-red-400/80 transition hover:bg-red-500/8 hover:text-red-400"
+      className="flex w-full items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3 text-sm text-red-400/80 transition hover:bg-red-500/8 hover:text-red-400"
     >
       <LogOut className="h-4 w-4 shrink-0" />
       {t('auth.logout')}

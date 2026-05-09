@@ -55,7 +55,7 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
       onClick={() => router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
-      className="flex w-full items-center gap-3 rounded-2xl bg-[#0F1E35] px-4 py-3.5 text-left transition hover:bg-white/5 active:scale-[0.98]"
+      className="flex w-full items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3.5 text-left transition hover:bg-white/5 active:scale-[0.98] light:hover:bg-black/5"
     >
       {/* Line badge + train number stacked */}
       <div className="flex shrink-0 flex-col items-start gap-1">

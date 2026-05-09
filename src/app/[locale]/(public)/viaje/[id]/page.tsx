@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { ArrowLeft } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { ViajeClient } from '@/components/viaje/ViajeClient'
-import { BottomNav } from '@/components/layout/BottomNav'
 import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
 
 /** Extracts numeric train reference and line code from a GTFS tripId.
@@ -39,9 +38,9 @@ export default async function ViajePage({
   const shortLine = lineCode ? routeShortName(lineCode) : null
 
   return (
-    <div className="flex min-h-dvh flex-col bg-rail-navy pb-20">
-      {/* Sticky header */}
-      <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-white/5 bg-rail-navy/95 px-4 py-3 backdrop-blur-sm">
+    <div className="flex min-h-dvh flex-col bg-rail-navy">
+      {/* Header */}
+      <header className="flex items-center gap-3 border-b border-rail-border bg-rail-navy/95 px-4 py-3">
         <Link
           href={stopId ? `/estacion/${stopId}` : '/'}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition hover:bg-white/5"
@@ -73,8 +72,6 @@ export default async function ViajePage({
 
       {/* Client section — hook + components */}
       <ViajeClient tripId={id} userStopId={stopId} />
-
-      <BottomNav />
     </div>
   )
 }

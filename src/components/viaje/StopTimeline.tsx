@@ -94,7 +94,7 @@ function StopDot({
   const size = isTerminus ? 'h-[1.05rem] w-[1.05rem]' : 'h-3 w-3'
   const userRing =
     isUser && estado !== 'actual'
-      ? 'ring-2 ring-rail-amber/50 ring-offset-[3px] ring-offset-[#0A1628]'
+      ? 'ring-2 ring-rail-amber/50 ring-offset-[3px] ring-offset-rail-navy'
       : ''
 
   if (estado === 'actual') {
@@ -103,13 +103,13 @@ function StopDot({
         data-pulse="true"
         animate={reduce ? {} : { scale: [1, 1.6, 1], opacity: [1, 0.45, 1] }}
         transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-        className={cn('rounded-full bg-rail-amber', size, isUser ? 'ring-2 ring-rail-amber/50 ring-offset-[3px] ring-offset-[#0A1628]' : '')}
+        className={cn('rounded-full bg-rail-amber', size, isUser ? 'ring-2 ring-rail-amber/50 ring-offset-[3px] ring-offset-rail-navy' : '')}
       />
     )
   }
 
   if (estado === 'pasada') {
-    return <div className={cn('rounded-full bg-white/20', size)} />
+    return <div className={cn('rounded-full bg-rail-cream/20 light:bg-rail-cream/10', size)} />
   }
 
   // futura
@@ -207,7 +207,7 @@ function StopRow({
           <div
             className={cn(
               'w-px flex-1',
-              estado === 'pasada' ? 'bg-white/8' : 'bg-white/15'
+              estado === 'pasada' ? 'bg-rail-cream/8' : 'bg-rail-cream/15'
             )}
           />
         )}
@@ -272,10 +272,10 @@ function TrainInTransitRow() {
           transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
           className="z-10 flex h-7 w-7 items-center justify-center rounded-full bg-rail-amber shadow-lg shadow-rail-amber/25 ring-4 ring-rail-amber/15"
         >
-          <Train className="h-3.5 w-3.5 text-[#0A1628]" />
+          <Train className="h-3.5 w-3.5 text-rail-navy" />
         </motion.div>
         {/* Bottom stub connecting to next stop's line */}
-        <div className="h-2 w-px bg-white/15" />
+        <div className="h-2 w-px bg-rail-cream/15" />
       </div>
       <p className="pl-0.5 text-[12px] font-medium text-rail-amber/80">{t('inTransit')}</p>
     </div>

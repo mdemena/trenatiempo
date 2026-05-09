@@ -42,7 +42,7 @@ export function TripHeader({ tren, userStopId, stale }: TripHeaderProps) {
   const shortName = routeShortName(tren.routeId)
 
   return (
-    <div className="space-y-3 border-b border-white/5 px-4 py-4">
+    <div className="space-y-3 border-b border-rail-border px-4 py-4">
       {/* Origin → Destination */}
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
@@ -92,7 +92,7 @@ export function TripHeader({ tren, userStopId, stale }: TripHeaderProps) {
           <button
             disabled
             aria-label={t('favorites.addTrip')}
-            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/5 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F5A623]"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/5 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-amber"
           >
             <Star className="h-4 w-4 text-rail-cream/50" />
           </button>

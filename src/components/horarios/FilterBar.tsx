@@ -21,7 +21,7 @@ export function FilterBar({ value, onChange }: FilterBarProps) {
 
   return (
     <div className="sticky top-0 z-30 bg-rail-navy/95 backdrop-blur-sm px-4 py-3">
-      <div className="relative flex gap-1 rounded-xl bg-white/5 p-1">
+      <div className="relative flex gap-1 rounded-xl bg-rail-surface p-1">
         {TABS.map((tab) => (
           <button
             key={tab.key}

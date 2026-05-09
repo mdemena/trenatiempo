@@ -5,6 +5,8 @@ import { Syne, DM_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { SessionProvider } from '@/components/auth/SessionProvider'
+import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import { LayoutShell } from '@/components/layout/LayoutShell'
 import { GoogleTagManager } from '@/components/analytics/GoogleTagManager'
 import './globals.css'
 
@@ -69,7 +71,11 @@ export default async function LocaleLayout({
         <GoogleTagManager />
         <NextIntlClientProvider messages={messages}>
           <SessionProvider>
-            {children}
+            <ThemeProvider>
+              <LayoutShell>
+                {children}
+              </LayoutShell>
+            </ThemeProvider>
           </SessionProvider>
         </NextIntlClientProvider>
       </body>

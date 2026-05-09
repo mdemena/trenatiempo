@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { PerfilClient } from '@/components/perfil/PerfilClient'
-import { BottomNav } from '@/components/layout/BottomNav'
 
 export async function generateMetadata({
   params,
@@ -36,9 +35,8 @@ export default async function PerfilPage() {
     .single()
 
   return (
-    <div className="flex min-h-dvh flex-col bg-rail-navy pb-20">
+    <div className="flex min-h-dvh flex-col bg-rail-navy">
       <PerfilClient user={user} profile={profile} />
-      <BottomNav />
     </div>
   )
 }

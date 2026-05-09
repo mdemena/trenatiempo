@@ -27,7 +27,7 @@ export function GoogleButton({ returnUrl }: GoogleButtonProps) {
       type="button"
       onClick={handleClick}
       disabled={loading}
-      className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white/8 px-4 py-3 text-sm font-medium text-rail-cream/80 transition hover:bg-white/12 active:scale-[0.98] disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-3 rounded-2xl bg-rail-surface px-4 py-3 text-sm font-medium text-rail-cream/80 transition hover:bg-white/12 light:hover:bg-black/10 active:scale-[0.98] disabled:opacity-50"
     >
       {loading ? (
         <span className="h-5 w-5 animate-spin rounded-full border-2 border-rail-cream/30 border-t-rail-cream/70" />
@@ -61,9 +61,9 @@ export function GoogleButton({ returnUrl }: GoogleButtonProps) {
 export function OrSeparator() {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-px flex-1 bg-white/8" />
+      <div className="h-px flex-1 bg-rail-border" />
       <span className="text-xs text-rail-cream/30">o</span>
-      <div className="h-px flex-1 bg-white/8" />
+      <div className="h-px flex-1 bg-rail-border" />
     </div>
   )
 }

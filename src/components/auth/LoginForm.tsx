@@ -75,8 +75,8 @@ export function LoginForm({ returnUrl }: LoginFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={cn(
-            'w-full rounded-2xl bg-white/6 px-4 py-3 text-sm text-rail-cream placeholder:text-rail-cream/25 outline-none transition focus:bg-white/8 focus:ring-1',
-            fieldErrors.email ? 'ring-1 ring-red-400/60' : 'focus:ring-white/15'
+            'w-full rounded-2xl bg-white/6 px-4 py-3 text-sm text-rail-cream placeholder:text-rail-cream/25 outline-none transition focus:bg-white/8 focus:ring-1 light:bg-black/5 light:focus:bg-black/8',
+            fieldErrors.email ? 'ring-1 ring-red-400/60' : 'focus:ring-white/15 light:focus:ring-black/10'
           )}
         />
         {fieldErrors.email && (
@@ -96,8 +96,8 @@ export function LoginForm({ returnUrl }: LoginFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={cn(
-              'w-full rounded-2xl bg-white/6 px-4 py-3 pr-11 text-sm text-rail-cream placeholder:text-rail-cream/25 outline-none transition focus:bg-white/8 focus:ring-1',
-              fieldErrors.password ? 'ring-1 ring-red-400/60' : 'focus:ring-white/15'
+              'w-full rounded-2xl bg-white/6 px-4 py-3 pr-11 text-sm text-rail-cream placeholder:text-rail-cream/25 outline-none transition focus:bg-white/8 focus:ring-1 light:bg-black/5 light:focus:bg-black/8',
+              fieldErrors.password ? 'ring-1 ring-red-400/60' : 'focus:ring-white/15 light:focus:ring-black/10'
             )}
           />
           <button

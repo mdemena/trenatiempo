@@ -51,8 +51,9 @@ export async function signInWithGoogle(returnUrl?: string) {
 
 export async function signOut() {
   const supabase = createClient()
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
+  await supabase.auth.signOut()
+  // Clear server httpOnly cookies
+  await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
   useUserStore.getState().clearUser()
 }
 
