@@ -91,10 +91,14 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
         return
       }
 
-      const swRegistration = await navigator.serviceWorker.getRegistration()
+      let swRegistration = await navigator.serviceWorker.getRegistration()
       if (!swRegistration) {
-        setStatus('idle')
-        return
+        try {
+          swRegistration = await navigator.serviceWorker.register('/sw.js')
+        } catch {
+          setStatus('idle')
+          return
+        }
       }
       const sub = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
