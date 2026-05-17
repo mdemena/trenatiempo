@@ -4,9 +4,11 @@ import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { syncLocaleOnLogin } from '@/lib/supabase/auth-helpers'
 import { useUserStore } from '@/store/userStore'
+import { useLoadFavorites } from '@/hooks/useFavorites'
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, clearUser } = useUserStore()
+  useLoadFavorites()
 
   useEffect(() => {
     const supabase = createClient()

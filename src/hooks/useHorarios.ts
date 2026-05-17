@@ -81,14 +81,22 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
           throw new Error('All feeds failed')
         }
 
-        // Dedup by tripId: the same train can appear in both cercanías and MD responses
-        // when gtfs_stop_times contains cercanías data only (MD not yet seeded).
+        // Dedup: the same train can appear in both feeds with different
+        // tripId and routeId (e.g. routeId "R11" in cercanías vs "MD" in
+        // the MD feed). Use destino+departure as composite key when
+        // available, fall back to routeId+departure.
         const seenTripIds = new Set<string>()
+        const seenComposite = new Set<string>()
         merged = ok
           .sort((a, b) => a.salidaProgramada.localeCompare(b.salidaProgramada))
           .filter((t) => {
             if (seenTripIds.has(t.tripId)) return false
             seenTripIds.add(t.tripId)
+            const compositeKey = t.destino
+              ? `${t.salidaProgramada}:${t.destino}`
+              : `${t.salidaProgramada}:${t.routeId}`
+            if (seenComposite.has(compositeKey)) return false
+            seenComposite.add(compositeKey)
             return true
           })
         updatedAt = latestAt

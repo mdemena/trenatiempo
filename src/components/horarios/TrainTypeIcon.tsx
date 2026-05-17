@@ -17,9 +17,8 @@ export function TrainTypeIcon({ tipo }: TrainTypeIconProps) {
 
   // MD / Regional
   return (
-    <span className="flex items-center justify-center gap-0.5 text-[10px] font-semibold uppercase tracking-tight text-rail-amber/80 light:text-rail-amber">
+    <span className="flex items-center justify-center gap-0.5 text-[10px] text-rail-amber/60 light:text-rail-amber">
       <TrainTrack className="h-3 w-3" />
-      <span>MD</span>
     </span>
   )
 }

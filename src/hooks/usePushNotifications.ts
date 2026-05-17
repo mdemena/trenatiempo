@@ -17,8 +17,12 @@ export function usePushNotifications() {
     setLoading(true)
     setError(null)
     try {
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
+      const swRegistration = await navigator.serviceWorker.getRegistration()
+      if (!swRegistration) {
+        setError('Push no disponible sin service worker')
+        return
+      }
+      const subscription = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(
           process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!

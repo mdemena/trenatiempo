@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,30 +17,6 @@ type FavoriteButtonProps = {
   name?: string
 } & (StationFav | TripFav)
 
-// ─── Hook: fetch favorite stations on mount when user logs in ────────────────
-
-function useLoadFavorites() {
-  const user = useUserStore((s) => s.user)
-  const { loaded, loading, setStationIds, setTrips, setLoading } = useFavoritesStore()
-
-  useEffect(() => {
-    if (!user || loaded || loading) return
-    setLoading(true)
-
-    Promise.all([
-      fetch('/api/favorites/stations').then((r) => (r.ok ? r.json() : null)),
-      fetch('/api/favorites/trips').then((r) => (r.ok ? r.json() : null)),
-    ])
-      .then(([stations, trips]) => {
-        if (stations?.favorites) setStationIds(stations.favorites)
-        if (trips?.favorites) setTrips(trips.favorites)
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
-}
-
 // ─── FavoriteButton ──────────────────────────────────────────────────────────
 
 export function FavoriteButton(props: FavoriteButtonProps) {
@@ -56,8 +32,6 @@ export function FavoriteButton(props: FavoriteButtonProps) {
   } = useFavoritesStore()
   const [loading, setBtnLoading] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
-
-  useLoadFavorites()
 
   const isStation = props.type === 'station'
   const id = props.id

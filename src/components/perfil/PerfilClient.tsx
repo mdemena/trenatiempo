@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { User, Globe, Bell, Star, LogOut } from 'lucide-react'
+import { LogOut, ChevronRight, MapPin, Train, BellRing } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { signOut } from '@/lib/supabase/auth-helpers'
 import { useUserStore } from '@/store/userStore'
+import { useFavoritesStore } from '@/store/favoritesStore'
 import { Spinner } from '@/components/ui/Spinner'
 import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher'
 
@@ -32,17 +33,36 @@ function Section({
   )
 }
 
-// ─── Coming-soon slot ─────────────────────────────────────────────────────────
+// ─── Favorite count row ───────────────────────────────────────────────────────
 
-function ComingSoonSlot({ label }: { label: string }) {
-  const t = useTranslations('profile')
+function FavCountRow({
+  icon,
+  label,
+  count,
+  href,
+}: {
+  icon: React.ReactNode
+  label: string
+  count: number
+  href: string
+}) {
+  const router = useRouter()
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-rail-surface/40 px-4 py-3">
-      <span className="text-sm text-rail-cream/40">{label}</span>
-      <span className="rounded-full bg-rail-surface px-2.5 py-0.5 text-[10px] font-medium text-rail-cream/30">
-        {t('comingSoon')}
+    <button
+      onClick={() => router.push(href)}
+      className="flex w-full items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3 text-left transition hover:bg-white/5"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-amber/10 text-rail-amber">
+        {icon}
       </span>
-    </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-rail-cream">{label}</p>
+        <p className="mt-0.5 text-[11px] text-rail-cream/35">
+          {count === 0 ? '0' : `${count}`}
+        </p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-rail-cream/20" />
+    </button>
   )
 }
 
@@ -112,6 +132,21 @@ export function PerfilClient({ user, profile }: PerfilClientProps) {
   const t = useTranslations('profile')
   const displayName = profile?.full_name ?? user.email ?? '–'
   const initials = (profile?.full_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()
+  const stationCount = useFavoritesStore((s) => s.stationIds.size)
+  const tripCount = useFavoritesStore((s) => s.trips.length)
+
+  const [pushCount, setPushCount] = useState(0)
+  const [pushFetched, setPushFetched] = useState(false)
+
+  useEffect(() => {
+    if (!user || pushFetched) return
+    setPushFetched(true)
+
+    fetch('/api/push/subscriptions')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setPushCount(data.length))
+      .catch(() => {})
+  }, [user, pushFetched])
 
   return (
     <div className="space-y-6 py-6">
@@ -141,17 +176,32 @@ export function PerfilClient({ user, profile }: PerfilClientProps) {
         <LocaleSwitcher />
       </Section>
 
-      {/* Favorites section — coming soon */}
+      {/* Favorites section */}
       <Section title={t('favorites')}>
         <div className="space-y-2">
-          <ComingSoonSlot label={t('savedStations')} />
-          <ComingSoonSlot label={t('savedTrips')} />
+          <FavCountRow
+            icon={<MapPin className="h-4 w-4" />}
+            label={t('savedStations')}
+            count={stationCount}
+            href="/favoritos"
+          />
+          <FavCountRow
+            icon={<Train className="h-4 w-4" />}
+            label={t('savedTrips')}
+            count={tripCount}
+            href="/favoritos"
+          />
         </div>
       </Section>
 
-      {/* Notifications section — coming soon */}
+      {/* Notification subscriptions section */}
       <Section title={t('notifications')}>
-        <ComingSoonSlot label={t('pushEnabled')} />
+        <FavCountRow
+          icon={<BellRing className="h-4 w-4" />}
+          label={t('pushEnabled')}
+          count={pushCount}
+          href="/alertas"
+        />
       </Section>
 
       {/* Sign out */}

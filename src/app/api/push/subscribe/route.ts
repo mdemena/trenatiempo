@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   const { subscription, tripCode } = parsed.data
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('push_subscriptions')
     .upsert(
       {
@@ -47,17 +47,14 @@ export async function POST(request: Request) {
         auth: subscription.keys.auth,
         trip_code: tripCode ?? null,
       },
-      { onConflict: 'endpoint' }
+      { onConflict: 'user_id,endpoint' }
     )
-    .select()
-    .single()
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const isNew = data.created_at === data.created_at // upsert always returns row
-  return NextResponse.json({ ok: true }, { status: isNew ? 201 : 200 })
+  return NextResponse.json({ ok: true })
 }
 
 // ─── DELETE /api/push/subscribe ───────────────────────────────────────────────

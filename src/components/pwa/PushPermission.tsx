@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Bell, BellOff, BellRing } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
@@ -29,16 +29,34 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
 
   const [status, setStatus] = useState<Status>('idle')
   const [endpoint, setEndpoint] = useState<string | null>(null)
+  const fetchedRef = useRef(false)
 
-  // Check existing subscription on mount
+  // Check subscription server-side on mount
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
 
-    const stored = localStorage.getItem(`push_sub_${tripCode}`)
-    if (stored) setStatus('subscribed')
+    if (Notification.permission === 'denied') {
+      setStatus('denied')
+      return
+    }
 
-    if (Notification.permission === 'denied') setStatus('denied')
-  }, [tripCode])
+    if (!user || fetchedRef.current) return
+    fetchedRef.current = true
+
+    fetch('/api/push/subscriptions')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((subs) => {
+        const match = subs.find(
+          (s: { trip_code: string; endpoint: string }) => s.trip_code === tripCode
+        )
+        if (match) {
+          setEndpoint(match.endpoint)
+          setStatus('subscribed')
+          localStorage.setItem(`push_sub_${tripCode}`, match.endpoint)
+        }
+      })
+      .catch((e) => console.error('Fetch subscriptions failed:', e))
+  }, [tripCode, user])
 
   async function handleToggle() {
     if (!user) {
@@ -46,12 +64,16 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
       return
     }
 
-    if (status === 'subscribed' && endpoint) {
-      await fetch('/api/push/subscribe', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint }),
-      })
+    if (status === 'subscribed') {
+      // Unsubscribe using endpoint from state or localStorage
+      const ep = endpoint ?? localStorage.getItem(`push_sub_${tripCode}`)
+      if (ep) {
+        await fetch('/api/push/subscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: ep }),
+        })
+      }
       localStorage.removeItem(`push_sub_${tripCode}`)
       setStatus('idle')
       setEndpoint(null)
@@ -69,8 +91,12 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
         return
       }
 
-      const registration = await navigator.serviceWorker.ready
-      const sub = await registration.pushManager.subscribe({
+      const swRegistration = await navigator.serviceWorker.getRegistration()
+      if (!swRegistration) {
+        setStatus('idle')
+        return
+      }
+      const sub = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(
           process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
@@ -87,7 +113,8 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
       localStorage.setItem(`push_sub_${tripCode}`, ep)
       setEndpoint(ep)
       setStatus('subscribed')
-    } catch {
+    } catch (err) {
+      console.error('Push subscribe failed:', err)
       setStatus('idle')
     }
   }

@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
 import type { HorarioEntry } from '@/lib/renfe/types'
 import { TrainTypeIcon } from './TrainTypeIcon'
+import { FavoriteButton } from '@/components/favorites/FavoriteButton'
+import { PushPermission } from '@/components/pwa/PushPermission'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -51,12 +53,15 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
   const originalTime = tren.salidaReal ? gtfsToHHMM(tren.salidaProgramada) : null
 
   return (
-    <motion.button
+    <motion.div
+      role="button"
+      tabIndex={0}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
       onClick={() => router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
-      className="flex w-full items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3.5 text-left transition hover:bg-white/5 active:scale-[0.98] light:hover:bg-black/5"
+      onKeyDown={(e) => e.key === 'Enter' && router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
+      className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3.5 text-left transition hover:bg-white/5 active:scale-[0.98] light:hover:bg-black/5"
     >
       {/* Line badge + type badge + train number stacked */}
       <div className="flex shrink-0 flex-col items-start gap-1">
@@ -118,7 +123,13 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
         )}
       </div>
 
+      {/* Notification bell + Favorite button */}
+      <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+        <PushPermission tripCode={tren.tripId} />
+        <FavoriteButton type="trip" id={tren.tripId} lineName={tren.routeId} />
+      </div>
+
       <ChevronRight className="h-4 w-4 shrink-0 text-rail-cream/20" />
-    </motion.button>
+    </motion.div>
   )
 }

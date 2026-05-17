@@ -3,6 +3,11 @@ import type { CookieOptions } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import type { Database } from '@/types/database'
 
+export interface SessionUser {
+  id: string
+  email?: string
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -25,9 +30,14 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data, error } = await supabase.auth.getClaims()
+
+  const claims = data?.claims
+
+  const user: SessionUser | null =
+    !error && claims?.sub
+      ? { id: claims.sub, email: claims.email }
+      : null
 
   return { supabaseResponse, user, supabase }
 }
