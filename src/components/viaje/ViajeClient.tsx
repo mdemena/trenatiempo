@@ -81,14 +81,20 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {tren.estado === 'cancelado' && <CancelledBanner />}
+      {tren.estado === 'cancelado' && (
+        <div className="sticky top-0 z-10 bg-rail-navy">
+          <CancelledBanner />
+        </div>
+      )}
 
-      <TripHeader
-        tren={tren}
-        userStopId={userStopId}
-        stale={stale}
-        updatedAt={updatedAt}
-      />
+      <div className="sticky top-0 z-10 bg-rail-navy">
+        <TripHeader
+          tren={tren}
+          userStopId={userStopId}
+          stale={stale}
+          updatedAt={updatedAt}
+        />
+      </div>
 
       <div className="flex-1 overflow-y-auto">
         <StopTimeline
