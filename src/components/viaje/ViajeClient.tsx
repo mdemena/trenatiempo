@@ -1,10 +1,20 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-import { AlertCircle } from 'lucide-react'
+import { useTranslations, useLocale } from 'next-intl'
+import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
 import { useViaje } from '@/hooks/useViaje'
-import { TripHeader } from './TripHeader'
+import type { Tren } from '@/lib/renfe/types'
 import { StopTimeline } from './StopTimeline'
+import { FavoriteButton } from '@/components/favorites/FavoriteButton'
+import { PushPermission } from '@/components/pwa/PushPermission'
+import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
+import { formatTime } from '@/lib/utils'
+
+function parseTripId(tripId: string): { numTren: string | null; lineCode: string | null } {
+  const match = tripId.match(/X(\d+)([A-Za-z0-9]+)$/)
+  return { numTren: match?.[1] ?? null, lineCode: match?.[2] ?? null }
+}
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -59,8 +69,94 @@ function ViajeError({ onRetry }: { onRetry: () => void }) {
 function CancelledBanner() {
   const t = useTranslations('viaje')
   return (
-    <div className="mx-4 my-3 rounded-2xl bg-red-500/10 px-4 py-3 ring-1 ring-red-500/25">
+    <div className="mx-4 mb-3 rounded-2xl bg-red-500/10 px-4 py-3 ring-1 ring-red-500/25">
       <p className="text-sm font-semibold text-red-400">{t('cancelledBanner')}</p>
+    </div>
+  )
+}
+
+// ─── Trip info bar ────────────────────────────────────────────────────────────
+
+function TripInfoBar({ tren, userStopId, stale }: {
+  tren: Tren
+  userStopId?: string
+  stale: boolean
+}) {
+  const t = useTranslations()
+  const locale = useLocale()
+
+  const origin = tren.paradas[0]
+  const destination = tren.paradas[tren.paradas.length - 1]
+  const userStop = userStopId
+    ? tren.paradas.find((p) => p.stopId === userStopId)
+    : undefined
+
+  const delayMin = Math.round((tren.retrasoSegundos ?? 0) / 60)
+  const firstDep = origin?.salidaReal ?? origin?.salidaProgramada
+  const lastArr = destination?.llegadaReal ?? destination?.llegadaProgramada
+  const durationMin = firstDep && lastArr ? Math.round((lastArr - firstDep) / 60) : null
+  const userDepTs = userStop?.salidaReal ?? userStop?.salidaProgramada
+  const userDepTime = userDepTs ? formatTime(userDepTs, locale) : null
+
+  return (
+    <div className="space-y-3 px-4 pb-4">
+      {/* Status row */}
+      <div className="flex flex-wrap items-center gap-2">
+        {tren.estado === 'cancelado' ? (
+          <span className="text-sm font-semibold text-red-400">{t('horarios.cancelled')}</span>
+        ) : tren.estado === 'retrasado' && delayMin > 0 ? (
+          <span className="flex items-center gap-1.5 text-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-rail-amber" />
+            <span className="text-rail-amber">{t('horarios.delayed', { minutes: delayMin })}</span>
+          </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-rail-green" />
+            <span className="text-rail-green/80">{t('horarios.onTime')}</span>
+          </span>
+        )}
+      </div>
+
+      {/* Origin → Destination */}
+      <div className="flex items-center gap-1.5 text-sm">
+        <span className="max-w-[40%] truncate text-rail-cream/45">
+          {origin?.nombre || origin?.stopId || '–'}
+        </span>
+        <span className="shrink-0 text-rail-cream/20">→</span>
+        <span className="min-w-0 flex-1 truncate font-medium text-rail-cream/75">
+          {destination?.nombre || destination?.stopId || '–'}
+        </span>
+      </div>
+
+      {/* Times + Duration */}
+      {(userDepTime || durationMin) && (
+        <div className="flex flex-wrap items-center gap-4 text-xs text-rail-cream/40">
+          {userDepTime && (
+            <div>
+              <span className="uppercase tracking-wide">{t('viaje.origin')}</span>
+              <span className="ml-2 font-mono text-rail-cream/65">{userDepTime}</span>
+            </div>
+          )}
+          {durationMin !== null && (
+            <div>
+              <span className="uppercase tracking-wide">{t('viaje.duration')}</span>
+              <span className="ml-2 font-mono text-rail-cream/65">
+                {Math.floor(durationMin / 60) > 0
+                  ? `${Math.floor(durationMin / 60)}h ${durationMin % 60}m`
+                  : `${durationMin} min`}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Stale indicator */}
+      {stale && (
+        <p className="flex items-center gap-1.5 text-[11px] text-rail-amber/50">
+          <RefreshCw className="h-3 w-3 animate-spin" />
+          {t('horarios.reconnecting')}
+        </p>
+      )}
     </div>
   )
 }
@@ -73,36 +169,78 @@ interface ViajeClientProps {
 }
 
 export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
-  const { tren, loading, error, stale, updatedAt, refresh } = useViaje(tripId)
-
-  if (loading && !tren) return <div className="flex min-h-0 flex-1"><ViajeLoadingSkeleton /></div>
-  if (error && !tren) return <div className="flex min-h-0 flex-1"><ViajeError onRetry={refresh} /></div>
-  if (!tren) return null
+  const { tren, loading, error, stale, refresh } = useViaje(tripId)
+  const { numTren, lineCode } = parseTripId(tripId)
+  const { bg: badgeBg, text: badgeText } = getRouteColors(lineCode ?? '')
+  const shortLine = lineCode ? routeShortName(lineCode) : null
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {tren.estado === 'cancelado' && (
-        <div className="sticky top-0 z-10 bg-rail-navy">
-          <CancelledBanner />
+      {/* Fixed header — always visible */}
+      <header className="shrink-0 border-b border-rail-border bg-rail-navy/95">
+        {/* Top row: back + badge + train ref + actions */}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Link
+            href={userStopId ? `/estacion/${userStopId}` : '/'}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition hover:bg-white/5"
+            aria-label="Volver"
+          >
+            <ArrowLeft className="h-5 w-5 text-rail-cream/70" />
+          </Link>
+
+          {shortLine && (
+            <span
+              className="shrink-0 inline-flex min-w-[2.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[11px] font-bold leading-none tracking-wide"
+              style={{ backgroundColor: badgeBg, color: badgeText }}
+            >
+              {shortLine}
+            </span>
+          )}
+
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-rail-cream/35">
+              Tren
+            </p>
+            <p className="truncate font-display text-base font-bold leading-tight text-rail-cream">
+              {numTren ?? tripId}
+            </p>
+          </div>
+
+          {tren && (
+            <div className="flex shrink-0 gap-1">
+              <FavoriteButton type="trip" id={tren.id} lineName={tren.routeId} />
+              <PushPermission tripCode={tren.id} />
+            </div>
+          )}
+        </div>
+
+        {/* Trip info data */}
+        {tren && <TripInfoBar tren={tren} userStopId={userStopId} stale={stale} />}
+
+        {/* Cancelled banner inside header */}
+        {tren?.estado === 'cancelado' && <CancelledBanner />}
+      </header>
+
+      {/* Content area — only StopTimeline scrolls */}
+      {loading && !tren && (
+        <div className="flex min-h-0 flex-1">
+          <ViajeLoadingSkeleton />
         </div>
       )}
-
-      <div className="sticky top-0 z-10 bg-rail-navy">
-        <TripHeader
-          tren={tren}
-          userStopId={userStopId}
-          stale={stale}
-          updatedAt={updatedAt}
-        />
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <StopTimeline
-          paradas={tren.paradas}
-          posicionActual={tren.posicionActual}
-          userStopId={userStopId}
-        />
-      </div>
+      {error && !tren && (
+        <div className="flex min-h-0 flex-1">
+          <ViajeError onRetry={refresh} />
+        </div>
+      )}
+      {tren && (
+        <div className="flex-1 overflow-y-auto">
+          <StopTimeline
+            paradas={tren.paradas}
+            posicionActual={tren.posicionActual}
+            userStopId={userStopId}
+          />
+        </div>
+      )}
     </div>
   )
 }
