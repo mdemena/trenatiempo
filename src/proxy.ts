@@ -24,7 +24,7 @@ function hasSessionCookie(request: NextRequest): boolean {
   return request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Las rutas de API no necesitan auth ni locale
