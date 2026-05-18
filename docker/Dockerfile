@@ -1,7 +1,8 @@
 # ─── Stage 1: Dependencies ─────────────────────────────────────────────────────
 FROM node:22-alpine AS deps
 
-RUN apk add --no-cache libc6-compat pnpm
+RUN apk add --no-cache libc6-compat && \
+    npm install -g pnpm
 
 WORKDIR /app
 
@@ -12,7 +13,8 @@ RUN pnpm install --frozen-lockfile
 # ─── Stage 2: Builder ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
 
-RUN apk add --no-cache libc6-compat pnpm
+RUN apk add --no-cache libc6-compat && \
+    npm install -g pnpm
 
 WORKDIR /app
 
@@ -27,7 +29,7 @@ RUN pnpm build
 # ─── Stage 3: Runner ───────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini wget
 
 WORKDIR /app
 
