@@ -76,6 +76,7 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   async headers() {
     return [
       {
