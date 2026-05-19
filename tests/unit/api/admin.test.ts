@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { NextResponse } from 'next/server'
 
 // ─── Shared mock state ────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ const mockAdminClient = {
 const ADMIN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const OTHER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 
-let mockRequireAdmin = vi.fn()
+const mockRequireAdmin = vi.fn()
 
 vi.mock('@/lib/supabase/admin-guard', () => ({
   get requireAdmin() {
@@ -61,7 +62,6 @@ function adminGuardOk(requesterId = ADMIN_ID) {
 }
 
 function adminGuardFail(status: 401 | 403) {
-  const { NextResponse } = require('next/server')
   mockRequireAdmin.mockResolvedValue({
     ok: false,
     response: NextResponse.json(
