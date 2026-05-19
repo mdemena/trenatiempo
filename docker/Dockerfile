@@ -1,8 +1,11 @@
+# syntax=docker/dockerfile:1
 # ─── Stage 1: Dependencies ─────────────────────────────────────────────────────
 FROM node:22-alpine AS deps
 
+ARG PNPM_VERSION=10.33.2
+
 RUN apk add --no-cache libc6-compat && \
-    npm install -g pnpm
+    npm install -g pnpm@${PNPM_VERSION}
 
 WORKDIR /app
 
@@ -13,13 +16,27 @@ RUN pnpm install --frozen-lockfile
 # ─── Stage 2: Builder ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
 
+ARG PNPM_VERSION=10.33.2
+
 RUN apk add --no-cache libc6-compat && \
-    npm install -g pnpm
+    npm install -g pnpm@${PNPM_VERSION}
 
 WORKDIR /app
 
+# Config files for next build
+COPY next.config.ts tsconfig.json postcss.config.mjs ./
+COPY src/i18n ./src/i18n
+COPY messages ./messages
+COPY public ./public
+COPY package.json ./
+
+# Dependencies
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+
+# Source code
+COPY src ./src
+COPY scripts ./scripts
+COPY eslint.config.mjs ./
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
@@ -41,6 +58,7 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+# Static assets
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/messages ./messages
 
@@ -51,6 +69,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 ENTRYPOINT ["tini", "--"]
 
