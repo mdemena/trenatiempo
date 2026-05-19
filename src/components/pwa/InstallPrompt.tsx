@@ -29,19 +29,19 @@ export function InstallPrompt() {
 
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showAndroid, setShowAndroid] = useState(false)
-  const [showIOS, setShowIOS] = useState(false)
+  const [showIOS, setShowIOS] = useState(() => {
+    if (typeof window === 'undefined') return false
+    if (isInStandaloneMode()) return false
+    const dismissedUntil = localStorage.getItem(DISMISSED_KEY)
+    if (dismissedUntil && Date.now() < Number(dismissedUntil)) return false
+    return isIOS()
+  })
 
   useEffect(() => {
     if (isInStandaloneMode()) return
 
-    // Check if dismissed recently
     const dismissedUntil = localStorage.getItem(DISMISSED_KEY)
     if (dismissedUntil && Date.now() < Number(dismissedUntil)) return
-
-    if (isIOS()) {
-      setShowIOS(true)
-      return
-    }
 
     const handler = (e: Event) => {
       e.preventDefault()

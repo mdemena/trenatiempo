@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useReducer } from 'react'
 import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'motion/react'
 import { MapPin, Loader2, RotateCcw, Search } from 'lucide-react'
@@ -57,6 +57,53 @@ function HighlightText({ text, query }: { text: string; query: string }) {
   )
 }
 
+// ─── Search state reducer ─────────────────────────────────────────────────────
+
+type SearchState = {
+  results: Estacion[]
+  loading: boolean
+  isOpen: boolean
+  activeIndex: number
+}
+
+const initialSearchState: SearchState = {
+  results: [],
+  loading: false,
+  isOpen: false,
+  activeIndex: -1,
+}
+
+type SearchAction =
+  | { type: 'FETCH_START' }
+  | { type: 'FETCH_DONE'; results: Estacion[] }
+  | { type: 'FETCH_ERROR' }
+  | { type: 'GPS_DONE' }
+  | { type: 'RESET' }
+  | { type: 'OPEN' }
+  | { type: 'CLOSE' }
+  | { type: 'SET_ACTIVE_INDEX'; index: number }
+
+function searchReducer(state: SearchState, action: SearchAction): SearchState {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { ...state, loading: true }
+    case 'FETCH_DONE':
+      return { results: action.results, loading: false, isOpen: true, activeIndex: -1 }
+    case 'FETCH_ERROR':
+      return { ...state, loading: false }
+    case 'GPS_DONE':
+      return { ...state, isOpen: true, activeIndex: -1 }
+    case 'RESET':
+      return { ...initialSearchState }
+    case 'OPEN':
+      return { ...state, isOpen: true }
+    case 'CLOSE':
+      return { ...state, isOpen: false, activeIndex: -1 }
+    case 'SET_ACTIVE_INDEX':
+      return { ...state, activeIndex: action.index }
+  }
+}
+
 // ─── StationSearch ────────────────────────────────────────────────────────────
 
 export interface StationSearchProps {
@@ -66,10 +113,7 @@ export interface StationSearchProps {
 export function StationSearch({ onSelect }: StationSearchProps) {
   const t = useTranslations()
   const [query, setQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Estacion[]>([])
-  const [searchLoading, setSearchLoading] = useState(false)
-  const [activeIndex, setActiveIndex] = useState(-1)
-  const [isOpen, setIsOpen] = useState(false)
+  const [searchState, dispatch] = useReducer(searchReducer, initialSearchState)
   const [isGpsMode, setIsGpsMode] = useState(false)
 
   const { loading: gpsLoading, geoError, stations: gpsStations, trigger: triggerGPS } =
@@ -80,14 +124,12 @@ export function StationSearch({ onSelect }: StationSearchProps) {
   useEffect(() => {
     if (isGpsMode || query.trim().length < 2) {
       if (!isGpsMode) {
-        setSearchResults([])
-        setIsOpen(false)
-        setSearchLoading(false)
+        dispatch({ type: 'RESET' })
       }
       return
     }
 
-    setSearchLoading(true)
+    dispatch({ type: 'FETCH_START' })
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
@@ -95,13 +137,9 @@ export function StationSearch({ onSelect }: StationSearchProps) {
         )
         if (!res.ok) throw new Error('fetch error')
         const data = (await res.json()) as { estaciones?: Estacion[] }
-        setSearchResults(data.estaciones ?? [])
-        setIsOpen(true)
-        setActiveIndex(-1)
+        dispatch({ type: 'FETCH_DONE', results: data.estaciones ?? [] })
       } catch {
-        setSearchResults([])
-      } finally {
-        setSearchLoading(false)
+        dispatch({ type: 'FETCH_ERROR' })
       }
     }, 300)
 
@@ -111,21 +149,19 @@ export function StationSearch({ onSelect }: StationSearchProps) {
   // Open dropdown when GPS stations arrive
   useEffect(() => {
     if (isGpsMode && gpsStations.length > 0) {
-      setIsOpen(true)
-      setActiveIndex(-1)
+      dispatch({ type: 'GPS_DONE' })
     }
   }, [isGpsMode, gpsStations])
 
   const currentItems: (Estacion | EstacionConDistancia)[] = isGpsMode
     ? gpsStations
-    : searchResults
+    : searchState.results
 
   const handleSelect = useCallback(
     (station: Estacion) => {
       onSelect(station)
       setQuery('')
-      setSearchResults([])
-      setIsOpen(false)
+      dispatch({ type: 'RESET' })
       setIsGpsMode(false)
     },
     [onSelect]
@@ -134,8 +170,7 @@ export function StationSearch({ onSelect }: StationSearchProps) {
   const handleGPS = useCallback(() => {
     setIsGpsMode(true)
     setQuery('')
-    setSearchResults([])
-    setIsOpen(false)
+    dispatch({ type: 'RESET' })
     triggerGPS()
     inputRef.current?.blur()
   }, [triggerGPS])
@@ -147,34 +182,33 @@ export function StationSearch({ onSelect }: StationSearchProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!isOpen || currentItems.length === 0) return
+      if (!searchState.isOpen || currentItems.length === 0) return
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setActiveIndex((i) => Math.min(i + 1, currentItems.length - 1))
+          dispatch({ type: 'SET_ACTIVE_INDEX', index: Math.min(searchState.activeIndex + 1, currentItems.length - 1) })
           break
         case 'ArrowUp':
           e.preventDefault()
-          setActiveIndex((i) => Math.max(i - 1, -1))
+          dispatch({ type: 'SET_ACTIVE_INDEX', index: Math.max(searchState.activeIndex - 1, -1) })
           break
         case 'Enter':
           e.preventDefault()
-          if (activeIndex >= 0) {
-            const item = currentItems[activeIndex]
+          if (searchState.activeIndex >= 0) {
+            const item = currentItems[searchState.activeIndex]
             if (item) handleSelect(item)
           }
           break
         case 'Escape':
           e.preventDefault()
-          setIsOpen(false)
-          setActiveIndex(-1)
+          dispatch({ type: 'CLOSE' })
           break
       }
     },
-    [isOpen, currentItems, activeIndex, handleSelect]
+    [searchState.isOpen, searchState.activeIndex, currentItems, handleSelect]
   )
 
-  const isLoading = searchLoading || gpsLoading
+  const isLoading = searchState.loading || gpsLoading
 
   return (
     <div className="relative w-full">
@@ -188,13 +222,13 @@ export function StationSearch({ onSelect }: StationSearchProps) {
             value={query}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onFocus={() => currentItems.length > 0 && setIsOpen(true)}
-            onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+            onFocus={() => currentItems.length > 0 && dispatch({ type: 'OPEN' })}
+            onBlur={() => setTimeout(() => dispatch({ type: 'CLOSE' }), 150)}
             placeholder={t('home.searchPlaceholder')}
             className="w-full rounded-2xl bg-white/8 py-3.5 pl-10 pr-10 text-rail-cream placeholder:text-rail-cream/30 outline-none ring-1 ring-white/10 transition focus:ring-2 focus:ring-rail-amber/50 light:bg-black/5 light:ring-black/10"
             aria-label={t('home.searchPlaceholder')}
             aria-autocomplete="list"
-            aria-expanded={isOpen}
+            aria-expanded={searchState.isOpen}
             aria-controls="station-listbox"
             role="combobox"
           />
@@ -204,7 +238,7 @@ export function StationSearch({ onSelect }: StationSearchProps) {
 
           {/* Results dropdown — inside input wrapper to match input width */}
           <AnimatePresence>
-            {isOpen && currentItems.length > 0 && (
+            {searchState.isOpen && currentItems.length > 0 && (
               <motion.ul
                 id="station-listbox"
                 role="listbox"
@@ -227,13 +261,13 @@ export function StationSearch({ onSelect }: StationSearchProps) {
                     <li
                       key={station.id}
                       role="option"
-                      aria-selected={idx === activeIndex}
+                      aria-selected={idx === searchState.activeIndex}
                   className={cn(
                     'flex cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition',
-                        idx === activeIndex ? 'bg-rail-amber/10' : 'hover:bg-white/5 light:hover:bg-black/5',
+                        idx === searchState.activeIndex ? 'bg-rail-amber/10' : 'hover:bg-white/5 light:hover:bg-black/5',
                         idx !== 0 && 'border-t border-rail-border'
                       )}
-                      onMouseEnter={() => setActiveIndex(idx)}
+                      onMouseEnter={() => dispatch({ type: 'SET_ACTIVE_INDEX', index: idx })}
                       onMouseDown={(e) => {
                         e.preventDefault()
                         handleSelect(station)

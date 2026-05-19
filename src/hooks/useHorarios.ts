@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useReducer, useEffect, useCallback, useRef } from 'react'
 import type { HorarioEntry, HorariosResponse } from '@/lib/renfe/types'
 
 export type TipoFiltro = 'cercanias' | 'md' | 'all'
@@ -17,6 +17,28 @@ const INTERVAL_MS: Record<TipoFiltro, number> = {
   cercanias: 20_000,
   md: 30_000,
   all: 20_000,
+}
+
+type HorariosAction =
+  | { type: 'LOADING' }
+  | { type: 'SUCCESS'; trenes: HorarioEntry[]; updatedAt: number; stale: boolean }
+  | { type: 'ERROR'; trenes: HorarioEntry[] }
+
+function horariosReducer(state: HorariosState, action: HorariosAction): HorariosState {
+  switch (action.type) {
+    case 'LOADING':
+      return { ...state, loading: true, error: false }
+    case 'SUCCESS':
+      return {
+        trenes: action.trenes,
+        updatedAt: action.updatedAt,
+        loading: false,
+        error: false,
+        stale: action.stale,
+      }
+    case 'ERROR':
+      return { ...state, trenes: action.trenes, loading: false, error: true, stale: true }
+  }
 }
 
 function gtfsTimeToSeconds(time: string): number {
@@ -38,19 +60,21 @@ async function apiFetch(stopId: string, tipo: 'cercanias' | 'md'): Promise<Horar
   return res.json() as Promise<HorariosResponse>
 }
 
+const initialState: HorariosState = {
+  trenes: [],
+  updatedAt: null,
+  loading: false,
+  error: false,
+  stale: false,
+}
+
 export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias') {
-  const [state, setState] = useState<HorariosState>({
-    trenes: [],
-    updatedAt: null,
-    loading: false,
-    error: false,
-    stale: false,
-  })
+  const [state, dispatch] = useReducer(horariosReducer, initialState)
   const prevTrenes = useRef<HorarioEntry[]>([])
 
   const load = useCallback(async () => {
     if (!stopId) return
-    setState((s) => ({ ...s, loading: true, error: false }))
+    dispatch({ type: 'LOADING' })
 
     try {
       let merged: HorarioEntry[]
@@ -81,10 +105,6 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
           throw new Error('All feeds failed')
         }
 
-        // Dedup: the same train can appear in both feeds with different
-        // tripId and routeId (e.g. routeId "R11" in cercanías vs "MD" in
-        // the MD feed). Use destino+departure as composite key when
-        // available, fall back to routeId+departure.
         const seenTripIds = new Set<string>()
         const seenComposite = new Set<string>()
         merged = ok
@@ -110,15 +130,9 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
 
       const trenes = filterFuture(merged)
       prevTrenes.current = trenes
-      setState({ trenes, updatedAt, loading: false, error: false, stale })
+      dispatch({ type: 'SUCCESS', trenes, updatedAt, stale })
     } catch {
-      setState((s) => ({
-        ...s,
-        trenes: prevTrenes.current,
-        loading: false,
-        error: true,
-        stale: true,
-      }))
+      dispatch({ type: 'ERROR', trenes: prevTrenes.current })
     }
   }, [stopId, tipo])
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { LogOut, ChevronRight, MapPin, Train, BellRing } from 'lucide-react'
@@ -136,17 +136,17 @@ export function PerfilClient({ user, profile }: PerfilClientProps) {
   const tripCount = useFavoritesStore((s) => s.trips.length)
 
   const [pushCount, setPushCount] = useState(0)
-  const [pushFetched, setPushFetched] = useState(false)
+  const pushFetchedRef = useRef(false)
 
   useEffect(() => {
-    if (!user || pushFetched) return
-    setPushFetched(true)
+    if (!user || pushFetchedRef.current) return
+    pushFetchedRef.current = true
 
     fetch('/api/push/subscriptions')
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setPushCount(data.length))
       .catch(() => {})
-  }, [user, pushFetched])
+  }, [user])
 
   return (
     <div className="space-y-6 py-6">

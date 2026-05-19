@@ -98,23 +98,16 @@ export function UserTable({ currentAdminId }: UserTableProps) {
     []
   )
 
-  // Debounce search input
+  // Debounce search/filter/page changes
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      setPage(1)
-      fetchUsers({ page: 1, search, role: roleFilter, status: statusFilter })
+      fetchUsers({ page, search, role: roleFilter, status: statusFilter })
     }, 300)
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [search, roleFilter, statusFilter, fetchUsers])
-
-  // Fetch on page change
-  useEffect(() => {
-    fetchUsers({ page, search, role: roleFilter, status: statusFilter })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page])
+  }, [page, search, roleFilter, statusFilter, fetchUsers])
 
   const handleSaved = useCallback((updated: Profile) => {
     setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))

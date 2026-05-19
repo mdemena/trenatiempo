@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useReducer, useEffect, useCallback, useRef } from 'react'
 import type { Tren, ViajeResponse } from '@/lib/renfe/types'
 
 interface ViajeState {
@@ -9,6 +9,28 @@ interface ViajeState {
   error: boolean
   stale: boolean
   updatedAt: number | null
+}
+
+type ViajeAction =
+  | { type: 'LOADING' }
+  | { type: 'SUCCESS'; tren: Tren; updatedAt: number; stale: boolean }
+  | { type: 'ERROR'; tren: Tren | null }
+
+function viajeReducer(state: ViajeState, action: ViajeAction): ViajeState {
+  switch (action.type) {
+    case 'LOADING':
+      return { ...state, loading: true, error: false }
+    case 'SUCCESS':
+      return {
+        tren: action.tren,
+        loading: false,
+        error: false,
+        stale: action.stale,
+        updatedAt: action.updatedAt,
+      }
+    case 'ERROR':
+      return { ...state, tren: action.tren, loading: false, error: true, stale: true }
+  }
 }
 
 function isTripFinished(tren: Tren): boolean {
@@ -25,37 +47,32 @@ async function apiFetch(tripId: string): Promise<ViajeResponse> {
   return res.json() as Promise<ViajeResponse>
 }
 
+const initialState: ViajeState = {
+  tren: null,
+  loading: false,
+  error: false,
+  stale: false,
+  updatedAt: null,
+}
+
 export function useViaje(tripId: string | null) {
-  const [state, setState] = useState<ViajeState>({
-    tren: null,
-    loading: false,
-    error: false,
-    stale: false,
-    updatedAt: null,
-  })
+  const [state, dispatch] = useReducer(viajeReducer, initialState)
   const prevTren = useRef<Tren | null>(null)
 
   const load = useCallback(async () => {
     if (!tripId) return
-    setState((s) => ({ ...s, loading: true, error: false }))
+    dispatch({ type: 'LOADING' })
     try {
       const data = await apiFetch(tripId)
       prevTren.current = data.tren
-      setState({
+      dispatch({
+        type: 'SUCCESS',
         tren: data.tren,
-        loading: false,
-        error: false,
-        stale: data.stale,
         updatedAt: data.updatedAt,
+        stale: data.stale,
       })
     } catch {
-      setState((s) => ({
-        ...s,
-        tren: prevTren.current,
-        loading: false,
-        error: true,
-        stale: true,
-      }))
+      dispatch({ type: 'ERROR', tren: prevTren.current })
     }
   }, [tripId])
 

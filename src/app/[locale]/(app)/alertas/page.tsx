@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, BellOff, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
@@ -19,20 +19,26 @@ export default function AlertasPage() {
   const [loading, setLoading] = useState(true)
   const [removing, setRemoving] = useState<string | null>(null)
 
-  const fetchSubs = useCallback(async () => {
-    try {
-      const res = await fetch('/api/push/subscriptions')
-      if (res.ok) setSubs(await res.json())
-    } catch {
-      // silently ignore
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    fetchSubs()
-  }, [fetchSubs])
+    let ignore = false
+
+    async function load() {
+      try {
+        const res = await fetch('/api/push/subscriptions')
+        if (!ignore && res.ok) {
+          const data = await res.json() as Subscription[]
+          setSubs(data)
+        }
+      } catch {
+        // silently ignore
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+
+    load()
+    return () => { ignore = true }
+  }, [])
 
   async function handleRemove(sub: Subscription) {
     setRemoving(sub.id)

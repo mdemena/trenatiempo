@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { motion } from 'motion/react'
 import { Clock, MapPin } from 'lucide-react'
@@ -29,11 +29,7 @@ function addToRecent(station: Estacion, prev: Estacion[]): Estacion[] {
 export function HomeClient() {
   const t = useTranslations()
   const router = useRouter()
-  const [recent, setRecent] = useState<Estacion[]>([])
-
-  useEffect(() => {
-    setRecent(loadRecent())
-  }, [])
+  const [recent, setRecent] = useState<Estacion[]>(loadRecent)
 
   const handleSelect = useCallback(
     (station: Estacion) => {

@@ -27,18 +27,16 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
   const router = useRouter()
   const user = useUserStore((s) => s.user)
 
-  const [status, setStatus] = useState<Status>('idle')
+  const [status, setStatus] = useState<Status>(() => {
+    if (typeof window !== 'undefined' && Notification.permission === 'denied') return 'denied'
+    return 'idle'
+  })
   const [endpoint, setEndpoint] = useState<string | null>(null)
   const fetchedRef = useRef(false)
 
   // Check subscription server-side on mount
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-
-    if (Notification.permission === 'denied') {
-      setStatus('denied')
-      return
-    }
 
     if (!user || fetchedRef.current) return
     fetchedRef.current = true
