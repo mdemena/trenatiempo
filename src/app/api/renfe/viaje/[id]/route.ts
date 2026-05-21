@@ -165,6 +165,9 @@ export async function GET(
       const baseSec = gtfsTimeToUnix(st.departure_time, today)
       const realSec = delaySeg !== 0 ? baseSec + delaySeg : undefined
 
+      const isCurrentStop = posicionActual?.stopId === st.stop_id
+      const anden = isCurrentStop ? posicionActual?.anden : undefined
+
       return {
         stopId: st.stop_id,
         nombre: nameMap.get(st.stop_id) ?? st.stop_id,
@@ -173,6 +176,7 @@ export async function GET(
         llegadaProgramada: i === last ? baseSec : undefined,
         llegadaReal: i === last ? realSec : undefined,
         delaySeg,
+        anden,
         esOrigen: i === 0,
         esDestino: i === last,
       }

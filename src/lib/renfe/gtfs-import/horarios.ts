@@ -1,6 +1,6 @@
 import AdmZip from 'adm-zip'
 import { parse } from 'csv-parse/sync'
-import type { StopTimeRow } from './types'
+import type { StopTimeRow, HorarioImportResult, HorarioFeedDetail } from './types'
 
 type CsvRecord = Record<string, string>
 
@@ -31,18 +31,32 @@ const FEEDS: { name: string; url: string; source: string }[] = [
   },
 ]
 
-export async function importHorarios(): Promise<{ totalRows: number; failures: string[]; rows: StopTimeRow[]; serviceDate: string }> {
+export async function importHorarios(): Promise<HorarioImportResult> {
   const today = todayYYYYMMDD()
   const todayIso = todayISO()
   const dow = getDayOfWeek()
   const failures: string[] = []
   const allRows: StopTimeRow[] = []
+  const feeds: HorarioFeedDetail[] = []
 
   for (const feed of FEEDS) {
+    const detail: HorarioFeedDetail = {
+      name: feed.name,
+      source: feed.source,
+      activeServiceIds: [],
+      routesLoaded: 0,
+      activeTrips: 0,
+      rowsParsed: 0,
+      rowsInserted: 0,
+      rowsFailed: 0,
+    }
+
     try {
       const res = await fetch(feed.url, { signal: AbortSignal.timeout(120_000) })
       if (!res.ok) {
+        detail.error = `HTTP ${res.status}`
         failures.push(`${feed.name}: HTTP ${res.status}`)
+        feeds.push(detail)
         continue
       }
 
@@ -51,7 +65,9 @@ export async function importHorarios(): Promise<{ totalRows: number; failures: s
 
       const calendarRaw = zip.readAsText('calendar.txt')
       if (!calendarRaw) {
+        detail.error = 'calendar.txt not found'
         failures.push(`${feed.name}: calendar.txt not found`)
+        feeds.push(detail)
         continue
       }
 
@@ -64,14 +80,20 @@ export async function importHorarios(): Promise<{ totalRows: number; failures: s
         }
       }
 
+      detail.activeServiceIds = [...activeServiceIds]
+
       if (activeServiceIds.size === 0) {
+        detail.error = `no active service for today (${dow})`
         failures.push(`${feed.name}: no active service for today (${dow})`)
+        feeds.push(detail)
         continue
       }
 
       const routesRaw = zip.readAsText('routes.txt')
       if (!routesRaw) {
+        detail.error = 'routes.txt not found'
         failures.push(`${feed.name}: routes.txt not found`)
+        feeds.push(detail)
         continue
       }
 
@@ -80,10 +102,13 @@ export async function importHorarios(): Promise<{ totalRows: number; failures: s
       for (const r of routes) {
         if (r.route_id && r.route_short_name) routeShortNames.set(r.route_id, r.route_short_name)
       }
+      detail.routesLoaded = routeShortNames.size
 
       const tripsRaw = zip.readAsText('trips.txt')
       if (!tripsRaw) {
+        detail.error = 'trips.txt not found'
         failures.push(`${feed.name}: trips.txt not found`)
+        feeds.push(detail)
         continue
       }
 
@@ -96,14 +121,20 @@ export async function importHorarios(): Promise<{ totalRows: number; failures: s
         activeTripRoutes.set(t.trip_id, shortName)
       }
 
+      detail.activeTrips = activeTripRoutes.size
+
       if (activeTripRoutes.size === 0) {
+        detail.error = 'no active trips for today'
         failures.push(`${feed.name}: no active trips for today`)
+        feeds.push(detail)
         continue
       }
 
       const stopTimesRaw = zip.readAsText('stop_times.txt')
       if (!stopTimesRaw) {
+        detail.error = 'stop_times.txt not found'
         failures.push(`${feed.name}: stop_times.txt not found`)
+        feeds.push(detail)
         continue
       }
 
@@ -117,6 +148,8 @@ export async function importHorarios(): Promise<{ totalRows: number; failures: s
         const departure = st.departure_time?.trim() || st.arrival_time?.trim()
         if (!departure) continue
 
+        detail.rowsParsed++
+
         allRows.push({
           trip_id: tripId,
           route_id: routeId,
@@ -128,9 +161,13 @@ export async function importHorarios(): Promise<{ totalRows: number; failures: s
         })
       }
     } catch (err) {
-      failures.push(`${feed.name}: ${err instanceof Error ? err.message : 'unknown error'}`)
+      const msg = err instanceof Error ? err.message : 'unknown error'
+      detail.error = msg
+      failures.push(`${feed.name}: ${msg}`)
     }
+
+    feeds.push(detail)
   }
 
-  return { totalRows: allRows.length, failures, rows: allRows, serviceDate: todayIso }
+  return { totalRows: allRows.length, failures, rows: allRows, serviceDate: todayIso, feeds }
 }

@@ -17,6 +17,7 @@ export interface Parada {
   salidaProgramada?: number
   salidaReal?: number
   delaySeg?: number
+  anden?: string
   esOrigen: boolean
   esDestino: boolean
 }

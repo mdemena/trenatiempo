@@ -26,6 +26,7 @@ export interface Parada {
   salidaProgramada?: number
   salidaReal?: number
   delaySeg?: number
+  anden?: string               // vía/andén desde GTFS-RT vehicle position
   esOrigen: boolean
   esDestino: boolean
 }

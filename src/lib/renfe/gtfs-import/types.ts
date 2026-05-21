@@ -16,3 +16,23 @@ export interface StopTimeRow {
   service_date: string
   feed_source: string
 }
+
+export interface HorarioFeedDetail {
+  name: string
+  source: string
+  activeServiceIds: string[]
+  routesLoaded: number
+  activeTrips: number
+  rowsParsed: number
+  rowsInserted: number
+  rowsFailed: number
+  error?: string
+}
+
+export interface HorarioImportResult {
+  totalRows: number
+  failures: string[]
+  rows: StopTimeRow[]
+  serviceDate: string
+  feeds: HorarioFeedDetail[]
+}

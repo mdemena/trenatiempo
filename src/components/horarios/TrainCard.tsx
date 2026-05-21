@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { motion } from 'motion/react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, MapPin } from 'lucide-react'
 import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
@@ -115,9 +115,10 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
           </div>
         )}
 
-        {/* Platform */}
+        {/* Platform / vía */}
         {tren.anden && (
-          <div className="mt-0.5 text-[11px] text-rail-cream/35">
+          <div className="mt-0.5 flex items-center gap-1 text-[11px] text-rail-amber/70">
+            <MapPin className="h-3 w-3" />
             {t('platform', { number: tren.anden })}
           </div>
         )}

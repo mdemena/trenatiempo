@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, useReducedMotion } from 'motion/react'
-import { Train } from 'lucide-react'
+import { Train, MapPin } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { Parada, PosicionTren } from '@/lib/renfe/types'
@@ -157,11 +157,7 @@ function StopRow({
   const scheduledTime = scheduledTs ? formatTime(scheduledTs, locale) : null
   const realTime = realTs ? formatTime(realTs, locale) : null
 
-  // Show platform when train is stopped here
-  const anden =
-    estado === 'actual' && posicionActual?.stopId === parada.stopId
-      ? posicionActual.anden
-      : undefined
+  const anden = parada.anden
 
   const nameColor = cn(
     'block truncate leading-snug',
@@ -225,9 +221,10 @@ function StopRow({
         {/* Stop name */}
         <span className={nameColor}>{parada.nombre || parada.stopId}</span>
 
-        {/* Platform (shown when train is stopped here) */}
+        {/* Platform / vía */}
         {anden && (
-          <span className="mt-0.5 block text-[11px] text-rail-amber/65">
+          <span className="mt-0.5 flex items-center gap-1 text-[11px] text-rail-amber/80">
+            <MapPin className="h-3 w-3" />
             {t('platform', { number: anden })}
           </span>
         )}

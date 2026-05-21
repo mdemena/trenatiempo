@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { importStations } from '@/lib/renfe/gtfs-import/stations'
 import { importHorarios } from '@/lib/renfe/gtfs-import/horarios'
+import type { HorarioFeedDetail } from '@/lib/renfe/gtfs-import/types'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -49,6 +50,12 @@ export async function GET(request: Request) {
     const horarioResult = await importHorarios()
     logs.push(`Horarios: ${horarioResult.totalRows} parsed`)
 
+    // Init per-feed upsert counters from parsed counts
+    const feedCounts = new Map<string, { inserted: number; failed: number }>()
+    for (const f of horarioResult.feeds) {
+      feedCounts.set(f.source, { inserted: 0, failed: 0 })
+    }
+
     let horariosInserted = 0
     let horariosFailed = 0
     if (horarioResult.totalRows > 0) {
@@ -61,8 +68,16 @@ export async function GET(request: Request) {
         if (error) {
           console.error(`Stop times batch ${i} error:`, error.message)
           horariosFailed += batch.length
+          for (const row of batch) {
+            const c = feedCounts.get(row.feed_source)
+            if (c) c.failed++
+          }
         } else {
           horariosInserted += batch.length
+          for (const row of batch) {
+            const c = feedCounts.get(row.feed_source)
+            if (c) c.inserted++
+          }
         }
       }
       logs.push(`Horarios upserted: ${horariosInserted}, failed: ${horariosFailed}`)
@@ -75,14 +90,26 @@ export async function GET(request: Request) {
       else logs.push('Stale horarios cleaned up')
     }
 
+    // Attach upsert counts back to feed details
+    const feeds: HorarioFeedDetail[] = horarioResult.feeds.map((f: HorarioFeedDetail) => {
+      const counts = feedCounts.get(f.source)
+      return {
+        ...f,
+        rowsInserted: counts?.inserted ?? 0,
+        rowsFailed: counts?.failed ?? 0,
+      }
+    })
+
     const elapsed = ((Date.now() - start) / 1000).toFixed(1)
     logs.push(`Done in ${elapsed}s`)
 
     return NextResponse.json({
       ok: true,
       elapsed: `${elapsed}s`,
+      serviceDate: horarioResult.serviceDate,
       stations: { parsed: stationResult.count, inserted: stationsInserted, failed: stationsFailed },
       horarios: { parsed: horarioResult.totalRows, inserted: horariosInserted, failed: horariosFailed },
+      feeds,
       failures: [...stationResult.failures, ...horarioResult.failures],
       logs,
     })
