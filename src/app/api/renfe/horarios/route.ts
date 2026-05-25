@@ -215,7 +215,7 @@ export async function GET(request: Request) {
         : undefined
 
       const vehicle = vehicleIndex[st.trip_id]
-      const anden = vehicle?.label ? parseAnden(vehicle.label) : undefined
+      const anden = vehicle?.vehicle?.label ? parseAnden(vehicle.vehicle.label) : undefined
 
       return {
         tripId: st.trip_id,
@@ -265,7 +265,7 @@ export async function GET(request: Request) {
         salidaReal,
         delaySeg,
         cancelado: stopUpdate.scheduleRelationship === 'CANCELED',
-        anden: vehicle?.label ? parseAnden(vehicle.label) : undefined,
+        anden: vehicle?.vehicle?.label ? parseAnden(vehicle.vehicle.label) : undefined,
         estado: resolveEstado(delaySeg, stopUpdate.scheduleRelationship),
         numTren: extractNumTren(tu.trip.tripId),
         // destino not available in RT-only mode

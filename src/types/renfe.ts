@@ -85,6 +85,11 @@ export interface TimeEvent {
   uncertainty?: number
 }
 
+export interface VehicleDescriptor {
+  id?: string
+  label?: string
+}
+
 export interface VehiclePosition {
   trip?: TripDescriptor
   position?: {
@@ -94,8 +99,8 @@ export interface VehiclePosition {
   }
   currentStatus?: 'INCOMING_AT' | 'STOPPED_AT' | 'IN_TRANSIT_TO'
   stopId?: string
-  label?: string
   timestamp?: number
+  vehicle?: VehicleDescriptor
 }
 
 export interface ServiceAlert {

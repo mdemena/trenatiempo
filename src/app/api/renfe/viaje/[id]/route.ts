@@ -129,7 +129,7 @@ export async function GET(
       lat: vehicle.position.latitude,
       lng: vehicle.position.longitude,
       stopId: vehicle.stopId,
-      anden: vehicle.label ? parseAnden(vehicle.label) : undefined,
+      anden: vehicle?.vehicle?.label ? parseAnden(vehicle.vehicle.label) : undefined,
       enMovimiento: vehicle.currentStatus === 'IN_TRANSIT_TO',
     }
   }

@@ -38,8 +38,11 @@ const FEED_FIXTURE: GtfsRtFeed = {
         position: { latitude: 40.4168, longitude: -3.7038, speed: 0 },
         currentStatus: 'STOPPED_AT',
         stopId: '60000',
-        label: 'C1-23537-PLATF.(3)',
         timestamp: 1700000050,
+        vehicle: {
+          id: '23537',
+          label: 'C1-23537-PLATF.(3)',
+        },
       },
     },
     {
