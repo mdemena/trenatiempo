@@ -28,27 +28,31 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 import { fileURLToPath } from 'url'
 
-// ─── Load .env.local ──────────────────────────────────────────────────────────
+// ─── Load env vars (system > .env file) ──────────────────────────────────────
 
 const ROOT = join(fileURLToPath(import.meta.url), '..', '..')
-const envPath = join(ROOT, '.env.local')
+const envPath = join(ROOT, '.env')
 
-if (!existsSync(envPath)) {
-  console.error('❌  .env.local not found.')
-  process.exit(1)
+let SUPABASE_URL = process.env['NEXT_PUBLIC_SUPABASE_URL']
+let SUPABASE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY']
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  if (!existsSync(envPath)) {
+    console.error('❌  Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment or .env')
+    process.exit(1)
+  }
+
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eqIdx = trimmed.indexOf('=')
+    if (eqIdx === -1) continue
+    const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '')
+    const key = trimmed.slice(0, eqIdx).trim()
+    if (key === 'NEXT_PUBLIC_SUPABASE_URL') SUPABASE_URL = val
+    if (key === 'SUPABASE_SERVICE_ROLE_KEY') SUPABASE_KEY = val
+  }
 }
-
-const env = {}
-for (const line of readFileSync(envPath, 'utf8').split('\n')) {
-  const trimmed = line.trim()
-  if (!trimmed || trimmed.startsWith('#')) continue
-  const eqIdx = trimmed.indexOf('=')
-  if (eqIdx === -1) continue
-  env[trimmed.slice(0, eqIdx).trim()] = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '')
-}
-
-const SUPABASE_URL = env['NEXT_PUBLIC_SUPABASE_URL']
-const SUPABASE_KEY = env['SUPABASE_SERVICE_ROLE_KEY']
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌  Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')

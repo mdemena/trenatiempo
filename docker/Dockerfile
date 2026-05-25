@@ -87,7 +87,6 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY scripts ./scripts
-COPY .env.local* ./
 
 ENTRYPOINT ["tini", "--"]
 CMD ["sh", "-c", "node scripts/seed-stations.mjs && node scripts/seed-horarios.mjs"]
