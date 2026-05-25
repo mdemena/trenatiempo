@@ -73,3 +73,21 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
 ENTRYPOINT ["tini", "--"]
 
 CMD ["node", "server.js"]
+
+# ─── Stage 4: Seeder ───────────────────────────────────────────────────────────
+FROM node:22-alpine AS seeder
+
+ARG PNPM_VERSION=10.33.2
+
+RUN apk add --no-cache libc6-compat curl python3 && \
+    npm install -g pnpm@${PNPM_VERSION}
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY scripts ./scripts
+COPY .env.local* ./
+
+ENTRYPOINT ["tini", "--"]
+CMD ["sh", "-c", "node scripts/seed-stations.mjs && node scripts/seed-horarios.mjs"]
