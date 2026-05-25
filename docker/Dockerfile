@@ -25,12 +25,9 @@ WORKDIR /app
 
 # Config files for next build
 COPY next.config.ts tsconfig.json postcss.config.mjs ./
-COPY src/i18n ./src/i18n
 COPY messages ./messages
 COPY public ./public
 COPY package.json ./
-
-# Dependencies
 COPY --from=deps /app/node_modules ./node_modules
 
 # Source code
