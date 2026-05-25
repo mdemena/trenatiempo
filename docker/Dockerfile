@@ -79,7 +79,7 @@ FROM node:22-alpine AS seeder
 
 ARG PNPM_VERSION=10.33.2
 
-RUN apk add --no-cache libc6-compat curl python3 && \
+RUN apk add --no-cache libc6-compat curl python3 tini && \
     npm install -g pnpm@${PNPM_VERSION}
 
 WORKDIR /app
