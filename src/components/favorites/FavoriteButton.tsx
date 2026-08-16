@@ -4,12 +4,13 @@ import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { Estacion } from '@/lib/renfe/types'
 import { useUserStore } from '@/store/userStore'
 import { useFavoritesStore } from '@/store/favoritesStore'
 import { Spinner } from '@/components/ui/Spinner'
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal'
 
-type StationFav = { type: 'station'; id: string }
+type StationFav = { type: 'station'; id: string; station?: Estacion }
 type TripFav = { type: 'trip'; id: string; lineName?: string }
 
 type FavoriteButtonProps = {
@@ -23,7 +24,7 @@ export function FavoriteButton(props: FavoriteButtonProps) {
   const t = useTranslations('favorites')
   const user = useUserStore((s) => s.user)
   const {
-    stationIds,
+    stations,
     trips: tripsStore,
     addStation,
     removeStation,
@@ -37,7 +38,7 @@ export function FavoriteButton(props: FavoriteButtonProps) {
   const id = props.id
 
   const isFav = isStation
-    ? stationIds.has(id)
+    ? stations.some((s) => s.id === id)
     : tripsStore.some((t) => t.trip_code === id)
 
   const handleToggle = useCallback(async () => {
@@ -60,7 +61,10 @@ export function FavoriteButton(props: FavoriteButtonProps) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ stationId: id }),
           })
-          if (res.ok) addStation(id)
+          if (res.ok) {
+            const station = (props as StationFav).station
+            if (station) addStation(station)
+          }
         }
       } else {
         const trip = props as TripFav

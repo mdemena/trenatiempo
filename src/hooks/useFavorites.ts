@@ -6,12 +6,13 @@ import { useFavoritesStore } from '@/store/favoritesStore'
 
 export function useLoadFavorites() {
   const user = useUserStore((s) => s.user)
-  const { loaded, loading, setStationIds, setTrips, setLoading } = useFavoritesStore()
+  const { loaded, loading, setStations, setTrips, setLoading, reset } = useFavoritesStore()
   const fetchedRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!user) {
       fetchedRef.current = null
+      reset()
       return
     }
     if (loaded || loading) return
@@ -25,7 +26,7 @@ export function useLoadFavorites() {
       fetch('/api/favorites/trips').then((r) => (r.ok ? r.json() : null)),
     ])
       .then(([stations, trips]) => {
-        if (stations?.favorites) setStationIds(stations.favorites)
+        if (stations?.stations) setStations(stations.stations)
         if (trips?.favorites) setTrips(trips.favorites)
       })
       .catch(() => {})

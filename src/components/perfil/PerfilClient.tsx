@@ -132,7 +132,7 @@ export function PerfilClient({ user, profile }: PerfilClientProps) {
   const t = useTranslations('profile')
   const displayName = profile?.full_name ?? user.email ?? '–'
   const initials = (profile?.full_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()
-  const stationCount = useFavoritesStore((s) => s.stationIds.size)
+  const stationCount = useFavoritesStore((s) => s.stations.length)
   const tripCount = useFavoritesStore((s) => s.trips.length)
 
   const [pushCount, setPushCount] = useState(0)

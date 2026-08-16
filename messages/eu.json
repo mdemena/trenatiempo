@@ -28,6 +28,12 @@
     "gpsError": "Ezin izan da zure kokapena lortu",
     "gpsPermissionDenied": "Kokapenaren baimena ukatua",
     "recentStations": "Azkenak",
+    "favoritesTab": "Gogokoak",
+    "stationTabs": "Azken eta gogoko geltokiak",
+    "noRecent": "Oraindik ez duzu geltokirik bilatu",
+    "noRecentDescription": "Bilatu geltoki bat edo erabili zure kokapena",
+    "noFavorites": "Oraindik ez duzu geltoki gogokorik",
+    "noFavoritesDescription": "Bilatu geltoki bat eta sakatu izarra gordetzeko",
     "startSearching": "Nondik irteten zara?",
     "features": {
       "title": "Zergatik TrenATiempo?",

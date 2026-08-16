@@ -28,6 +28,12 @@
     "gpsError": "No s'ha pogut obtenir la teva ubicació",
     "gpsPermissionDenied": "Permís d'ubicació denegat",
     "recentStations": "Recents",
+    "favoritesTab": "Preferides",
+    "stationTabs": "Estacions recents i preferides",
+    "noRecent": "Encara no has buscat estacions",
+    "noRecentDescription": "Cerca una estació o usa la teva ubicació",
+    "noFavorites": "Encara no tens estacions preferides",
+    "noFavoritesDescription": "Cerca una estació i prem l'estrella per desar-la",
     "startSearching": "Des d'on surts?",
     "features": {
       "title": "Per què TrenATiempo?",

@@ -28,6 +28,12 @@
     "gpsError": "Non se puido obter a túa localización",
     "gpsPermissionDenied": "Permiso de localización denegado",
     "recentStations": "Recentes",
+    "favoritesTab": "Favoritas",
+    "stationTabs": "Estacións recentes e favoritas",
+    "noRecent": "Aínda non buscaches estacións",
+    "noRecentDescription": "Busca unha estación ou usa a túa localización",
+    "noFavorites": "Aínda non tes estacións favoritas",
+    "noFavoritesDescription": "Busca unha estación e preme a estrela para gardala",
     "startSearching": "Desde onde saes?",
     "features": {
       "title": "Por que TrenATiempo?",
