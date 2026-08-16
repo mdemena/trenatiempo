@@ -22,10 +22,10 @@ TrenATiempo es una webapp **mobile-first** que muestra en tiempo real los horari
 - [x] 👤 **Perfil de usuario** con selector de idioma persistente
 - [x] 🛡️ **Panel de administración** con dashboard de métricas, gestión de usuarios (rol, activo), CSV export
 - [x] 🔔 **Notificaciones push** por viaje (Web Push / VAPID) con suscripción/desuscripción
+- [x] ⭐ **Favoritos** — estaciones y viajes, con pestaña **Favoritas** en la home para usuarios identificados (junto a **Recientes**)
 - [x] 📱 **PWA** — instalable en Android y iOS, caché offline de horarios
 - [x] 🕒 **Auto-actualización** cada 20s (Cercanías) / 30s (Media Distancia)
 - [x] 🎨 **Design system** ferroviario con colores de línea oficiales (40+ rutas)
-- [ ] ⭐ **Favoritos** — próximamente
 - [ ] 👥 **Reportes colaborativos** — próximamente
 
 ## Stack
@@ -215,6 +215,12 @@ Ejecutar `pnpm seed:stations` manualmente cada vez que Renfe publique cambios en
 
 | Método | Ruta | Descripción |
 |---|---|---|
+| `GET` | `/api/favorites/stations` | Listar estaciones favoritas (con detalle completo) |
+| `POST` | `/api/favorites/stations` | Añadir estación favorita |
+| `DELETE` | `/api/favorites/stations?stationId=` | Quitar estación favorita |
+| `GET` | `/api/favorites/trips` | Listar viajes favoritos |
+| `POST` | `/api/favorites/trips` | Añadir viaje favorito |
+| `DELETE` | `/api/favorites/trips?tripCode=` | Quitar viaje favorito |
 | `POST` | `/api/push/subscribe` | Suscribirse a notificaciones push de un viaje |
 | `DELETE` | `/api/push/subscribe` | Desuscribirse |
 | `GET` | `/api/push/subscriptions` | Listar suscripciones del usuario |
