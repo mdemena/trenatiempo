@@ -50,7 +50,7 @@ export default async function EstacionPage({
           </h1>
         </div>
 
-        <FavoriteButton type="station" id={station.id} name={station.name} />
+        <FavoriteButton type="station" id={station.id} name={station.name} station={station} />
       </header>
 
       {/* Client section: FilterBar + TrainList */}

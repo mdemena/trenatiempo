@@ -28,6 +28,12 @@
     "gpsError": "No se pudo obtener tu ubicación",
     "gpsPermissionDenied": "Permiso de ubicación denegado",
     "recentStations": "Recientes",
+    "favoritesTab": "Favoritas",
+    "stationTabs": "Estaciones recientes y favoritas",
+    "noRecent": "Todavía no has buscado estaciones",
+    "noRecentDescription": "Busca una estación o usa tu ubicación",
+    "noFavorites": "Aún no tienes estaciones favoritas",
+    "noFavoritesDescription": "Busca una estación y pulsa la estrella para guardarla",
     "startSearching": "¿Desde dónde sales?",
     "features": {
       "title": "¿Por qué TrenATiempo?",

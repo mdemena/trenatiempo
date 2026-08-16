@@ -28,6 +28,12 @@
     "gpsError": "Could not get your location",
     "gpsPermissionDenied": "Location permission denied",
     "recentStations": "Recent",
+    "favoritesTab": "Favourites",
+    "stationTabs": "Recent and favourite stations",
+    "noRecent": "You haven't searched for stations yet",
+    "noRecentDescription": "Search for a station or use your location",
+    "noFavorites": "No favourite stations yet",
+    "noFavoritesDescription": "Search for a station and tap the star to save it",
     "startSearching": "Where are you departing from?",
     "features": {
       "title": "Why TrenATiempo?",

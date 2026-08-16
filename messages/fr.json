@@ -28,6 +28,12 @@
     "gpsError": "Impossible d'obtenir votre position",
     "gpsPermissionDenied": "Permission de localisation refusée",
     "recentStations": "Récents",
+    "favoritesTab": "Favorites",
+    "stationTabs": "Gares récentes et favorites",
+    "noRecent": "Vous n'avez pas encore recherché de gares",
+    "noRecentDescription": "Recherchez une gare ou utilisez votre position",
+    "noFavorites": "Vous n'avez pas encore de gares favorites",
+    "noFavoritesDescription": "Recherchez une gare et touchez l'étoile pour l'enregistrer",
     "startSearching": "D'où partez-vous ?",
     "features": {
       "title": "Pourquoi TrenATiempo ?",

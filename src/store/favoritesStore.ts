@@ -1,47 +1,45 @@
 import { create } from 'zustand'
+import type { Estacion } from '@/lib/renfe/types'
 import type { Database } from '@/types/database'
 
 type TripFav = Database['public']['Tables']['favorite_trips']['Row']
 
 interface FavoritesState {
-  stationIds: Set<string>
+  stations: Estacion[]
   trips: TripFav[]
   loaded: boolean
   loading: boolean
-  setStationIds: (ids: string[]) => void
+  setStations: (stations: Estacion[]) => void
   setTrips: (trips: TripFav[]) => void
-  addStation: (id: string) => void
+  addStation: (station: Estacion) => void
   removeStation: (id: string) => void
   addTrip: (trip: TripFav) => void
   removeTrip: (tripCode: string) => void
   isStationFav: (id: string) => boolean
   isTripFav: (tripCode: string) => boolean
   setLoading: (v: boolean) => void
+  reset: () => void
 }
 
 export const useFavoritesStore = create<FavoritesState>((set, get) => ({
-  stationIds: new Set(),
+  stations: [],
   trips: [],
   loaded: false,
   loading: false,
-  setStationIds: (ids) => set({ stationIds: new Set(ids), loaded: true }),
+  setStations: (stations) => set({ stations, loaded: true }),
   setTrips: (trips) => set({ trips }),
-  addStation: (id) =>
-    set((s) => {
-      const next = new Set(s.stationIds)
-      next.add(id)
-      return { stationIds: next }
-    }),
-  removeStation: (id) =>
-    set((s) => {
-      const next = new Set(s.stationIds)
-      next.delete(id)
-      return { stationIds: next }
-    }),
+  addStation: (station) =>
+    set((s) =>
+      s.stations.some((x) => x.id === station.id)
+        ? {}
+        : { stations: [station, ...s.stations] }
+    ),
+  removeStation: (id) => set((s) => ({ stations: s.stations.filter((x) => x.id !== id) })),
   addTrip: (trip) => set((s) => ({ trips: [trip, ...s.trips] })),
   removeTrip: (tripCode) =>
     set((s) => ({ trips: s.trips.filter((t) => t.trip_code !== tripCode) })),
-  isStationFav: (id) => get().stationIds.has(id),
+  isStationFav: (id) => get().stations.some((s) => s.id === id),
   isTripFav: (tripCode) => get().trips.some((t) => t.trip_code === tripCode),
   setLoading: (loading) => set({ loading }),
+  reset: () => set({ stations: [], trips: [], loaded: false, loading: false }),
 }))

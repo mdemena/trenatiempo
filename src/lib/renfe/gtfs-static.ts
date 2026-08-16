@@ -39,6 +39,25 @@ export async function getStationById(stopId: string): Promise<Estacion | null> {
   return rowToEstacion(data)
 }
 
+/** Devuelve varias estaciones por ID, preservando el orden de `ids`. */
+export async function getStationsByIds(ids: string[]): Promise<Estacion[]> {
+  if (ids.length === 0) return []
+
+  const { data, error } = await supabaseAdmin
+    .from('stations')
+    .select(STATION_COLS)
+    .in('id', ids)
+    .eq('active', true)
+
+  if (error || !data) return []
+
+  const byId = new Map(data.map((s) => [s.id, s]))
+  return ids
+    .map((id) => byId.get(id))
+    .filter((s): s is NonNullable<typeof s> => Boolean(s))
+    .map(rowToEstacion)
+}
+
 /**
  * Búsqueda fuzzy por nombre de estación.
  * Usa el índice GIN de pg_trgm creado en la migration 001.

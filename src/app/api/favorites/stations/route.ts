@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { getStationsByIds } from '@/lib/renfe/gtfs-static'
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit'
 
 const PostSchema = z.object({
@@ -26,7 +27,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Error al obtener favoritos' }, { status: 500 })
   }
 
-  return NextResponse.json({ favorites: data?.map((r) => r.station_id) ?? [] })
+  const ids = data?.map((r) => r.station_id) ?? []
+  const stations = await getStationsByIds(ids)
+
+  return NextResponse.json({ favorites: ids, stations })
 }
 
 export async function POST(request: Request) {
