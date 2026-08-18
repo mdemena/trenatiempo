@@ -2,7 +2,7 @@
 name: Seed horarios
 on:
   schedule:
-    - cron: "0 5 * * *"   # 5:00 UTC
+    - cron: "0 5 * * *" # 5:00 UTC
 jobs:
   seed:
     runs-on: ubuntu-latest
@@ -10,10 +10,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
       - run: npm install
-      - run: npm seed:horarios
-      #- run: npm install -g pnpm
-      #- run: pnpm install
-      #- run: pnpm seed:horarios
+      - run: npm run seed:stations
+      - run: npm run seed:horarios
+        #- run: npm install -g pnpm
+        #- run: pnpm install
+        #- run: pnpm seed:horarios
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
