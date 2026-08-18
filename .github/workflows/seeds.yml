@@ -1,5 +1,5 @@
 # .github/workflows/seed-horarios.yml
-name: Seed horarios
+name: Seeds Stations and Horarios
 on:
   schedule:
     - cron: "0 5 * * *" # 5:00 UTC
