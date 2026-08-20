@@ -1,5 +1,6 @@
 # .github/workflows/seed-horarios.yml
 name: Seeds Stations and Horarios
+
 on:
   push:
     branches: [main]
@@ -8,6 +9,10 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 5 * * *" # 5:00 UTC
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   seed:
     runs-on: ubuntu-latest
@@ -17,6 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - run: npm install
       - run: npm run seed:stations
       - run: npm run seed:horarios
