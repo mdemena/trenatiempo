@@ -1,5 +1,6 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
@@ -169,7 +170,10 @@ interface ViajeClientProps {
 }
 
 export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
-  const { tren, loading, error, stale, refresh } = useViaje(tripId)
+  const searchParams = useSearchParams()
+  // Fecha futura del viaje (desde la URL); hoy por defecto
+  const fecha = searchParams.get('fecha')
+  const { tren, loading, error, stale, refresh } = useViaje(tripId, fecha)
   const { numTren, lineCode } = parseTripId(tripId)
   const { bg: badgeBg, text: badgeText } = getRouteColors(lineCode ?? '')
   const shortLine = lineCode ? routeShortName(lineCode) : null

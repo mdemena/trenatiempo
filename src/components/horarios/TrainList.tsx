@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'motion/react'
-import { Train, RefreshCw } from 'lucide-react'
+import { CalendarDays, Train, RefreshCw } from 'lucide-react'
 import { TrainCard } from './TrainCard'
 import type { HorarioEntry } from '@/lib/renfe/types'
 
@@ -57,6 +57,8 @@ interface TrainListProps {
   updatedAt: number | null
   onRetry: () => void
   stopId: string
+  /** Fecha consultada; presente (≠ hoy) cuando se muestran horarios programados */
+  fecha?: string | null
 }
 
 export function TrainList({
@@ -67,30 +69,42 @@ export function TrainList({
   updatedAt,
   onRetry,
   stopId,
+  fecha,
 }: TrainListProps) {
   const t = useTranslations()
   const isInitialLoad = loading && trenes.length === 0
+  const isFutureDate = !!fecha
 
   return (
     <div className="flex-1 px-4 pb-4">
-      {/* Top bar: updated-ago + stale indicator */}
-      <div className="mb-3 flex h-6 items-center justify-between">
-        {updatedAt ? <UpdatedAgo updatedAt={updatedAt} /> : <span />}
-        <AnimatePresence>
-          {stale && !isInitialLoad && (
-            <motion.span
-              key="stale"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-1.5 text-[11px] text-rail-amber/60"
-            >
-              <RefreshCw className="h-3 w-3 animate-spin" />
-              {t('horarios.reconnecting')}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Future-date notice */}
+      {isFutureDate && (
+        <div className="mb-3 flex items-center gap-2 rounded-xl bg-rail-amber/10 px-3.5 py-2.5 text-xs text-rail-amber ring-1 ring-rail-amber/20">
+          <CalendarDays className="h-4 w-4 shrink-0" />
+          <span>{t('horarios.futureNotice', { date: fecha })}</span>
+        </div>
+      )}
+
+      {/* Top bar: updated-ago + stale indicator (only for live data) */}
+      {!isFutureDate && (
+        <div className="mb-3 flex h-6 items-center justify-between">
+          {updatedAt ? <UpdatedAgo updatedAt={updatedAt} /> : <span />}
+          <AnimatePresence>
+            {stale && !isInitialLoad && (
+              <motion.span
+                key="stale"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-1.5 text-[11px] text-rail-amber/60"
+              >
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                {t('horarios.reconnecting')}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Error banner */}
       <AnimatePresence>
@@ -136,7 +150,13 @@ export function TrainList({
       {!isInitialLoad && trenes.length > 0 && (
         <div className="space-y-2">
           {trenes.map((tren, idx) => (
-            <TrainCard key={`${tren.tripId}-${tren.salidaProgramada}`} tren={tren} index={idx} stopId={stopId} />
+            <TrainCard
+              key={`${tren.tripId}-${tren.salidaProgramada}`}
+              tren={tren}
+              index={idx}
+              stopId={stopId}
+              fecha={fecha}
+            />
           ))}
         </div>
       )}

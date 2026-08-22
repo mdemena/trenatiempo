@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import type { Metadata } from 'next'
 import { ViajeClient } from '@/components/viaje/ViajeClient'
@@ -30,7 +31,9 @@ export default async function ViajePage({
 
   return (
     <div className="flex h-dvh flex-col bg-rail-navy">
-      <ViajeClient tripId={id} userStopId={stopId} />
+      <Suspense fallback={null}>
+        <ViajeClient tripId={id} userStopId={stopId} />
+      </Suspense>
     </div>
   )
 }

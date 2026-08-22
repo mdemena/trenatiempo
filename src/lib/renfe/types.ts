@@ -146,6 +146,10 @@ export interface HorariosResponse {
   horarios: HorarioEntry[]
   updatedAt: number
   stale: boolean
+  /** Fecha consultada (ISO yyyy-mm-dd) */
+  fecha: string
+  /** false cuando la consulta es de una fecha futura (sin datos en tiempo real) */
+  realtime: boolean
 }
 
 export interface ViajeResponse {

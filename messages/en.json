@@ -70,7 +70,18 @@
     "towards": "Towards {destination}",
     "stale": "Data from {minutes} min ago",
     "reconnecting": "Reconnecting...",
-    "trainNum": "Train {number}"
+    "trainNum": "Train {number}",
+    "futureNotice": "Scheduled timetables for {date}. No real-time information."
+  },
+  "datePicker": {
+    "label": "Travel date",
+    "today": "Today",
+    "open": "Open calendar",
+    "pickDate": "Pick a date",
+    "invalidRange": "Invalid date. Choose between {min} and {max}.",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "backToToday": "Back to today"
   },
   "viaje": {
     "title": "Train details",

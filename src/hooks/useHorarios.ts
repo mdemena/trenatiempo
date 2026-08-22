@@ -2,6 +2,7 @@
 
 import { useReducer, useEffect, useCallback, useRef } from 'react'
 import type { HorarioEntry, HorariosResponse } from '@/lib/renfe/types'
+import { todayISO, isISODate } from '@/lib/utils/dates'
 
 export type TipoFiltro = 'cercanias' | 'md' | 'all'
 
@@ -54,8 +55,14 @@ function filterFuture(trenes: HorarioEntry[]): HorarioEntry[] {
   )
 }
 
-async function apiFetch(stopId: string, tipo: 'cercanias' | 'md'): Promise<HorariosResponse> {
-  const res = await fetch(`/api/renfe/horarios?stopId=${stopId}&tipo=${tipo}`)
+async function apiFetch(
+  stopId: string,
+  tipo: 'cercanias' | 'md',
+  fecha: string | null
+): Promise<HorariosResponse> {
+  const params = new URLSearchParams({ stopId, tipo })
+  if (fecha) params.set('fecha', fecha)
+  const res = await fetch(`/api/renfe/horarios?${params.toString()}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<HorariosResponse>
 }
@@ -68,9 +75,17 @@ const initialState: HorariosState = {
   stale: false,
 }
 
-export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias') {
+export function useHorarios(
+  stopId: string | null,
+  tipo: TipoFiltro = 'cercanias',
+  fecha?: string | null
+) {
   const [state, dispatch] = useReducer(horariosReducer, initialState)
   const prevTrenes = useRef<HorarioEntry[]>([])
+
+  // Solo se pasa fecha explícita si es futura; pasado/inválido → hoy por defecto
+  const targetFecha =
+    fecha && isISODate(fecha) && fecha > todayISO() ? fecha : null
 
   const load = useCallback(async () => {
     if (!stopId) return
@@ -83,8 +98,8 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
 
       if (tipo === 'all') {
         const [cerRes, mdRes] = await Promise.allSettled([
-          apiFetch(stopId, 'cercanias'),
-          apiFetch(stopId, 'md'),
+          apiFetch(stopId, 'cercanias', targetFecha),
+          apiFetch(stopId, 'md', targetFecha),
         ])
 
         const ok: HorarioEntry[] = []
@@ -122,25 +137,28 @@ export function useHorarios(stopId: string | null, tipo: TipoFiltro = 'cercanias
         updatedAt = latestAt
         stale = isStale
       } else {
-        const data = await apiFetch(stopId, tipo)
+        const data = await apiFetch(stopId, tipo, targetFecha)
         merged = data.horarios
         updatedAt = data.updatedAt
         stale = data.stale
       }
 
-      const trenes = filterFuture(merged)
+      // En fechas futuras se muestran todos los trenes del día (sin filtro de hora)
+      const trenes = targetFecha ? merged : filterFuture(merged)
       prevTrenes.current = trenes
       dispatch({ type: 'SUCCESS', trenes, updatedAt, stale })
     } catch {
       dispatch({ type: 'ERROR', trenes: prevTrenes.current })
     }
-  }, [stopId, tipo])
+  }, [stopId, tipo, targetFecha])
 
   useEffect(() => {
     void load()
+    // Sin polling en fechas futuras: son datos estáticos
+    if (targetFecha) return
     const id = setInterval(() => void load(), INTERVAL_MS[tipo])
     return () => clearInterval(id)
-  }, [load, tipo])
+  }, [load, tipo, targetFecha])
 
   return { ...state, refresh: load }
 }

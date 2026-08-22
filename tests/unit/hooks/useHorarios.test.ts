@@ -23,7 +23,13 @@ function makeTren(
 }
 
 function makeResponse(horarios: HorarioEntry[], stale = false): HorariosResponse {
-  return { horarios, updatedAt: Date.now(), stale }
+  return {
+    horarios,
+    updatedAt: Date.now(),
+    stale,
+    fecha: new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' }),
+    realtime: true,
+  }
 }
 
 function mockFetch(responses: Record<string, HorariosResponse>) {

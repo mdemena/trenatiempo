@@ -70,7 +70,18 @@
     "towards": "Direction {destination}",
     "stale": "Données de il y a {minutes} min",
     "reconnecting": "Reconnexion...",
-    "trainNum": "Train {number}"
+    "trainNum": "Train {number}",
+    "futureNotice": "Horaires programmés du {date}. Sans information en temps réel."
+  },
+  "datePicker": {
+    "label": "Date du voyage",
+    "today": "Aujourd'hui",
+    "open": "Ouvrir le calendrier",
+    "pickDate": "Choisir une date",
+    "invalidRange": "Date non valide. Choisissez entre le {min} et le {max}.",
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "backToToday": "Revenir à aujourd'hui"
   },
   "viaje": {
     "title": "Détails du train",

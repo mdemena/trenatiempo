@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Clock, MapPin, Star } from 'lucide-react'
 import { useRouter } from '@/i18n/navigation'
 import { StationSearch } from './StationSearch'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { cn } from '@/lib/utils'
 import { useUserStore } from '@/store/userStore'
 import { useFavoritesStore } from '@/store/favoritesStore'
@@ -102,6 +103,8 @@ export function HomeClient() {
   const router = useRouter()
   const recent = useSyncExternalStore(subscribe, getRecentSnapshot, () => [])
   const [tab, setTab] = useState<Tab>('recent')
+  // Fecha de viaje seleccionada (null = hoy)
+  const [fecha, setFecha] = useState<string | null>(null)
   const user = useUserStore((s) => s.user)
   const favStations = useFavoritesStore((s) => s.stations)
   const favLoading = useFavoritesStore((s) => s.loading)
@@ -110,9 +113,9 @@ export function HomeClient() {
     (station: Estacion) => {
       addToRecent(station, getRecentSnapshot())
       window.dispatchEvent(new CustomEvent(RECENT_EVENT))
-      router.push(`/estacion/${station.id}`)
+      router.push(`/estacion/${station.id}${fecha ? `?fecha=${fecha}` : ''}`)
     },
-    [router]
+    [router, fecha]
   )
 
   const isLoggedIn = user !== null
@@ -135,8 +138,16 @@ export function HomeClient() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="space-y-3"
       >
         <StationSearch onSelect={handleSelect} />
+
+        <div>
+          <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-rail-cream/35">
+            {t('datePicker.label')}
+          </label>
+          <DatePicker value={fecha} onChange={setFecha} />
+        </div>
       </motion.div>
 
       {showTabs ? (
