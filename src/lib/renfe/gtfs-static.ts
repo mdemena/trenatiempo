@@ -26,6 +26,21 @@ function rowToEstacion(s: {
 
 const STATION_COLS = 'id, name, short_name, lat, lng, province, region, types' as const
 
+/**
+ * Última fecha con horarios disponibles en la base de datos
+ * (max end_date de gtfs_services). Null si no hay datos.
+ */
+export async function getMaxScheduleDate(): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from('gtfs_services')
+    .select('end_date')
+    .order('end_date', { ascending: false })
+    .limit(1)
+
+  const row = data?.[0] as { end_date: string } | undefined
+  return row?.end_date ?? null
+}
+
 /** Devuelve una estación por su código ADIF / stop_id GTFS. */
 export async function getStationById(stopId: string): Promise<Estacion | null> {
   const { data, error } = await supabaseAdmin

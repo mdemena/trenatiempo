@@ -18,6 +18,11 @@ const ParamsSchema = z.object({
 
 const QuerySchema = z.object({
   tipo: z.enum(['cercanias', 'md']).default('cercanias'),
+  /** Fecha del viaje (ISO). Por defecto hoy. Nunca en pasado. */
+  fecha: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'fecha debe tener formato YYYY-MM-DD')
+    .optional(),
 })
 
 function inferTipo(routeId: string): TipoServicio {
@@ -86,24 +91,36 @@ export async function GET(
   }
 
   const { searchParams } = new URL(request.url)
-  const parsedQuery = QuerySchema.safeParse({ tipo: searchParams.get('tipo') })
+  const parsedQuery = QuerySchema.safeParse({
+    tipo: searchParams.get('tipo') ?? undefined,
+    fecha: searchParams.get('fecha') ?? undefined,
+  })
   const tipo = parsedQuery.success ? parsedQuery.data.tipo : 'cercanias'
+  const fechaQuery = parsedQuery.success ? parsedQuery.data.fecha : undefined
 
   const tripId = parsedParams.data.id
   const today = todayISO()
+  // Past dates fall back to today (schedule lookup only; RT stays live).
+  const targetDate =
+    fechaQuery && fechaQuery >= today ? fechaQuery : fechaQuery ? undefined : today
+
+  if (!targetDate) {
+    return NextResponse.json({ error: 'La fecha no puede ser pasada' }, { status: 400 })
+  }
+
+  const isToday = targetDate === today
 
   // Fetch GTFS-RT and static schedule in parallel
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const db = supabaseAdmin as unknown as { from: (t: string) => any }
 
   const [tripResult, vehicleResult, staticResult] = await Promise.allSettled([
-    fetchTripUpdates(tipo),
-    fetchVehiclePositions(tipo),
+    isToday ? fetchTripUpdates(tipo) : Promise.resolve(null),
+    isToday ? fetchVehiclePositions(tipo) : Promise.resolve(null),
     db
       .from('gtfs_stop_times')
       .select('stop_id, stop_sequence, departure_time, route_id')
       .eq('trip_id', tripId)
-      .eq('service_date', today)
       .order('stop_sequence')
       .limit(100),
   ])
@@ -139,9 +156,9 @@ export async function GET(
   let stale: boolean
 
   if (stopTimesRaw.length > 0) {
-    // ── Static + RT overlay ───────────────────────────────────────────────────
+    // ── Static + RT overlay (today) or plain static (future date) ────────────
     routeId = stopTimesRaw[0]?.route_id ?? tripUpdate?.trip.routeId ?? ''
-    stale = tripFeed?.stale ?? true
+    stale = isToday ? (tripFeed?.stale ?? true) : false
 
     // Fetch station names for all stop_ids
     const stopIds = stopTimesRaw.map((r) => r.stop_id)
@@ -162,7 +179,7 @@ export async function GET(
     paradas = stopTimesRaw.map((st, i) => {
       const rtStop = tripUpdate?.stopTimeUpdate?.find((u) => u.stopId === st.stop_id)
       const delaySeg = rtStop?.departure?.delay ?? rtStop?.arrival?.delay ?? 0
-      const baseSec = gtfsTimeToUnix(st.departure_time, today)
+      const baseSec = gtfsTimeToUnix(st.departure_time, targetDate)
       const realSec = delaySeg !== 0 ? baseSec + delaySeg : undefined
 
       const isCurrentStop = posicionActual?.stopId === st.stop_id
@@ -230,12 +247,18 @@ export async function GET(
   }
 
   return NextResponse.json(
-    { tren, stale, updatedAt: tripFeed?.fetchedAt ?? Date.now() },
+    { tren, stale, updatedAt: tripFeed?.fetchedAt ?? Date.now(), fecha: targetDate, realtime: isToday },
     {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'Cache-Control': isToday
+          ? 'public, s-maxage=15, stale-while-revalidate=30'
+          : 'public, s-maxage=300, stale-while-revalidate=600',
         'X-Stale': String(stale),
-        'X-Source': stopTimesRaw.length > 0 ? 'static+rt' : 'rt-only',
+        'X-Source': isToday
+          ? stopTimesRaw.length > 0
+            ? 'static+rt'
+            : 'rt-only'
+          : 'static-future',
       },
     }
   )

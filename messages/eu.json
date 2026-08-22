@@ -70,7 +70,18 @@
     "towards": "{destination} norabidea",
     "stale": "Orain dela {minutes} min-ko datuak",
     "reconnecting": "Berkonektatzen...",
-    "trainNum": "{number} trena"
+    "trainNum": "{number} trena",
+    "futureNotice": "{date}ko programatutako ordutegiak. Denbora errealeko informaziorik gabe."
+  },
+  "datePicker": {
+    "label": "Bidaiaren data",
+    "today": "Gaur",
+    "open": "Ireki egutegia",
+    "pickDate": "Aukeratu data bat",
+    "invalidRange": "Data baliogabea. Aukeratu {min} eta {max} artean.",
+    "prevMonth": "Aurreko hilabetea",
+    "nextMonth": "Hurrengo hilabetea",
+    "backToToday": "Itzuli gaurera"
   },
   "viaje": {
     "title": "Trenaren xehetasunak",

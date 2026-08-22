@@ -2,6 +2,7 @@
 
 import { useReducer, useEffect, useCallback, useRef } from 'react'
 import type { Tren, ViajeResponse } from '@/lib/renfe/types'
+import { todayISO, isISODate } from '@/lib/utils/dates'
 
 interface ViajeState {
   tren: Tren | null
@@ -41,8 +42,11 @@ function isTripFinished(tren: Tren): boolean {
   return !!finalTs && finalTs * 1000 < Date.now()
 }
 
-async function apiFetch(tripId: string): Promise<ViajeResponse> {
-  const res = await fetch(`/api/renfe/viaje/${encodeURIComponent(tripId)}`)
+async function apiFetch(tripId: string, fecha: string | null): Promise<ViajeResponse> {
+  const params = new URLSearchParams()
+  if (fecha) params.set('fecha', fecha)
+  const qs = params.toString()
+  const res = await fetch(`/api/renfe/viaje/${encodeURIComponent(tripId)}${qs ? `?${qs}` : ''}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<ViajeResponse>
 }
@@ -55,15 +59,24 @@ const initialState: ViajeState = {
   updatedAt: null,
 }
 
-export function useViaje(tripId: string | null) {
+/**
+ * @param tripId   Trip GTFS id
+ * @param fecha    Fecha de viaje ISO (opcional). En fechas futuras no hay
+ *                 tiempo real y el polling se desactiva.
+ */
+export function useViaje(tripId: string | null, fecha?: string | null) {
   const [state, dispatch] = useReducer(viajeReducer, initialState)
   const prevTren = useRef<Tren | null>(null)
+
+  // Only pass explicit future dates to the API; past/invalid → default (today).
+  const targetFecha =
+    fecha && isISODate(fecha) && fecha > todayISO() ? fecha : null
 
   const load = useCallback(async () => {
     if (!tripId) return
     dispatch({ type: 'LOADING' })
     try {
-      const data = await apiFetch(tripId)
+      const data = await apiFetch(tripId, targetFecha)
       prevTren.current = data.tren
       dispatch({
         type: 'SUCCESS',
@@ -74,19 +87,21 @@ export function useViaje(tripId: string | null) {
     } catch {
       dispatch({ type: 'ERROR', tren: prevTren.current })
     }
-  }, [tripId])
+  }, [tripId, targetFecha])
 
   useEffect(() => {
     void load()
-    const id = setInterval(() => {
-      if (prevTren.current && isTripFinished(prevTren.current)) {
-        clearInterval(id)
-        return
-      }
-      void load()
-    }, 20_000)
-    return () => clearInterval(id)
-  }, [load])
+    if (!targetFecha) {
+      const id = setInterval(() => {
+        if (prevTren.current && isTripFinished(prevTren.current)) {
+          clearInterval(id)
+          return
+        }
+        void load()
+      }, 20_000)
+      return () => clearInterval(id)
+    }
+  }, [load, targetFecha])
 
   return { ...state, refresh: load }
 }

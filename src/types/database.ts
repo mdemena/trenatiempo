@@ -238,6 +238,104 @@ export interface Database {
         }
         Relationships: []
       }
+      gtfs_services: {
+        Row: {
+          service_id: string
+          feed_source: string
+          start_date: string
+          end_date: string
+          monday: boolean
+          tuesday: boolean
+          wednesday: boolean
+          thursday: boolean
+          friday: boolean
+          saturday: boolean
+          sunday: boolean
+        }
+        Insert: {
+          service_id: string
+          feed_source: string
+          start_date: string
+          end_date: string
+          monday: boolean
+          tuesday: boolean
+          wednesday: boolean
+          thursday: boolean
+          friday: boolean
+          saturday: boolean
+          sunday: boolean
+        }
+        Update: {
+          service_id?: string
+          feed_source?: string
+          start_date?: string
+          end_date?: string
+          monday?: boolean
+          tuesday?: boolean
+          wednesday?: boolean
+          thursday?: boolean
+          friday?: boolean
+          saturday?: boolean
+          sunday?: boolean
+        }
+        Relationships: []
+      }
+      gtfs_service_exceptions: {
+        Row: {
+          service_id: string
+          feed_source: string
+          exception_date: string
+          exception_type: number
+        }
+        Insert: {
+          service_id: string
+          feed_source: string
+          exception_date: string
+          exception_type: number
+        }
+        Update: {
+          service_id?: string
+          feed_source?: string
+          exception_date?: string
+          exception_type?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'gtfs_service_exceptions_service_fk'
+            columns: ['service_id', 'feed_source']
+            referencedRelation: 'gtfs_services'
+            referencedColumns: ['service_id', 'feed_source']
+          }
+        ]
+      }
+      gtfs_trips: {
+        Row: {
+          trip_id: string
+          route_id: string | null
+          service_id: string
+          feed_source: string
+        }
+        Insert: {
+          trip_id: string
+          route_id?: string | null
+          service_id: string
+          feed_source: string
+        }
+        Update: {
+          trip_id?: string
+          route_id?: string | null
+          service_id?: string
+          feed_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'gtfs_trips_service_fk'
+            columns: ['service_id', 'feed_source']
+            referencedRelation: 'gtfs_services'
+            referencedColumns: ['service_id', 'feed_source']
+          }
+        ]
+      }
       gtfs_stop_times: {
         Row: {
           id: number
@@ -246,7 +344,6 @@ export interface Database {
           stop_id: string
           stop_sequence: number
           departure_time: string
-          service_date: string
           feed_source: string
         }
         Insert: {
@@ -256,7 +353,6 @@ export interface Database {
           stop_id: string
           stop_sequence: number
           departure_time: string
-          service_date: string
           feed_source?: string
         }
         Update: {
@@ -265,17 +361,37 @@ export interface Database {
           stop_id?: string
           stop_sequence?: number
           departure_time?: string
-          service_date?: string
           feed_source?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'gtfs_stop_times_trip_fk'
+            columns: ['trip_id']
+            referencedRelation: 'gtfs_trips'
+            referencedColumns: ['trip_id']
+          }
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_stop_departures: {
+        Args: {
+          p_stop_id: string
+          p_date: string
+          p_feed: string
+          p_min_time: string | null
+        }
+        Returns: {
+          trip_id: string
+          route_id: string
+          departure_time: string
+          stop_sequence: number
+          feed_source: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

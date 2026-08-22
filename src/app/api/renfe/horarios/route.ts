@@ -12,9 +12,16 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit'
 import type { HorarioEntry, HorariosResponse } from '@/lib/renfe/types'
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
 const QuerySchema = z.object({
   stopId: z.string().min(1, 'stopId es obligatorio').max(20),
   tipo: z.enum(['cercanias', 'md']).default('cercanias'),
+  /** Fecha de viaje (ISO yyyy-mm-dd). Por defecto hoy. Nunca en pasado. */
+  fecha: z
+    .string()
+    .regex(ISO_DATE, 'fecha debe tener formato YYYY-MM-DD')
+    .optional(),
 })
 
 function gtfsTimeToSeconds(time: string): number {
@@ -59,16 +66,15 @@ function extractNumTren(tripId: string): string | undefined {
   return match?.[1]
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DB = { from: (t: string) => any }
+type DB = { from: (t: string) => any; rpc: (fn: string, args?: Record<string, unknown>) => any }
 
 /**
  * For each tripId, finds the name of its last stop (destination).
  * Excludes trips whose last stop matches the user's current stopId.
+ * Stop times are date-independent now, so no service_date filter is needed.
  */
 async function fetchDestinations(
   tripIds: string[],
-  today: string,
   userStopId: string,
   db: DB
 ): Promise<Map<string, string>> {
@@ -79,7 +85,6 @@ async function fetchDestinations(
     .from('gtfs_stop_times')
     .select('trip_id, stop_id, stop_sequence')
     .in('trip_id', tripIds)
-    .eq('service_date', today)
     .order('trip_id')
     .order('stop_sequence', { ascending: false })
 
@@ -119,6 +124,14 @@ async function fetchDestinations(
   return result
 }
 
+interface DepartureRow {
+  trip_id: string
+  route_id: string | null
+  departure_time: string
+  stop_sequence: number
+  feed_source: string
+}
+
 export async function GET(request: Request) {
   const rl = checkRateLimit(getRateLimitKey(request, 'horarios'), 120)
   if (!rl.ok) {
@@ -131,7 +144,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const parsed = QuerySchema.safeParse({
     stopId: searchParams.get('stopId'),
-    tipo: searchParams.get('tipo'),
+    tipo: searchParams.get('tipo') ?? undefined,
+    fecha: searchParams.get('fecha') ?? undefined,
   })
 
   if (!parsed.success) {
@@ -141,41 +155,51 @@ export async function GET(request: Request) {
     )
   }
 
-  const { stopId, tipo } = parsed.data
+  const { stopId, tipo, fecha } = parsed.data
+
+  // ── Resolve target date (Madrid timezone). Past dates rejected. ──────────
   const today = todayISO()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabaseAdmin as unknown as DB
+  const targetDate =
+    fecha && fecha >= today ? fecha : fecha ? undefined : today
 
-  // Fetch GTFS-RT and static schedule in parallel
-  let query = db
-    .from('gtfs_stop_times')
-    .select('trip_id, departure_time, stop_sequence, route_id, feed_source')
-    .eq('stop_id', stopId)
-    .eq('service_date', today)
-    .gte('departure_time', nowGtfsTime())
-
-  // Filtrar por tipo según el feed_source de cada viaje:
-  //   cercanias → feed del GTFS de Cercanías (incluye Rodalies R-prefixed)
-  //   md        → feed del GTFS de AV/LD/MD (incluye Regionales R-prefixed)
-  if (tipo === 'cercanias') {
-    query = query.eq('feed_source', 'cercanias')
-  } else if (tipo === 'md') {
-    query = query.eq('feed_source', 'md')
+  if (!targetDate) {
+    return NextResponse.json({ error: 'La fecha no puede ser pasada' }, { status: 400 })
   }
 
+  const isToday = targetDate === today
+  const db = supabaseAdmin as unknown as DB
+
+  // ── Static schedule via RPC (calendar-aware) ─────────────────────────────
+  const staticQuery = db.rpc('get_stop_departures', {
+    p_stop_id: stopId,
+    p_date: targetDate,
+    p_feed: tipo,
+    p_min_time: isToday ? nowGtfsTime() : null,
+  })
+
+  // Real-time feeds only make sense for today's trains.
   const [tripResult, vehicleResult, staticResult] = await Promise.allSettled([
-    fetchTripUpdates(tipo),
-    fetchVehiclePositions(tipo),
-    query.order('departure_time').order('stop_sequence').limit(60),
+    isToday ? fetchTripUpdates(tipo) : Promise.resolve(null),
+    isToday ? fetchVehiclePositions(tipo) : Promise.resolve(null),
+    staticQuery,
   ])
 
   const tripFeedResult = tripResult.status === 'fulfilled' ? tripResult.value : null
   const vehicleFeedResult = vehicleResult.status === 'fulfilled' ? vehicleResult.value : null
-  const staticData =
+
+  if (staticResult.status === 'rejected') {
+    console.error('get_stop_departures failed:', staticResult.reason)
+  }
+  const staticData: DepartureRow[] =
     staticResult.status === 'fulfilled' ? (staticResult.value.data ?? []) : []
 
   type StopTimeRow = { trip_id: string; departure_time: string; stop_sequence: number; route_id?: string }
-  const stopTimes: StopTimeRow[] = staticData
+  const stopTimes: StopTimeRow[] = staticData.map((r) => ({
+    trip_id: r.trip_id,
+    departure_time: r.departure_time,
+    stop_sequence: r.stop_sequence,
+    route_id: r.route_id ?? undefined,
+  }))
 
   // Deduplicate: keep lowest stop_sequence per trip
   const seen = new Set<string>()
@@ -185,15 +209,14 @@ export async function GET(request: Request) {
     return true
   })
 
-  // Build RT indexes
+  // Build RT indexes (empty for future dates)
   const tripIndex = tripFeedResult ? indexTripUpdatesById(tripFeedResult.feed) : {}
   const vehicleIndex = vehicleFeedResult ? indexVehiclePositionsById(vehicleFeedResult.feed) : {}
-  const stale = tripFeedResult?.stale ?? true
+  const stale = isToday ? (tripFeedResult?.stale ?? true) : false
 
   // Kick off destination lookup in parallel with RT index processing
   const destPromise = fetchDestinations(
     uniqueStopTimes.map((st) => st.trip_id),
-    today,
     stopId,
     db
   )
@@ -204,11 +227,11 @@ export async function GET(request: Request) {
     // Wait for destinations (fetched in parallel above)
     const destByTrip = await destPromise
 
-    // ── Static schedule + RT overlay ─────────────────────────────────────────
+    // ── Static schedule + RT overlay (today) or plain static (future) ───────
     horarios = uniqueStopTimes.map((st) => {
       const rt = tripIndex[st.trip_id]
       const rtStop = rt?.stopTimeUpdate?.find((u) => u.stopId === stopId)
-      const delaySeg = rtStop?.departure?.delay ?? 0
+      const delaySeg = isToday ? (rtStop?.departure?.delay ?? 0) : 0
 
       const salidaReal = delaySeg
         ? secondsToGtfsTime(gtfsTimeToSeconds(st.departure_time) + delaySeg)
@@ -224,15 +247,15 @@ export async function GET(request: Request) {
         salidaProgramada: st.departure_time,
         salidaReal,
         delaySeg,
-        cancelado: rtStop?.scheduleRelationship === 'CANCELED',
+        cancelado: isToday ? rtStop?.scheduleRelationship === 'CANCELED' : false,
         anden,
-        estado: resolveEstado(delaySeg, rtStop?.scheduleRelationship),
+        estado: resolveEstado(delaySeg, isToday ? rtStop?.scheduleRelationship : undefined),
         destino: destByTrip.get(st.trip_id),
         numTren: extractNumTren(st.trip_id),
       }
     })
   } else if (tripFeedResult) {
-    // ── Fallback: GTFS-RT only (active trains) ────────────────────────────────
+    // ── Fallback: GTFS-RT only (active trains), only valid for today ─────────
     const nowSec = Math.floor(Date.now() / 1000)
     horarios = []
 
@@ -280,14 +303,23 @@ export async function GET(request: Request) {
   const response: HorariosResponse = {
     horarios,
     updatedAt: tripFeedResult?.fetchedAt ?? Date.now(),
-    stale: stale || stopTimes.length === 0,
+    stale: stale || (isToday && stopTimes.length === 0),
+    fecha: targetDate,
+    realtime: isToday,
   }
 
   return NextResponse.json(response, {
     headers: {
-      'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
-      'X-Stale': String(stale),
-      'X-Source': stopTimes.length > 0 ? 'static+rt' : 'rt-only',
+      // Future dates are pure static data — cache them much more aggressively.
+      'Cache-Control': isToday
+        ? 'public, s-maxage=15, stale-while-revalidate=30'
+        : 'public, s-maxage=300, stale-while-revalidate=600',
+      'X-Stale': String(response.stale),
+      'X-Source': isToday
+        ? stopTimes.length > 0
+          ? 'static+rt'
+          : 'rt-only'
+        : 'static-future',
     },
   })
 }

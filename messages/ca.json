@@ -70,7 +70,18 @@
     "towards": "Direcció {destination}",
     "stale": "Dades de fa {minutes} min",
     "reconnecting": "Reconnectant...",
-    "trainNum": "Tren {number}"
+    "trainNum": "Tren {number}",
+    "futureNotice": "Horaris programats del {date}. Sense informació de temps real."
+  },
+  "datePicker": {
+    "label": "Data del viatge",
+    "today": "Avui",
+    "open": "Obre el calendari",
+    "pickDate": "Selecciona una data",
+    "invalidRange": "Data no vàlida. Tria entre {min} i {max}.",
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes següent",
+    "backToToday": "Torna a avui"
   },
   "viaje": {
     "title": "Detall del tren",

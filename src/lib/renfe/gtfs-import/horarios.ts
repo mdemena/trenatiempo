@@ -1,21 +1,55 @@
 import AdmZip from 'adm-zip'
-import { parse } from 'csv-parse/sync'
-import type { StopTimeRow, HorarioImportResult, HorarioFeedDetail } from './types'
+import type {
+  StopTimeRow,
+  ServiceRow,
+  ServiceExceptionRow,
+  TripRow,
+  HorarioImportResult,
+  HorarioFeedDetail,
+} from './types'
 
-type CsvRecord = Record<string, string>
+/**
+ * Imports the full schedule period from both Renfe GTFS feeds:
+ *   - calendar.txt      → gtfs_services
+ *   - calendar_dates.txt → gtfs_service_exceptions (if present)
+ *   - trips.txt         → gtfs_trips
+ *   - stop_times.txt    → gtfs_stop_times (date-independent)
+ *
+ * Unlike the previous single-day import, this stores every service in the feed
+ * coverage window (~1 month Cercanías, ~4 months AV/LD/MD) once. The RPC
+ * `get_stop_departures` resolves which services run on any requested date.
+ */
 
-function todayYYYYMMDD(): string {
-  return new Date().toLocaleDateString('es-ES', {
-    timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).split('/').reverse().join('')
+// Minimal CSV parser: Renfe GTFS files are simple comma-separated values with
+// no quoted commas; headers may carry trailing padding whitespace.
+function parseCsv(text: string): { headers: string[]; rows: string[][] } {
+  const clean = text.replace(/^\uFEFF/, '').replace(/\r/g, '')
+  const lines = clean.split('\n').filter((l) => l.trim() !== '')
+  const headers = (lines[0] ?? '').split(',').map((h) => h.trim())
+  const rows = lines.slice(1).map((l) => l.split(','))
+  return { headers, rows }
 }
 
-function todayISO(): string {
-  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' })
+function toRows(csv: { headers: string[]; rows: string[][] }): Record<string, string>[] {
+  return csv.rows.map((cols) => {
+    const rec: Record<string, string> = {}
+    for (let i = 0; i < csv.headers.length; i++) {
+      rec[csv.headers[i]] = (cols[i] ?? '').trim()
+    }
+    return rec
+  })
 }
 
-function getDayOfWeek(): string {
-  return new Date().toLocaleDateString('en-US', { timeZone: 'Europe/Madrid', weekday: 'long' }).toLowerCase()
+/** "20260822" → "2026-08-22". Returns null when malformed. */
+function yyyymmddToIso(v: string): string | null {
+  if (!/^\d{8}$/.test(v)) return null
+  const y = v.slice(0, 4)
+  const m = v.slice(4, 6)
+  const d = v.slice(6, 8)
+  const iso = `${y}-${m}-${d}`
+  // Reject impossible dates (e.g. 20260231)
+  if (Number.isNaN(new Date(`${iso}T00:00:00Z`).getTime())) return null
+  return iso
 }
 
 const FEEDS: { name: string; url: string; source: string }[] = [
@@ -32,20 +66,21 @@ const FEEDS: { name: string; url: string; source: string }[] = [
 ]
 
 export async function importHorarios(): Promise<HorarioImportResult> {
-  const today = todayYYYYMMDD()
-  const todayIso = todayISO()
-  const dow = getDayOfWeek()
   const failures: string[] = []
-  const allRows: StopTimeRow[] = []
+  const allStopTimes: StopTimeRow[] = []
+  const allServices: ServiceRow[] = []
+  const allExceptions: ServiceExceptionRow[] = []
+  const allTrips: TripRow[] = []
   const feeds: HorarioFeedDetail[] = []
 
   for (const feed of FEEDS) {
     const detail: HorarioFeedDetail = {
       name: feed.name,
       source: feed.source,
-      activeServiceIds: [],
+      servicesCount: 0,
+      exceptionsCount: 0,
+      tripsCount: 0,
       routesLoaded: 0,
-      activeTrips: 0,
       rowsParsed: 0,
       rowsInserted: 0,
       rowsFailed: 0,
@@ -63,6 +98,7 @@ export async function importHorarios(): Promise<HorarioImportResult> {
       const buffer = Buffer.from(await res.arrayBuffer())
       const zip = new AdmZip(buffer)
 
+      // ── calendar.txt → services ────────────────────────────────────────
       const calendarRaw = zip.readAsText('calendar.txt')
       if (!calendarRaw) {
         detail.error = 'calendar.txt not found'
@@ -71,24 +107,69 @@ export async function importHorarios(): Promise<HorarioImportResult> {
         continue
       }
 
-      const calendar: CsvRecord[] = parse(calendarRaw, { columns: true, skip_empty_lines: true, relax_column_count: true })
-      const activeServiceIds = new Set<string>()
+      const serviceIds = new Set<string>()
+      for (const cal of toRows(parseCsv(calendarRaw))) {
+        const start = yyyymmddToIso(cal['start_date'] ?? '')
+        const end = yyyymmddToIso(cal['end_date'] ?? '')
+        const serviceId = cal['service_id']
+        if (!serviceId || !start || !end) continue
 
-      for (const cal of calendar) {
-        if (cal[dow] === '1' && cal.start_date <= today && today <= cal.end_date) {
-          activeServiceIds.add(cal.service_id)
+        serviceIds.add(serviceId)
+        detail.servicesCount++
+        if (
+          detail.coverageStart === undefined ||
+          start < detail.coverageStart
+        ) {
+          detail.coverageStart = start
         }
+        if (detail.coverageEnd === undefined || end > detail.coverageEnd) {
+          detail.coverageEnd = end
+        }
+
+        allServices.push({
+          service_id: serviceId,
+          feed_source: feed.source,
+          start_date: start,
+          end_date: end,
+          monday: cal['monday'] === '1',
+          tuesday: cal['tuesday'] === '1',
+          wednesday: cal['wednesday'] === '1',
+          thursday: cal['thursday'] === '1',
+          friday: cal['friday'] === '1',
+          saturday: cal['saturday'] === '1',
+          sunday: cal['sunday'] === '1',
+        })
       }
 
-      detail.activeServiceIds = [...activeServiceIds]
-
-      if (activeServiceIds.size === 0) {
-        detail.error = `no active service for today (${dow})`
-        failures.push(`${feed.name}: no active service for today (${dow})`)
+      if (detail.servicesCount === 0) {
+        detail.error = 'no services parsed from calendar.txt'
+        failures.push(`${feed.name}: no services parsed from calendar.txt`)
         feeds.push(detail)
         continue
       }
 
+      // ── calendar_dates.txt → exceptions (optional file) ────────────────
+      const calDatesRaw = zip.readAsText('calendar_dates.txt')
+      if (calDatesRaw) {
+        for (const exc of toRows(parseCsv(calDatesRaw))) {
+          const serviceId = exc['service_id']
+          const date = yyyymmddToIso(exc['date'] ?? '')
+          const type = parseInt(exc['exception_type'] ?? '', 10)
+          // FK safety: skip exceptions referencing unknown services
+          if (!serviceId || !date || (type !== 1 && type !== 2)) continue
+          if (!serviceIds.has(serviceId)) continue
+
+          detail.exceptionsCount++
+          allExceptions.push({
+            service_id: serviceId,
+            feed_source: feed.source,
+            exception_date: date,
+            exception_type: type,
+          })
+        }
+      }
+
+      // ── routes.txt → short names ───────────────────────────────────────
       const routesRaw = zip.readAsText('routes.txt')
       if (!routesRaw) {
         detail.error = 'routes.txt not found'
@@ -97,13 +178,15 @@ export async function importHorarios(): Promise<HorarioImportResult> {
         continue
       }
 
-      const routes: CsvRecord[] = parse(routesRaw, { columns: true, skip_empty_lines: true })
       const routeShortNames = new Map<string, string>()
-      for (const r of routes) {
-        if (r.route_id && r.route_short_name) routeShortNames.set(r.route_id, r.route_short_name)
+      for (const r of toRows(parseCsv(routesRaw))) {
+        if (r['route_id'] && r['route_short_name']) {
+          routeShortNames.set(r['route_id'], r['route_short_name'])
+        }
       }
       detail.routesLoaded = routeShortNames.size
 
+      // ── trips.txt → trip/service mapping ───────────────────────────────
       const tripsRaw = zip.readAsText('trips.txt')
       if (!tripsRaw) {
         detail.error = 'trips.txt not found'
@@ -112,24 +195,30 @@ export async function importHorarios(): Promise<HorarioImportResult> {
         continue
       }
 
-      const trips: CsvRecord[] = parse(tripsRaw, { columns: true, skip_empty_lines: true })
-      const activeTripRoutes = new Map<string, string>()
+      const tripIds = new Set<string>()
+      for (const t of toRows(parseCsv(tripsRaw))) {
+        const tripId = t['trip_id']
+        const serviceId = t['service_id']
+        if (!tripId || !serviceId || !serviceIds.has(serviceId)) continue
 
-      for (const t of trips) {
-        if (!activeServiceIds.has(t.service_id)) continue
-        const shortName = routeShortNames.get(t.route_id) ?? t.route_id
-        activeTripRoutes.set(t.trip_id, shortName)
+        tripIds.add(tripId)
+        detail.tripsCount++
+        allTrips.push({
+          trip_id: tripId,
+          service_id: serviceId,
+          route_id: routeShortNames.get(t['route_id']) ?? t['route_id'] ?? '',
+          feed_source: feed.source,
+        })
       }
 
-      detail.activeTrips = activeTripRoutes.size
-
-      if (activeTripRoutes.size === 0) {
-        detail.error = 'no active trips for today'
-        failures.push(`${feed.name}: no active trips for today`)
+      if (detail.tripsCount === 0) {
+        detail.error = 'no trips parsed'
+        failures.push(`${feed.name}: no trips parsed`)
         feeds.push(detail)
         continue
       }
 
+      // ── stop_times.txt ─────────────────────────────────────────────────
       const stopTimesRaw = zip.readAsText('stop_times.txt')
       if (!stopTimesRaw) {
         detail.error = 'stop_times.txt not found'
@@ -138,25 +227,26 @@ export async function importHorarios(): Promise<HorarioImportResult> {
         continue
       }
 
-      const stopTimes: CsvRecord[] = parse(stopTimesRaw, { columns: true, skip_empty_lines: true, relax_column_count: true })
+      const stopTimesCsv = parseCsv(stopTimesRaw)
+      const idxTrip = stopTimesCsv.headers.indexOf('trip_id')
+      const idxStop = stopTimesCsv.headers.indexOf('stop_id')
+      const idxSeq = stopTimesCsv.headers.indexOf('stop_sequence')
+      const idxDep = stopTimesCsv.headers.indexOf('departure_time')
+      const idxArr = stopTimesCsv.headers.indexOf('arrival_time')
 
-      for (const st of stopTimes) {
-        const tripId = st.trip_id?.trim()
-        const routeId = activeTripRoutes.get(tripId)
-        if (!routeId) continue
-
-        const departure = st.departure_time?.trim() || st.arrival_time?.trim()
-        if (!departure) continue
+      for (const cols of stopTimesCsv.rows) {
+        const tripId = (cols[idxTrip] ?? '').trim()
+        const departure = (cols[idxDep] ?? cols[idxArr] ?? '').trim()
+        if (!tripId || !departure) continue
+        if (!tripIds.has(tripId)) continue
 
         detail.rowsParsed++
-
-        allRows.push({
+        allStopTimes.push({
           trip_id: tripId,
-          route_id: routeId,
-          stop_id: (st.stop_id ?? '').trim(),
-          stop_sequence: parseInt(st.stop_sequence, 10) || 0,
+          route_id: '', // filled below from trips map
+          stop_id: (cols[idxStop] ?? '').trim(),
+          stop_sequence: parseInt(cols[idxSeq] ?? '', 10) || 0,
           departure_time: departure,
-          service_date: todayIso,
           feed_source: feed.source,
         })
       }
@@ -169,5 +259,22 @@ export async function importHorarios(): Promise<HorarioImportResult> {
     feeds.push(detail)
   }
 
-  return { totalRows: allRows.length, failures, rows: allRows, serviceDate: todayIso, feeds }
+  // Fill route_id on stop times from the trip mapping (single pass).
+  const routeByTrip = new Map(allTrips.map((t) => [t.trip_id, t.route_id]))
+  for (const st of allStopTimes) {
+    st.route_id = routeByTrip.get(st.trip_id) ?? ''
+  }
+
+  return {
+    totalStopTimes: allStopTimes.length,
+    servicesCount: allServices.length,
+    exceptionsCount: allExceptions.length,
+    tripsCount: allTrips.length,
+    failures,
+    stopTimeRows: allStopTimes,
+    serviceRows: allServices,
+    exceptionRows: allExceptions,
+    tripRows: allTrips,
+    feeds,
+  }
 }

@@ -40,9 +40,11 @@ interface TrainCardProps {
   tren: HorarioEntry
   index: number
   stopId: string
+  /** Fecha consultada (ISO); se propaga al detalle del viaje */
+  fecha?: string | null
 }
 
-export function TrainCard({ tren, index, stopId }: TrainCardProps) {
+export function TrainCard({ tren, index, stopId, fecha }: TrainCardProps) {
   const t = useTranslations('horarios')
   const router = useRouter()
 
@@ -52,6 +54,8 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
   const displayTime = gtfsToHHMM(tren.salidaReal ?? tren.salidaProgramada)
   const originalTime = tren.salidaReal ? gtfsToHHMM(tren.salidaProgramada) : null
 
+  const href = `/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}${fecha ? `&fecha=${fecha}` : ''}`
+
   return (
     <motion.div
       role="button"
@@ -59,8 +63,8 @@ export function TrainCard({ tren, index, stopId }: TrainCardProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
-      onClick={() => router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
-      onKeyDown={(e) => e.key === 'Enter' && router.push(`/viaje/${tren.tripId}?stopId=${encodeURIComponent(stopId)}`)}
+      onClick={() => router.push(href)}
+      onKeyDown={(e) => e.key === 'Enter' && router.push(href)}
       className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3.5 text-left transition hover:bg-white/5 active:scale-[0.98] light:hover:bg-black/5"
     >
       {/* Line badge + type badge + train number stacked */}
