@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { parseAnden, resolveEstado, indexTripUpdatesById, indexVehiclePositionsById } from '@/lib/renfe/gtfs-rt'
+import {
+  parseAnden,
+  resolveEstado,
+  indexTripUpdatesById,
+  indexVehiclePositionsById,
+  clearFeedCache,
+} from '@/lib/renfe/gtfs-rt'
+import { RENFE_GTFSRT } from '@/lib/renfe/endpoints'
 import type { GtfsRtFeed } from '@/lib/renfe/types'
 
 // Mock del módulo supabase/admin para no necesitar credenciales en tests
@@ -138,6 +145,7 @@ describe('indexVehiclePositionsById', () => {
 describe('fetchTripUpdates con caché', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
+    clearFeedCache()
   })
 
   afterEach(() => {
@@ -183,5 +191,55 @@ describe('fetchTripUpdates con caché', () => {
 
     expect(result.stale).toBe(true)
     expect(result.feed).toBeDefined()
+  })
+
+  it('sirve desde memoria sin re-fetch mientras la caché L1 está fresca', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => FEED_FIXTURE,
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { fetchTripUpdates } = await import('@/lib/renfe/gtfs-rt')
+
+    await fetchTripUpdates('cercanias')
+    const second = await fetchTripUpdates('cercanias')
+
+    expect(mockFetch).toHaveBeenCalledOnce()
+    expect(second.stale).toBe(false)
+  })
+
+  it('deduplica peticiones concurrentes al mismo feed (single-flight)', async () => {
+    let resolveFetch!: (value: { ok: boolean; json: () => Promise<GtfsRtFeed> }) => void
+    const mockFetch = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve as typeof resolveFetch
+        })
+    )
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { fetchTripUpdates } = await import('@/lib/renfe/gtfs-rt')
+
+    const p1 = fetchTripUpdates('cercanias')
+    const p2 = fetchTripUpdates('cercanias')
+    expect(mockFetch).toHaveBeenCalledOnce()
+
+    resolveFetch({ ok: true, json: async () => FEED_FIXTURE })
+
+    const [a, b] = await Promise.all([p1, p2])
+
+    expect(mockFetch).toHaveBeenCalledOnce()
+    expect(a.feed.entity).toHaveLength(FEED_FIXTURE.entity.length)
+    expect(b.feed.entity).toHaveLength(FEED_FIXTURE.entity.length)
+  })
+})
+
+describe('endpoints GTFS-RT', () => {
+  it('las URLs del feed MD usan mayúsculas (_LD) — las minúsculas dan 404', () => {
+    expect(RENFE_GTFSRT.tripUpdatesLD).toBe('https://gtfsrt.renfe.com/trip_updates_LD.json')
+    expect(RENFE_GTFSRT.vehiclePositionsLD).toBe(
+      'https://gtfsrt.renfe.com/vehicle_positions_LD.json'
+    )
   })
 })

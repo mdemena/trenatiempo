@@ -1,8 +1,8 @@
 export const RENFE_GTFSRT = {
   tripUpdatesCercanias: 'https://gtfsrt.renfe.com/trip_updates.json',
   vehiclePositionsCercanias: 'https://gtfsrt.renfe.com/vehicle_positions.json',
-  tripUpdatesLD: 'https://gtfsrt.renfe.com/trip_updates_ld.json',
-  vehiclePositionsLD: 'https://gtfsrt.renfe.com/vehicle_positions_ld.json',
+  tripUpdatesLD: 'https://gtfsrt.renfe.com/trip_updates_LD.json',
+  vehiclePositionsLD: 'https://gtfsrt.renfe.com/vehicle_positions_LD.json',
   serviceAlerts: 'https://gtfsrt.renfe.com/service_alerts.json',
 } as const
 

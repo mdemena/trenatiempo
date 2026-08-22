@@ -12,6 +12,10 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit'
 import type { Tren, Parada, TipoServicio } from '@/lib/renfe/types'
 
+// Margen sobre los timeouts internos (Renfe 5s, Supabase 8s) para que la
+// función no muera con el límite por defecto de Vercel durante una degradación.
+export const maxDuration = 15
+
 const ParamsSchema = z.object({
   id: z.string().min(1).max(50),
 })

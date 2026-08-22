@@ -3,6 +3,13 @@ import type { Database } from '@/types/database'
 
 type AdminClient = SupabaseClient<Database>
 
+// Sin este timeout, si la BD va lenta o caída las queries se cuelgan y
+// arrastran la route handler hasta el límite de Vercel (504 timeout).
+const SUPABASE_FETCH_TIMEOUT_MS = Number(process.env.SUPABASE_FETCH_TIMEOUT_MS ?? 8_000)
+
+const timedFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, signal: AbortSignal.timeout(SUPABASE_FETCH_TIMEOUT_MS) })
+
 let _client: AdminClient | undefined
 
 function getClient(): AdminClient {
@@ -10,7 +17,10 @@ function getClient(): AdminClient {
     _client = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false } }
+      {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { fetch: timedFetch },
+      }
     )
   }
   return _client
