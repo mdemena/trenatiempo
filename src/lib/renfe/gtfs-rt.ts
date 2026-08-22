@@ -11,6 +11,20 @@ type FeedType = 'cercanias' | 'md'
 
 // ─── Cache helpers ────────────────────────────────────────────────────────────
 
+// L1: caché en memoria por instancia. Elimina las consultas a BD del camino
+// caliente y permite servir datos aunque Supabase vaya lento o esté caído.
+const memoryCache = new Map<string, { feed: GtfsRtFeed; expiresAt: number }>()
+
+// Single-flight: deduplica peticiones concurrentes al mismo feed (p. ej.
+// /horarios y /viaje arrancando a la vez tras un cold start).
+const inflight = new Map<string, Promise<FeedResult>>()
+
+/** Resetea las cachés en memoria. Pensado para tests. */
+export function clearFeedCache(): void {
+  memoryCache.clear()
+  inflight.clear()
+}
+
 async function readCache(key: string): Promise<{ data: GtfsRtFeed; expired: boolean } | null> {
   try {
     const { data, error } = await supabaseAdmin
@@ -43,14 +57,15 @@ async function writeCache(key: string, feed: GtfsRtFeed, ttlSeconds: number): Pr
 
 // ─── Generic fetch with cache ─────────────────────────────────────────────────
 
-async function fetchWithCache(url: string, cacheKey: string, ttl: number): Promise<FeedResult> {
-  // 1. Try fresh cache
-  const cached = await readCache(cacheKey)
-  if (cached && !cached.expired) {
-    return { feed: cached.data, stale: false, fetchedAt: Date.now() }
+async function doFetchWithCache(url: string, cacheKey: string, ttl: number): Promise<FeedResult> {
+  const mem = memoryCache.get(cacheKey)
+
+  // 1. Memoria fresca → respuesta instantánea sin tocar BD ni Renfe
+  if (mem && mem.expiresAt > Date.now()) {
+    return { feed: mem.feed, stale: false, fetchedAt: Date.now() }
   }
 
-  // 2. Fetch from Renfe
+  // 2. Fetch desde Renfe
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(5000),
@@ -62,18 +77,35 @@ async function fetchWithCache(url: string, cacheKey: string, ttl: number): Promi
     const feed = (await res.json()) as GtfsRtFeed
     const fetchedAt = Date.now()
 
-    // 3. Persist to cache (non-blocking)
+    // 3. Persistir: memoria síncrona, BD en segundo plano (L2 entre cold starts)
+    memoryCache.set(cacheKey, { feed, expiresAt: fetchedAt + ttl * 1000 })
     void writeCache(cacheKey, feed, ttl)
 
     return { feed, stale: false, fetchedAt }
   } catch (fetchError) {
-    // 4. Fallback to stale cache rather than throwing
+    console.error(`[gtfs-rt] Fetch failed for ${cacheKey}:`, fetchError)
+
+    // 4. Degradación ordenada: memoria expirada → caché en BD (fresca o vieja)
+    if (mem) {
+      return { feed: mem.feed, stale: true, fetchedAt: Date.now() }
+    }
+    const cached = await readCache(cacheKey)
     if (cached) {
-      console.error(`[gtfs-rt] Fetch failed, serving stale cache for ${cacheKey}:`, fetchError)
       return { feed: cached.data, stale: true, fetchedAt: Date.now() }
     }
     throw fetchError
   }
+}
+
+function fetchWithCache(url: string, cacheKey: string, ttl: number): Promise<FeedResult> {
+  let task = inflight.get(cacheKey)
+  if (!task) {
+    task = doFetchWithCache(url, cacheKey, ttl).finally(() => {
+      inflight.delete(cacheKey)
+    })
+    inflight.set(cacheKey, task)
+  }
+  return task
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
