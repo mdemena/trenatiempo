@@ -8,6 +8,12 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    environmentOptions: {
+      jsdom: {
+        url: 'http://localhost:3000',
+      },
+    },
+    setupFiles: ['./tests/setup.ts'],
     exclude: ['tests/e2e/**', 'node_modules/**'],
     coverage: {
       reporter: ['text', 'lcov'],
