@@ -133,7 +133,7 @@ AS $$
     FROM public.gtfs_service_exceptions e
     WHERE e.exception_date = p_date AND e.exception_type = 1
   )
-  SELECT st.trip_id, st.route_id, st.departure_time, st.stop_sequence, st.feed_source
+  SELECT st.trip_id, t.route_id, st.departure_time, st.stop_sequence, st.feed_source
   FROM public.gtfs_stop_times st
   JOIN public.gtfs_trips t
     ON t.trip_id = st.trip_id AND t.feed_source = st.feed_source

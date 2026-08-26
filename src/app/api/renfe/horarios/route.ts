@@ -84,48 +84,53 @@ async function fetchDestinations(
 ): Promise<Map<string, string>> {
   if (tripIds.length === 0) return new Map()
 
-  // Get all stop rows for these trips (only 2 cols, ordered desc by stop_sequence)
-  const { data: rows } = await db
-    .from('gtfs_stop_times')
-    .select('trip_id, stop_id, stop_sequence')
-    .in('trip_id', tripIds)
-    .order('trip_id')
-    .order('stop_sequence', { ascending: false })
+  try {
+    // Get all stop rows for these trips (ordered desc by stop_sequence)
+    const { data: rows } = await db
+      .from('gtfs_stop_times')
+      .select('trip_id, stop_id, stop_sequence')
+      .in('trip_id', tripIds)
+      .order('trip_id')
+      .order('stop_sequence', { ascending: false })
 
-  if (!rows?.length) return new Map()
+    if (!rows?.length) return new Map()
 
-  // First occurrence per trip_id = last stop (since sorted desc)
-  const lastStopByTrip = new Map<string, string>()
-  for (const row of rows as Array<{ trip_id: string; stop_id: string }>) {
-    if (!lastStopByTrip.has(row.trip_id)) {
-      lastStopByTrip.set(row.trip_id, row.stop_id)
+    // First occurrence per trip_id = last stop (since sorted desc)
+    const lastStopByTrip = new Map<string, string>()
+    for (const row of rows as Array<{ trip_id: string; stop_id: string }>) {
+      if (!lastStopByTrip.has(row.trip_id)) {
+        lastStopByTrip.set(row.trip_id, row.stop_id)
+      }
     }
+
+    // Remove trips whose destination IS the user's stop (train terminates here)
+    for (const [tripId, stopId] of lastStopByTrip) {
+      if (stopId === userStopId) lastStopByTrip.delete(tripId)
+    }
+
+    if (lastStopByTrip.size === 0) return new Map()
+
+    // Fetch station names for unique destination stop IDs
+    const destStopIds = [...new Set(lastStopByTrip.values())]
+    const { data: stations } = await db
+      .from('stations')
+      .select('id, name')
+      .in('id', destStopIds)
+
+    const nameMap = new Map<string, string>(
+      ((stations as Array<{ id: string; name: string }>) ?? []).map((s) => [s.id, s.name])
+    )
+
+    const result = new Map<string, string>()
+    for (const [tripId, stopId] of lastStopByTrip) {
+      const name = nameMap.get(stopId)
+      if (name) result.set(tripId, name)
+    }
+    return result
+  } catch (err) {
+    console.error('fetchDestinations failed:', err)
+    return new Map()
   }
-
-  // Remove trips whose destination IS the user's stop (train terminates here)
-  for (const [tripId, stopId] of lastStopByTrip) {
-    if (stopId === userStopId) lastStopByTrip.delete(tripId)
-  }
-
-  if (lastStopByTrip.size === 0) return new Map()
-
-  // Fetch station names for unique destination stop IDs
-  const destStopIds = [...new Set(lastStopByTrip.values())]
-  const { data: stations } = await db
-    .from('stations')
-    .select('id, name')
-    .in('id', destStopIds)
-
-  const nameMap = new Map<string, string>(
-    ((stations as Array<{ id: string; name: string }>) ?? []).map((s) => [s.id, s.name])
-  )
-
-  const result = new Map<string, string>()
-  for (const [tripId, stopId] of lastStopByTrip) {
-    const name = nameMap.get(stopId)
-    if (name) result.set(tripId, name)
-  }
-  return result
 }
 
 interface DepartureRow {

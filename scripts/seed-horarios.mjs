@@ -36,18 +36,22 @@ import { fileURLToPath } from 'url'
 // ─── Load env vars (system > .env file) ──────────────────────────────────────
 
 const ROOT = join(fileURLToPath(import.meta.url), '..', '..')
-const envPath = join(ROOT, '.env')
 
 let SUPABASE_URL = process.env['NEXT_PUBLIC_SUPABASE_URL']
 let SUPABASE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY']
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  if (!existsSync(envPath)) {
-    console.error('❌  Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment or .env')
+  // Prefer .env.local over .env (Next.js convention)
+  const envLocalPath = join(ROOT, '.env.local')
+  const envPath = join(ROOT, '.env')
+  const envFile = existsSync(envLocalPath) ? envLocalPath : envPath
+
+  if (!existsSync(envFile)) {
+    console.error('❌  Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment or .env.local')
     process.exit(1)
   }
 
-  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+  for (const line of readFileSync(envFile, 'utf8').split('\n')) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('#')) continue
     const eqIdx = trimmed.indexOf('=')
@@ -174,8 +178,15 @@ files = ${JSON.stringify(filesToExtract)}
 with zipfile.ZipFile(zip_path) as z:
     names = z.namelist()
     for f in files:
-        if f in names:
-            z.extract(f, dest)
+        # Match both "calendar.txt" and "GTFS/calendar.txt" (subdirectory)
+        for name in names:
+            basename = name.rsplit('/', 1)[-1] if '/' in name else name
+            if basename == f:
+                data = z.read(name)
+                os.makedirs(dest, exist_ok=True)
+                with open(os.path.join(dest, f), 'wb') as out:
+                    out.write(data)
+                break
 `
   )
   execSync(`python3 "${pyExtract}"`, { stdio: 'pipe' })
@@ -254,8 +265,13 @@ with zipfile.ZipFile(zip_path) as z:
   console.log(`   🗂   [${feed.name}] Parsing trips.txt...`)
 
   const routeShortNames = new Map()
-  for (const r of parseCsvObjects(readFileSync(join(extractDir, 'routes.txt'), 'utf8'))) {
-    if (r['route_id'] && r['route_short_name']) routeShortNames.set(r['route_id'], r['route_short_name'])
+  const routesPath = join(extractDir, 'routes.txt')
+  if (existsSync(routesPath)) {
+    for (const r of parseCsvObjects(readFileSync(routesPath, 'utf8'))) {
+      if (r['route_id'] && r['route_short_name']) routeShortNames.set(r['route_id'], r['route_short_name'])
+    }
+  } else {
+    console.log(`   ⚠️  [${feed.name}] No routes.txt — using raw route_id`)
   }
 
   const tripIds = new Set()
@@ -310,6 +326,9 @@ with zipfile.ZipFile(zip_path) as z:
   let insertedRows = 0
   let failedRows = 0
 
+  // Map trip_id → route_id from parsed trips
+  const routeByTrip = new Map(tripRows.map((t) => [t.trip_id, t.route_id]))
+
   async function flushBatch(rows) {
     if (rows.length === 0) return
     const { error } = await supabase
@@ -346,7 +365,7 @@ with zipfile.ZipFile(zip_path) as z:
     totalRows++
     rowBuffer.push({
       trip_id: tripId,
-      route_id: '',
+      route_id: routeByTrip.get(tripId) ?? '',
       stop_id: cols[colST.stopId],
       stop_sequence: parseInt(cols[colST.stopSeq], 10) || 0,
       departure_time: departure,
