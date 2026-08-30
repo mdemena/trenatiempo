@@ -2,10 +2,6 @@
 name: Seeds Stations and Horarios
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
   schedule:
     - cron: "0 5 * * *" # 5:00 UTC
@@ -23,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
       - run: npm install
       - run: npm run seed:stations
       - run: npm run seed:horarios
