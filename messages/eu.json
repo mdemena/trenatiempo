@@ -93,6 +93,7 @@
     "origin": "Jatorria",
     "destination": "Helmuga",
     "duration": "Iraupena",
+    "date": "Data",
     "previousStop": "Aurreko geltokia",
     "nextStop": "Hurrengo geltokia",
     "trainShort": "Konboi laburra",
@@ -144,7 +145,9 @@
     "comingSoon": "Laster",
     "favorites": "Gogokoak",
     "savedStations": "Gordetako geltokiak",
-    "savedTrips": "Gordetako trenak"
+    "savedTrips": "Gordetako trenak",
+    "consentTitle": "Cookie-baimenak",
+    "consentDescription": "Aukeratu baimendu nahi diozun TrenATiempo-ri cookie analitikoak erabiltzea aplikazioa hobetzeko"
   },
   "favorites": {
     "title": "Nire gogokoak",
@@ -201,5 +204,58 @@
     "unsubscribe": "Alerta bertan behera utzi",
     "train": "Trena {id}",
     "view": "Ikusi"
+  },
+  "cookies": {
+    "title": "Zure pribatutasuna garrantzitsua da",
+    "description": "Aplikazioak funtzionatzeko derrigorrezko cookieak erabiltzen ditugu. Zure baimenarekin, cookie analitikoak ere erabiltzen ditugu TrenATiempo nola erabiltzen den ulertzeko eta hobetu ahal izateko.",
+    "acceptAll": "Guztiak onartu",
+    "essential": "Beharrezkoak soilik",
+    "configure": "Hobespenak konfiguratu",
+    "preferencesTitle": "Cookieen hobespenak",
+    "alwaysActive": "Beti aktibo",
+    "necessary": "Derrigorrezkoak",
+    "necessaryDescription": "Funtzionamendurako ezinbestekoak: zure hizkuntza, saioa eta aukeratutako data gogoratzeko.",
+    "analytics": "Analitikoak",
+    "analyticsDescription": "Aplikazioa nola erabiltzen duzun jakiten laguntzen digute (Google Analytics) hobetzeko. Zure datuak ez ditugu inoiz saltzen.",
+    "saveAndClose": "Gorde eta itxi"
+  },
+  "footer": {
+    "copyright": "© 2026 <link>SC Technology Solutions</link>",
+    "privacy": "Pribatutasun politika"
+  },
+  "legal": {
+    "title": "Pribatutasun politika",
+    "updated": "Azken eguneratzea: 2026ko abuztua",
+    "intro": "TrenATiempo-n zure pribatutasuna oso serio hartzen dugu. Orrialde honetan azaltzen dizugu zein datu tratatzen ditugun, zein helbururekin eta zein cookie erabiltzen ditugun.",
+    "responsibleTitle": "Tratamenduaren erantzulea",
+    "responsibleText": "TrenATiempo bidez tratatutako datuen erantzulea SC Technology Solutions da. Pribatutasunari buruzko edozein zalantza izateko idatz iezaguzu helbide honetara: info@sctechsolutions.es.",
+    "dataTitle": "Tratatzen ditugun datuak",
+    "dataText": "Ez da beharrezkoa erregistratzea trenen ordutegiak kontsultatzeko. Kontu bat sortzea erabakitzen baduzu, zure posta elektronikoa, zure izena eta zure hobespenak (hizkuntza eta cookie-baimenak) tratatzen ditugu zure esperientzia pertsonalizatzeko eta zure saioa aktibo mantentzeko helburu bakarrarekin. Zure datuak ez ditugu saltzen ezta hirugarrenekin partekatzen, lege-betebeharra izan ezean.",
+    "cookiesTitle": "Erabiltzen ditugun cookiak",
+    "cookiesIntro": "Hauek dira TrenATiempo-k zure nabigatzailean erregistra ditzakeen cookiak:",
+    "cookieName": "Cookiea",
+    "cookiePurpose": "Helburua",
+    "cookieType": "Mota",
+    "cookieDuration": "Iraupena",
+    "cookiesNecessary": "Beharrezkoa",
+    "cookiesAnalytics": "Analitikoa",
+    "c1Name": "trenatiempo_consent",
+    "c1Purpose": "Cookie-baimenen zure aukera gordetzeko",
+    "c1Duration": "Urte 1",
+    "c2Name": "NEXT_LOCALE",
+    "c2Purpose": "Aplikazioaren hizkuntza hobespena gogoratzeko",
+    "c2Duration": "Urte 1",
+    "c3Name": "sb-*-auth-token",
+    "c3Purpose": "Zure saioa irekita mantentzeko (erregistratutako erabiltzaileak soilik)",
+    "c3Duration": "Saioa",
+    "c4Name": "_ga, _ga_*",
+    "c4Purpose": "Aplikazioaren erabilera aztertzeko (Google Analytics)",
+    "c4Duration": "2 urte arte",
+    "c5Name": "_gid",
+    "c5Purpose": "Aplikazioaren erabilera aztertzeko (Google Analytics)",
+    "c5Duration": "24 ordu",
+    "storageNote": "Gainera, TrenATiempo-k zure nabigatzailearen biltegiratze lokala (localStorage) erabiltzen du zure itxura-gaia eta azken geltokiak gordetzeko. Datu hauek ez dira inoiz zure gailutik ateratzen eta edonoiz ezabatu ditzakezu nabigatzailearen ezarpenetan.",
+    "rightsTitle": "Zure eskubideak",
+    "rightsText": "Sarbide-, zuzenketa-, ezabaketa- eta aurkaritza-eskubideak bete ditzakezu info@sctechsolutions.es helbidera idatzita. Cookie-hobespenak ere edonoiz aldatu ditzakezu zure profileko «Cookie-baimenak» atalean."
   }
 }

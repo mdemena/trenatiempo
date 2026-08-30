@@ -23,6 +23,7 @@ export interface Database {
           role: 'user' | 'admin'
           active: boolean
           preferred_locale: Locale
+          consent_choice: 'essential' | 'analytics' | null
           last_seen: string | null
           created_at: string
           updated_at: string
@@ -35,6 +36,7 @@ export interface Database {
           role?: 'user' | 'admin'
           active?: boolean
           preferred_locale?: Locale
+          consent_choice?: 'essential' | 'analytics' | null
           last_seen?: string | null
           created_at?: string
           updated_at?: string
@@ -46,6 +48,7 @@ export interface Database {
           role?: 'user' | 'admin'
           active?: boolean
           preferred_locale?: Locale
+          consent_choice?: 'essential' | 'analytics' | null
           last_seen?: string | null
           updated_at?: string
         }

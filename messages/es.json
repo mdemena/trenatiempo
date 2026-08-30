@@ -93,6 +93,7 @@
     "origin": "Origen",
     "destination": "Destino",
     "duration": "Duración",
+    "date": "Fecha",
     "previousStop": "Parada anterior",
     "nextStop": "Próxima parada",
     "trainShort": "Convoy corto",
@@ -144,7 +145,9 @@
     "comingSoon": "Próximamente",
     "favorites": "Favoritos",
     "savedStations": "Estaciones guardadas",
-    "savedTrips": "Trenes guardados"
+    "savedTrips": "Trenes guardados",
+    "consentTitle": "Consentimiento de cookies",
+    "consentDescription": "Elige si permites que TrenATiempo use cookies analíticas para mejorar la aplicación"
   },
   "favorites": {
     "title": "Mis favoritos",
@@ -201,5 +204,58 @@
     "unsubscribe": "Cancelar alerta",
     "train": "Tren {id}",
     "view": "Ver"
+  },
+  "cookies": {
+    "title": "Tu privacidad importa",
+    "description": "Usamos cookies estrictamente necesarias para que la app funcione. Con tu permiso, también usamos cookies analíticas para entender cómo se usa TrenATiempo y poder mejorarla.",
+    "acceptAll": "Aceptar todas",
+    "essential": "Solo necesarias",
+    "configure": "Configurar preferencias",
+    "preferencesTitle": "Preferencias de cookies",
+    "alwaysActive": "Siempre activas",
+    "necessary": "Estrictamente necesarias",
+    "necessaryDescription": "Imprescindibles para el funcionamiento: recordar tu idioma, tu sesión y la fecha que elijas.",
+    "analytics": "Analíticas",
+    "analyticsDescription": "Nos ayudan a saber cómo usas la app (Google Analytics) para mejorarla. Nunca vendemos tus datos.",
+    "saveAndClose": "Guardar y cerrar"
+  },
+  "footer": {
+    "copyright": "© 2026 <link>SC Technology Solutions</link>",
+    "privacy": "Política de privacidad"
+  },
+  "legal": {
+    "title": "Política de privacidad",
+    "updated": "Última actualización: agosto de 2026",
+    "intro": "En TrenATiempo nos tomamos muy en serio tu privacidad. En esta página te explicamos qué datos tratamos, con qué finalidad y qué cookies utilizamos.",
+    "responsibleTitle": "Responsable del tratamiento",
+    "responsibleText": "La responsable del tratamiento de los datos tratados a través de TrenATiempo es SC Technology Solutions. Para cualquier cuestión sobre privacidad puedes escribirnos a info@sctechsolutions.es.",
+    "dataTitle": "Datos que tratamos",
+    "dataText": "No es necesario registrarse para consultar horarios de trenes. Si decides crear una cuenta, tratamos tu correo electrónico, tu nombre y tus preferencias (idioma y consentimiento de cookies) con la única finalidad de personalizar tu experiencia y mantener tu sesión activa. No vendemos ni compartimos tus datos con terceros, salvo obligación legal.",
+    "cookiesTitle": "Cookies que utilizamos",
+    "cookiesIntro": "Estas son las cookies que TrenATiempo puede registrar en tu navegador:",
+    "cookieName": "Cookie",
+    "cookiePurpose": "Finalidad",
+    "cookieType": "Tipo",
+    "cookieDuration": "Duración",
+    "cookiesNecessary": "Necesaria",
+    "cookiesAnalytics": "Analítica",
+    "c1Name": "trenatiempo_consent",
+    "c1Purpose": "Guardar tu elección de consentimiento de cookies",
+    "c1Duration": "1 año",
+    "c2Name": "NEXT_LOCALE",
+    "c2Purpose": "Recordar el idioma preferido de la aplicación",
+    "c2Duration": "1 año",
+    "c3Name": "sb-*-auth-token",
+    "c3Purpose": "Mantener tu sesión iniciada (solo usuarios registrados)",
+    "c3Duration": "Sesión",
+    "c4Name": "_ga, _ga_*",
+    "c4Purpose": "Analizar el uso de la aplicación (Google Analytics)",
+    "c4Duration": "Hasta 2 años",
+    "c5Name": "_gid",
+    "c5Purpose": "Analizar el uso de la aplicación (Google Analytics)",
+    "c5Duration": "24 horas",
+    "storageNote": "Además, TrenATiempo utiliza el almacenamiento local de tu navegador (localStorage) para guardar tu tema visual y las últimas estaciones consultadas. Estos datos nunca salen de tu dispositivo y puedes borrarlos en cualquier momento desde los ajustes del navegador.",
+    "rightsTitle": "Tus derechos",
+    "rightsText": "Puedes ejercer tus derechos de acceso, rectificación, supresión y oposición escribiendo a info@sctechsolutions.es. También puedes modificar tus preferencias de cookies en cualquier momento desde la sección «Consentimiento de cookies» de tu perfil."
   }
 }

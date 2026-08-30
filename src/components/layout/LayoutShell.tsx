@@ -4,6 +4,8 @@ import { useUserStore } from '@/store/userStore'
 import { usePathname } from '@/i18n/navigation'
 import { Header } from './Header'
 import { BottomNav } from './BottomNav'
+import { Footer } from './Footer'
+import { CookieConsentBanner } from '@/components/analytics/CookieConsentBanner'
 
 const AUTH_PAGES = ['/login', '/registro']
 
@@ -20,8 +22,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
-      <div className={showBottomNav ? 'pb-20' : ''}>{children}</div>
+      <div className={showBottomNav ? 'pb-20' : ''}>
+        {children}
+        <Footer />
+      </div>
       {showBottomNav && <BottomNav />}
+      <CookieConsentBanner />
     </>
   )
 }

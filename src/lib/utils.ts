@@ -20,3 +20,12 @@ export function formatTime(unixTimestamp: number, locale: string): string {
     hour12: false,
   }).format(new Date(unixTimestamp * 1000))
 }
+
+export function formatDate(isoDate: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${isoDate}T00:00:00Z`))
+}

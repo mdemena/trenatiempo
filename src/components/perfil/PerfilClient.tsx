@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { LogOut, ChevronRight, MapPin, Train, BellRing } from 'lucide-react'
+import { LogOut, ChevronRight, MapPin, Train, BellRing, Settings2, ShieldCheck } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { signOut } from '@/lib/supabase/auth-helpers'
@@ -11,6 +11,13 @@ import { useUserStore } from '@/store/userStore'
 import { useFavoritesStore } from '@/store/favoritesStore'
 import { Spinner } from '@/components/ui/Spinner'
 import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher'
+import { Switch } from '@/components/ui/Switch'
+import {
+  saveConsent,
+  applyConsent,
+  type ConsentChoice,
+} from '@/lib/consent'
+import { saveRemoteConsent } from '@/lib/supabase/consent'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
@@ -130,6 +137,7 @@ interface PerfilClientProps {
 
 export function PerfilClient({ user, profile }: PerfilClientProps) {
   const t = useTranslations('profile')
+  const tc = useTranslations('cookies')
   const displayName = profile?.full_name ?? user.email ?? '–'
   const initials = (profile?.full_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()
   const stationCount = useFavoritesStore((s) => s.stations.length)
@@ -137,6 +145,21 @@ export function PerfilClient({ user, profile }: PerfilClientProps) {
 
   const [pushCount, setPushCount] = useState(0)
   const pushFetchedRef = useRef(false)
+
+  // Consentimiento: el perfil es la fuente de verdad entre dispositivos
+  const [analytics, setAnalytics] = useState(profile?.consent_choice === 'analytics')
+
+  async function handleConsentChange(next: boolean) {
+    const choice: ConsentChoice = next ? 'analytics' : 'essential'
+    setAnalytics(next)
+    saveConsent(choice)
+    applyConsent(choice)
+    try {
+      await saveRemoteConsent(user.id, choice)
+    } catch {
+      // El cambio local ya está aplicado; Supabase se reintentará en el próximo banner/perfil
+    }
+  }
 
   useEffect(() => {
     if (!user || pushFetchedRef.current) return
@@ -174,6 +197,44 @@ export function PerfilClient({ user, profile }: PerfilClientProps) {
       <Section title={t('language')}>
         <p className="mb-3 text-xs text-rail-cream/40">{t('languageDescription')}</p>
         <LocaleSwitcher />
+      </Section>
+
+      {/* Cookie consent section */}
+      <Section title={t('consentTitle')}>
+        <p className="mb-3 text-xs text-rail-cream/40">{t('consentDescription')}</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-rail-surface px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-green/10 text-rail-green">
+                <ShieldCheck className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-rail-cream">{tc('necessary')}</p>
+                <p className="mt-0.5 text-[11px] text-rail-cream/35">{tc('necessaryDescription')}</p>
+              </div>
+            </div>
+            <span className="shrink-0 rounded-full bg-rail-green/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-rail-green">
+              {tc('alwaysActive')}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-rail-surface px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-amber/10 text-rail-amber">
+                <Settings2 className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-rail-cream">{tc('analytics')}</p>
+                <p className="mt-0.5 text-[11px] text-rail-cream/35">{tc('analyticsDescription')}</p>
+              </div>
+            </div>
+            <Switch
+              checked={analytics}
+              onChange={(next) => void handleConsentChange(next)}
+              label={tc('analytics')}
+            />
+          </div>
+        </div>
       </Section>
 
       {/* Favorites section */}

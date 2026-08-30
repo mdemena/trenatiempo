@@ -93,6 +93,7 @@
     "origin": "Origin",
     "destination": "Destination",
     "duration": "Duration",
+    "date": "Date",
     "previousStop": "Previous stop",
     "nextStop": "Next stop",
     "trainShort": "Short train",
@@ -144,7 +145,9 @@
     "comingSoon": "Coming soon",
     "favorites": "Favourites",
     "savedStations": "Saved stations",
-    "savedTrips": "Saved trips"
+    "savedTrips": "Saved trips",
+    "consentTitle": "Cookie consent",
+    "consentDescription": "Choose whether you allow TrenATiempo to use analytics cookies to improve the app"
   },
   "favorites": {
     "title": "My favourites",
@@ -201,5 +204,58 @@
     "unsubscribe": "Remove alert",
     "train": "Train {id}",
     "view": "View"
+  },
+  "cookies": {
+    "title": "Your privacy matters",
+    "description": "We use strictly necessary cookies to make the app work. With your permission, we also use analytics cookies to understand how TrenATiempo is used and to improve it.",
+    "acceptAll": "Accept all",
+    "essential": "Only necessary",
+    "configure": "Configure preferences",
+    "preferencesTitle": "Cookie preferences",
+    "alwaysActive": "Always on",
+    "necessary": "Strictly necessary",
+    "necessaryDescription": "Essential for the app to work: remember your language, session and chosen date.",
+    "analytics": "Analytics",
+    "analyticsDescription": "Help us understand how you use the app (Google Analytics) to improve it. We never sell your data.",
+    "saveAndClose": "Save and close"
+  },
+  "footer": {
+    "copyright": "© 2026 <link>SC Technology Solutions</link>",
+    "privacy": "Privacy policy"
+  },
+  "legal": {
+    "title": "Privacy policy",
+    "updated": "Last updated: August 2026",
+    "intro": "At TrenATiempo we take your privacy very seriously. This page explains what data we process, for what purpose and which cookies we use.",
+    "responsibleTitle": "Data controller",
+    "responsibleText": "The data controller for the data processed through TrenATiempo is SC Technology Solutions. For any privacy question you can contact us at info@sctechsolutions.es.",
+    "dataTitle": "Data we process",
+    "dataText": "No registration is required to check train schedules. If you decide to create an account, we process your email address, your name and your preferences (language and cookie consent) solely to personalise your experience and keep your session active. We never sell or share your data with third parties, except where required by law.",
+    "cookiesTitle": "Cookies we use",
+    "cookiesIntro": "These are the cookies TrenATiempo may store in your browser:",
+    "cookieName": "Cookie",
+    "cookiePurpose": "Purpose",
+    "cookieType": "Type",
+    "cookieDuration": "Duration",
+    "cookiesNecessary": "Necessary",
+    "cookiesAnalytics": "Analytics",
+    "c1Name": "trenatiempo_consent",
+    "c1Purpose": "Store your cookie consent choice",
+    "c1Duration": "1 year",
+    "c2Name": "NEXT_LOCALE",
+    "c2Purpose": "Remember the language you prefer in the app",
+    "c2Duration": "1 year",
+    "c3Name": "sb-*-auth-token",
+    "c3Purpose": "Keep you signed in (registered users only)",
+    "c3Duration": "Session",
+    "c4Name": "_ga, _ga_*",
+    "c4Purpose": "Analyse app usage (Google Analytics)",
+    "c4Duration": "Up to 2 years",
+    "c5Name": "_gid",
+    "c5Purpose": "Analyse app usage (Google Analytics)",
+    "c5Duration": "24 hours",
+    "storageNote": "In addition, TrenATiempo uses your browser's local storage (localStorage) to remember your visual theme and recently viewed stations. This data never leaves your device and you can delete it at any time in your browser settings.",
+    "rightsTitle": "Your rights",
+    "rightsText": "You can exercise your rights of access, rectification, erasure and objection by writing to info@sctechsolutions.es. You can also change your cookie preferences at any time from the “Cookie consent” section of your profile."
   }
 }

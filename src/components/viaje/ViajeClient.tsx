@@ -10,7 +10,8 @@ import { StopTimeline } from './StopTimeline'
 import { FavoriteButton } from '@/components/favorites/FavoriteButton'
 import { PushPermission } from '@/components/pwa/PushPermission'
 import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
-import { formatTime } from '@/lib/utils'
+import { formatTime, formatDate } from '@/lib/utils'
+import { todayISO, isISODate } from '@/lib/utils/dates'
 
 function parseTripId(tripId: string): { numTren: string | null; lineCode: string | null } {
   const match = tripId.match(/X(\d+)([A-Za-z0-9]+)$/)
@@ -78,10 +79,11 @@ function CancelledBanner() {
 
 // ─── Trip info bar ────────────────────────────────────────────────────────────
 
-function TripInfoBar({ tren, userStopId, stale }: {
+function TripInfoBar({ tren, userStopId, stale, fecha }: {
   tren: Tren
   userStopId?: string
   stale: boolean
+  fecha: string
 }) {
   const t = useTranslations()
   const locale = useLocale()
@@ -116,6 +118,14 @@ function TripInfoBar({ tren, userStopId, stale }: {
             <span className="text-rail-green/80">{t('horarios.onTime')}</span>
           </span>
         )}
+      </div>
+
+      {/* Date */}
+      <div className="flex items-center gap-2 text-xs text-rail-cream/45">
+        <span className="uppercase tracking-wide">{t('viaje.date')}</span>
+        <span className="font-medium capitalize text-rail-cream/70">
+          {formatDate(fecha, locale)}
+        </span>
       </div>
 
       {/* Origin → Destination */}
@@ -173,6 +183,7 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
   const searchParams = useSearchParams()
   // Fecha futura del viaje (desde la URL); hoy por defecto
   const fecha = searchParams.get('fecha')
+  const fechaISO = fecha && isISODate(fecha) ? fecha : todayISO()
   const { tren, loading, error, stale, refresh } = useViaje(tripId, fecha)
   const { numTren, lineCode } = parseTripId(tripId)
   const { bg: badgeBg, text: badgeText } = getRouteColors(lineCode ?? '')
@@ -219,7 +230,7 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
         </div>
 
         {/* Trip info data */}
-        {tren && <TripInfoBar tren={tren} userStopId={userStopId} stale={stale} />}
+        {tren && <TripInfoBar tren={tren} userStopId={userStopId} stale={stale} fecha={fechaISO} />}
 
         {/* Cancelled banner inside header */}
         {tren?.estado === 'cancelado' && <CancelledBanner />}

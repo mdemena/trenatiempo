@@ -94,6 +94,7 @@
     "origin": "Origen",
     "destination": "Destinació",
     "duration": "Durada",
+    "date": "Data",
     "previousStop": "Parada anterior",
     "nextStop": "Pròxima parada",
     "trainShort": "Comboi curt",
@@ -144,7 +145,9 @@
     "comingSoon": "Pròximament",
     "favorites": "Preferits",
     "savedStations": "Estacions desades",
-    "savedTrips": "Trens desats"
+    "savedTrips": "Trens desats",
+    "consentTitle": "Consentiment de cookies",
+    "consentDescription": "Tria si permets que TrenATiempo faci servir cookies analítiques per millorar l'aplicació"
   },
   "favorites": {
     "title": "Els meus preferits",
@@ -201,5 +204,58 @@
     "stationNotFound": "Estació no trobada",
     "goBack": "Torna enrere",
     "retry": "Torna-ho a intentar"
+  },
+  "cookies": {
+    "title": "La teva privacitat importa",
+    "description": "Fem servir cookies estrictament necessàries perquè l'aplicació funcioni. Amb el teu permís, també fem servir cookies analítiques per entendre com s'utilitza TrenATiempo i poder millorar-la.",
+    "acceptAll": "Accepta totes",
+    "essential": "Només les necessàries",
+    "configure": "Configura les preferències",
+    "preferencesTitle": "Preferències de cookies",
+    "alwaysActive": "Sempre actives",
+    "necessary": "Estrictament necessàries",
+    "necessaryDescription": "Imprescindibles per al funcionament: recordar el teu idioma, la teva sessió i la data que triïs.",
+    "analytics": "Analítiques",
+    "analyticsDescription": "Ens ajuden a saber com fas servir l'aplicació (Google Analytics) per millorar-la. Mai venem les teves dades.",
+    "saveAndClose": "Desa i tanca"
+  },
+  "footer": {
+    "copyright": "© 2026 <link>SC Technology Solutions</link>",
+    "privacy": "Política de privacitat"
+  },
+  "legal": {
+    "title": "Política de privacitat",
+    "updated": "Última actualització: agost de 2026",
+    "intro": "A TrenATiempo ens prenem molt seriosament la teva privacitat. En aquesta pàgina t'expliquem quines dades tractem, amb quina finalitat i quines cookies fem servir.",
+    "responsibleTitle": "Responsable del tractament",
+    "responsibleText": "El responsable del tractament de les dades tractades a través de TrenATiempo és SC Technology Solutions. Per a qualsevol qüestió sobre privacitat pots escriure'ns a info@sctechsolutions.es.",
+    "dataTitle": "Dades que tractem",
+    "dataText": "No cal registrar-se per consultar horaris de trens. Si decideixes crear un compte, tractem el teu correu electrònic, el teu nom i les teves preferències (idioma i consentiment de cookies) amb l'única finalitat de personalitzar la teva experiència i mantenir la teva sessió activa. No venem ni compartim les teves dades amb tercers, excepte per obligació legal.",
+    "cookiesTitle": "Cookies que fem servir",
+    "cookiesIntro": "Aquestes són les cookies que TrenATiempo pot registrar al teu navegador:",
+    "cookieName": "Cookie",
+    "cookiePurpose": "Finalitat",
+    "cookieType": "Tipus",
+    "cookieDuration": "Durada",
+    "cookiesNecessary": "Necessària",
+    "cookiesAnalytics": "Analítica",
+    "c1Name": "trenatiempo_consent",
+    "c1Purpose": "Guardar la teva elecció de consentiment de cookies",
+    "c1Duration": "1 any",
+    "c2Name": "NEXT_LOCALE",
+    "c2Purpose": "Recordar l'idioma preferit de l'aplicació",
+    "c2Duration": "1 any",
+    "c3Name": "sb-*-auth-token",
+    "c3Purpose": "Mantenir la teva sessió iniciada (només usuaris registrats)",
+    "c3Duration": "Sessió",
+    "c4Name": "_ga, _ga_*",
+    "c4Purpose": "Analitzar l'ús de l'aplicació (Google Analytics)",
+    "c4Duration": "Fins a 2 anys",
+    "c5Name": "_gid",
+    "c5Purpose": "Analitzar l'ús de l'aplicació (Google Analytics)",
+    "c5Duration": "24 hores",
+    "storageNote": "A més, TrenATiempo utilitza l'emmagatzematge local del teu navegador (localStorage) per guardar el teu tema visual i les últimes estacions consultades. Aquestes dades mai surten del teu dispositiu i les pots esborrar en qualsevol moment des dels ajustos del navegador.",
+    "rightsTitle": "Els teus drets",
+    "rightsText": "Pots exercir els teus drets d'accés, rectificació, supressió i oposició escrivint a info@sctechsolutions.es. També pots modificar les teves preferències de cookies en qualsevol moment des de la secció «Consentiment de cookies» del teu perfil."
   }
 }

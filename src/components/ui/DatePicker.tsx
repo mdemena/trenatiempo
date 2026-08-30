@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'motion/react'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { addDaysISO, isISODate, parseFlexibleDate, todayISO } from '@/lib/utils/dates'
+import { cn } from '@/lib/utils'
 
 const LOCALE_TAGS: Record<string, string> = {
   es: 'es-ES',
@@ -17,6 +18,19 @@ const LOCALE_TAGS: Record<string, string> = {
 
 const WEEKDAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
+const FIELD_FORMAT: Intl.DateTimeFormatOptions = {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+}
+
+// Texto del campo para una fecha ISO (vacío si no hay fecha)
+function fieldText(iso: string | null, localeTag: string): string {
+  if (!iso) return ''
+  return new Intl.DateTimeFormat(localeTag, FIELD_FORMAT).format(new Date(`${iso}T00:00:00Z`))
+}
+
 interface DatePickerProps {
   /** Fecha seleccionada en ISO (yyyy-mm-dd) o null = hoy */
   value: string | null
@@ -25,9 +39,12 @@ interface DatePickerProps {
   minIso?: string
   /** Máximo seleccionable (default: hoy + 180 días) */
   maxIso?: string
+  /** Variante compacta para cabeceras */
+  compact?: boolean
+  className?: string
 }
 
-export function DatePicker({ value, onChange, minIso, maxIso }: DatePickerProps) {
+export function DatePicker({ value, onChange, minIso, maxIso, compact, className }: DatePickerProps) {
   const t = useTranslations('datePicker')
   const localeTag = LOCALE_TAGS[useLocale()] ?? 'es-ES'
 
@@ -36,15 +53,35 @@ export function DatePicker({ value, onChange, minIso, maxIso }: DatePickerProps)
   const max = maxIso && maxIso >= min ? maxIso : addDaysISO(todayISO(), 180)
 
   const [open, setOpen] = useState(false)
-  const [draft, setDraft] = useState('')
+  const [draft, setDraft] = useState(() => fieldText(value, localeTag))
   const [error, setError] = useState(false)
-  // Mes mostrado en el popup (año, mes 0-11)
+  // Mes mostrado en el calendario (año, mes 0-11)
   const [view, setView] = useState(() => {
     const base = value ?? todayISO()
     return { y: Number(base.slice(0, 4)), m: Number(base.slice(5, 7)) - 1 }
   })
+  const titleId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
-  const listboxId = useId()
+
+  // Cerrar al hacer click fuera o pulsar Escape
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
 
   const effectiveValue = value ?? min
 
@@ -67,31 +104,13 @@ export function DatePicker({ value, onChange, minIso, maxIso }: DatePickerProps)
       }),
     [localeTag]
   )
-  const fmtShort = useMemo(
-    () => new Intl.DateTimeFormat(localeTag, { day: 'numeric', month: 'short', timeZone: 'UTC' }),
-    [localeTag]
-  )
-
-  // Sincronizar el input con el valor externo (ajuste durante el render,
-  // patrón recomendado por React para derivar estado de props)
+  // Sincronizar el input con el valor externo cuando cambie la prop
   const [prevValue, setPrevValue] = useState(value)
   if (value !== prevValue) {
     setPrevValue(value)
-    setDraft(value ? fmtShort.format(new Date(`${value}T00:00:00Z`)) : '')
+    setDraft(fieldText(value, localeTag))
     setError(false)
   }
-
-  // Cerrar al hacer click fuera
-  useEffect(() => {
-    if (!open) return
-    const onPointerDown = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('pointerdown', onPointerDown)
-    return () => document.removeEventListener('pointerdown', onPointerDown)
-  }, [open])
 
   function commitText() {
     const raw = draft.trim()
@@ -103,7 +122,7 @@ export function DatePicker({ value, onChange, minIso, maxIso }: DatePickerProps)
     const iso = parseFlexibleDate(raw)
     if (!iso || iso < min || iso > max) {
       setError(true)
-      setDraft(iso ? fmtShort.format(new Date(`${iso}T00:00:00Z`)) : draft)
+      setDraft(iso ? fieldText(iso, localeTag) : draft)
       return
     }
     setError(false)
@@ -111,9 +130,18 @@ export function DatePicker({ value, onChange, minIso, maxIso }: DatePickerProps)
     setView({ y: Number(iso.slice(0, 4)), m: Number(iso.slice(5, 7)) - 1 })
   }
 
+  function openCalendar() {
+    const base = effectiveValue
+    setView({ y: Number(base.slice(0, 4)), m: Number(base.slice(5, 7)) - 1 })
+    setError(false)
+    setOpen(true)
+  }
+
   function pick(iso: string) {
     setError(false)
     onChange(iso)
+    setDraft(fieldText(iso, localeTag))
+    setView({ y: Number(iso.slice(0, 4)), m: Number(iso.slice(5, 7)) - 1 })
     setOpen(false)
   }
 
@@ -160,65 +188,66 @@ export function DatePicker({ value, onChange, minIso, maxIso }: DatePickerProps)
   }
 
   return (
-    <div ref={rootRef} className="relative w-full">
-      <div className="flex items-stretch gap-2">
-        <div className="relative flex-1">
-          <CalendarDays aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
-          <input
-            type="text"
-            role="combobox"
-            aria-expanded={open}
-            aria-controls={listboxId}
-            aria-invalid={error}
-            aria-label={t('label')}
-            placeholder={t('today')}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onFocus={() => setError(false)}
-            onBlur={commitText}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                commitText()
-                e.currentTarget.blur()
-              }
-              if (e.key === 'Escape') setOpen(false)
-            }}
-            inputMode="numeric"
-            autoComplete="off"
-            className={`w-full rounded-xl border bg-white/[0.04] py-3 pl-10 pr-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-amber-400/70 focus:bg-white/[0.07] ${
-              error ? 'border-red-500' : 'border-white/10'
-            }`}
-          />
-        </div>
-        <button
-          type="button"
-          aria-label={t('open')}
+    <div ref={rootRef} className={cn('relative', compact ? 'w-40' : 'w-full', className)}>
+      <div className="relative">
+        <CalendarDays
+          aria-hidden
+          className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-500 ${
+            compact ? 'left-2.5 h-4 w-4' : 'left-3 h-5 w-5'
+          }`}
+        />
+        <input
+          type="text"
+          role="combobox"
           aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className="flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-3 text-slate-300 transition-colors hover:border-amber-400/50 hover:text-amber-400"
-        >
-          <ChevronRight className={`h-5 w-5 transition-transform ${open ? 'rotate-90' : ''}`} />
-        </button>
+          aria-haspopup="dialog"
+          aria-controls={titleId}
+          aria-invalid={error}
+          aria-label={t('label')}
+          placeholder={t('today')}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onFocus={openCalendar}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              commitText()
+            }
+            if (e.key === 'ArrowDown') {
+              e.preventDefault()
+              openCalendar()
+            }
+          }}
+          inputMode="numeric"
+          autoComplete="off"
+          className={`border bg-white/[0.04] text-white outline-none transition-colors placeholder:text-slate-500 focus:border-amber-400/70 focus:bg-white/[0.07] ${
+            compact
+              ? 'w-full rounded-lg py-1.5 pl-8 pr-2.5 text-xs'
+              : 'w-full rounded-xl py-3 pl-10 pr-3 text-sm'
+          } ${error ? 'border-red-500' : 'border-white/10'}`}
+        />
       </div>
 
       {error && (
         <p className="mt-1 text-xs text-red-400">
-          {t('invalidRange', { min: fmtShort.format(new Date(`${min}T00:00:00Z`)), max: fmtShort.format(new Date(`${max}T00:00:00Z`)) })}
+          {t('invalidRange', { min: fieldText(min, localeTag), max: fieldText(max, localeTag) })}
         </p>
       )}
 
       <AnimatePresence>
         {open && (
           <motion.div
-            id={listboxId}
+            id={titleId}
+            role="dialog"
+            aria-label={t('pickDate')}
             initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            role="dialog"
-            aria-label={t('pickDate')}
-            className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-white/10 bg-[#101c30] p-3 shadow-xl shadow-black/40"
+            className={cn(
+              'absolute top-full z-50 mt-2 rounded-xl border border-white/10 bg-[#101c30] p-3 shadow-xl shadow-black/40',
+              compact ? 'left-1/2 w-[19rem] max-w-[calc(100vw-2rem)] -translate-x-1/2' : 'left-0 right-0'
+            )}
           >
             {/* Cabecera mes */}
             <div className="mb-2 flex items-center justify-between">
