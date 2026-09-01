@@ -1,4 +1,5 @@
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
+import { setConsentCookie, findSettledInput } from './helpers'
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 
@@ -8,9 +9,11 @@ async function loginAs(
   password: string,
   redirectTo = '/es'
 ) {
+  // Banner de consentimiento es overlay bloqueante: evitar antes del login.
+  await setConsentCookie(page)
   await page.goto('/es/login')
-  await page.fill('input[type="email"]', email)
-  await page.fill('input[type="password"]', password)
+  await findSettledInput(page, page.locator('input[type="email"]'), email)
+  await findSettledInput(page, page.locator('input[type="password"]'), password)
   await page.click('button[type="submit"]')
   await page.waitForURL(new RegExp(redirectTo), { timeout: 10_000 })
 }

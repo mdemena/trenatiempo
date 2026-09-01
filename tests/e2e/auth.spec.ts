@@ -1,6 +1,13 @@
 import { test, expect, type Page } from '@playwright/test'
+import { setConsentCookie, findSettledInput, submitUntilValidation } from './helpers'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+test.beforeEach(async ({ page }) => {
+  // El banner de consentimiento es un overlay bloqueante que intercepta el
+  // click en los botones de submit. Inyectamos la cookie antes de navegar.
+  await setConsentCookie(page)
+})
 
 async function goToHome(page: Page) {
   await page.goto('/es')
@@ -73,16 +80,20 @@ test.describe('Login page', () => {
   })
 
   test('shows inline error for invalid email', async ({ page }) => {
-    await page.fill('input[type="email"]', 'notanemail')
-    await page.fill('input[type="password"]', 'somepassword')
-    await page.getByRole('button', { name: /iniciar sesión|iniciar sesion/i }).click()
+    const email = page.locator('input[type="email"]')
+    const password = page.locator('input[type="password"]')
+    await findSettledInput(page, email, 'notanemail')
+    await findSettledInput(page, password, 'somepassword')
+    await submitUntilValidation(page, page.getByRole('button', { name: /iniciar sesión|iniciar sesion/i }), [[email, 'notanemail'], [password, 'somepassword']])
     await expect(page.locator('form p.text-red-400').first()).toBeVisible()
   })
 
   test('shows inline error for short password', async ({ page }) => {
-    await page.fill('input[type="email"]', 'valid@email.com')
-    await page.fill('input[type="password"]', 'short')
-    await page.getByRole('button', { name: /iniciar sesión|iniciar sesion/i }).click()
+    const email = page.locator('input[type="email"]')
+    const password = page.locator('input[type="password"]')
+    await findSettledInput(page, email, 'valid@email.com')
+    await findSettledInput(page, password, 'short')
+    await submitUntilValidation(page, page.getByRole('button', { name: /iniciar sesión|iniciar sesion/i }), [[email, 'valid@email.com'], [password, 'short']])
     await expect(page.locator('form p.text-red-400').first()).toBeVisible()
   })
 })
@@ -107,12 +118,19 @@ test.describe('Registro page', () => {
   })
 
   test('shows inline error when passwords do not match', async ({ page }) => {
-    await page.fill('input[autocomplete="name"]', 'Test User')
-    await page.fill('input[type="email"]', 'test@example.com')
+    const name = page.locator('input[autocomplete="name"]')
+    const email = page.locator('input[type="email"]')
     const pwFields = page.locator('input[type="password"]')
-    await pwFields.nth(0).fill('password123')
-    await pwFields.nth(1).fill('different456')
-    await page.getByRole('button', { name: /crear cuenta/i }).click()
+    await findSettledInput(page, name, 'Test User')
+    await findSettledInput(page, email, 'test@example.com')
+    await findSettledInput(page, pwFields.nth(0), 'password123')
+    await findSettledInput(page, pwFields.nth(1), 'different456')
+    await submitUntilValidation(page, page.getByRole('button', { name: /crear cuenta/i }), [
+      [name, 'Test User'],
+      [email, 'test@example.com'],
+      [pwFields.nth(0), 'password123'],
+      [pwFields.nth(1), 'different456'],
+    ])
     await expect(page.locator('form p.text-red-400').first()).toBeVisible()
   })
 

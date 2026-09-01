@@ -773,6 +773,8 @@ Los browsers se descargan a `~/.cache/ms-playwright` (no requieren sudo).
 - **Cookie de consentimiento:** el banner de cookies es un overlay bloqueante (`z-100`). Los tests inyectan `trenatiempo_consent` en el context (`setConsentCookie`) antes de navegar para que nunca aparezca.
 - **Home tiene DOS comboboxes** (buscador de estación + selector de fecha). Desambiguar por nombre accesible: `getByRole('combobox', { name: 'Buscar estación...' })`.
 - **Hidratación de React dev server:** `fill()` sobre un input SSR no hidratado se resetea a `''`. `searchStation()` autocura: re-escribe la query cada vez que el valor se pierde y espera a que aparezcan opciones en un bucle (robusto bajo carga paralela contra Turbopack).
+- **Inputs controlados de auth:** `fill()` en un input controlado de React solo cambia el `.value` del DOM; el ESTADO interno de React sigue en `''`, así que un submit valida `''` y no pinta el error inline (fallos de auth, sobre todo WebKit). `findSettledInput()` escribe con `pressSequentially()` (eventos `input` reales que React procesa) y espera a que el valor se mantenga, señal de que `onChange` ya está montado. `submitUntilValidation()` reintenta el click por si el primer submit cae antes de que el `onSubmit` del form esté enganchado (submit nativo a `/login?`), recargando y re-sincronizando con `findSettledInput`.
+- **Ejecutar E2E contra el build de producción:** la suite completa puede dar flakies en dev (`pnpm dev`, Turbopack) por la compilación en caliente bajo carga paralela. Contra el build (`pnpm build && pnpm start`) corre estable: 104 passed / 0 failed / 16 skipped (admin sin creds). CI usa `pnpm start`, así que ese es el escenario de referencia.
 
 > Nota: con el Service Worker bloqueado (`serviceWorkers:'block'` en el config), Serwist lanza un `pageerror` en `_registration.waiting` al registrarse con resultado vacío. Es un artefacto del test (no un fallo de la app) y se filtra en el spec de estación.
 
@@ -831,7 +833,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...       # service_role key — solo backend, NUNC
 ## 13. Git & CI/CD
 
 ### Branches
-- `main` → producción (Vercel auto-deploy)
+- `main` → producción (deploy vía GitHub Actions, tras pasar E2E)
 - `develop` → staging
 - `feature/*` → nuevas funcionalidades
 - `fix/*` → bugfixes
@@ -844,11 +846,28 @@ feat(i18n): add galego translations
 chore(deps): update next to 15.x
 ```
 
-### GitHub Actions
-- **PR**: lint + typecheck + unit tests.
-- **Push a main**: build + deploy a Vercel + E2E tests.
+### GitHub Actions (`ci.yml`)
+Pipeline: `quality` (lint+typecheck+unit) → `build` → `e2e` → `deploy`.
 
-> **E2E en CI:** el job `e2e` de `ci.yml` está desactivado (`if: false`) pendiente de una instancia de Supabase de test (los tests E2E de auth/admin requieren credenciales reales). Los tests de estación (`estacion.spec.ts`) sí se pueden ejecutar localmente contra el dev server sin credenciales.
+- **PR / push a `develop`**: quality + build + e2e. E2E es el **merge gate**: no se mergea si no pasa.
+- **Push a `main`**: además, el job `deploy` despliega a Vercel **solo después** de que quality+build+e2e hayan pasado.
+
+El job `deploy` usa el patrón oficial de Vercel CLI → `vercel pull --environment=production` → `vercel build --prod` → `vercel deploy --prebuilt --prod` (sube el artefacto ya construido, Vercel no re-compila). Requiere 3 secrets en GitHub:
+
+```bash
+VERCEL_TOKEN        # https://vercel.com/account/tokens
+VERCEL_ORG_ID       # de .vercel/project.json (orgId), o del dashboard
+VERCEL_PROJECT_ID   # de .vercel/project.json (projectId)
+```
+
+**Configuración obligatoria en el dashboard de Vercel** (para que NUNCA despliegue por su cuenta mientras corre CI):
+
+1. **Project → Settings → Git → Ignored Build Step →** poner un comando que siempre salga con `exit 0` (p. ej. `true`). Convención invertida: **exit 0 = skip el build**, exit ≥1 = build. Así Vercel ignora todos los deploys disparados por git (pushes y PRs) y el único path de deploy es el job del workflow.
+2. **Environment Variables:** las `NEXT_PUBLIC_*` (SUPABASE_URL, SUPABASE_ANON_KEY, APP_URL) deben estar tipadas como `Encrypted` (normal), **NO** como `Sensitive`. Las variables `Sensitive` no se exponen a `vercel pull`/builds por CLI (Vercel CLI issue #17183) y `vercel pull` con valor vacío escribe `VAR=""` que con `output: 'standalone'` se hornea en `.next/standalone/.env` y suplanta a la inyección en runtime (incidente May 2026 `invalid_token`).
+
+**E2E en CI:** corre contra la misma instancia de Supabase (necesita `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` con las estaciones seedeadas vía `seeds.yml`). Instala Chromium + WebKit (`playwright install --with-deps chromium webkit`). Los tests de auth/admin se auto-desactivan si no hay `E2E_*` creds (`test.skip`); el resto (home/estacion/viaje/pwa/offline) corre siempre. En PRs desde forks los secretos no están disponibles → el job no puede ejecutarse (aceptable para un repo personal/privado).
+
+> Nota: los nuevos specs inyectan la cookie de consentimiento (`setConsentCookie`) también en `auth.spec.ts` y `admin.spec.ts`, porque el banner bloquea el click en los botones de submit (`dialog "Tu privacidad importa"`). Los 6 fallos de auth en suite completa eran este banner, no los selectores.
 
 ---
 

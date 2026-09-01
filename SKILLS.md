@@ -549,6 +549,10 @@ test('carga trenes de Cercanías', async ({ page }) => {
 
 > Patrón iOS crítico: si un E2E en WebKit tira la página al error boundary con `Can't find variable: Notification`, es porque algún componente cliente accede a la global `Notification` (o `serviceWorker`/`PushManager`) sin guardar `typeof ... !== 'undefined'`. Fix: ver `src/components/pwa/PushPermission.tsx` y la sección 8 de `CLAUDE.md`.
 
+**Inputs controlados de React (auth):** `fill()` solo cambia el `.value` del DOM, no el ESTADO de React (queda en `''`), así que un submit valida `''` y no pinta el error inline. Usar `findSettledInput()` (escribe con `pressSequentially()` + espera a que el valor se mantenga) y `submitUntilValidation()` (reintenta por el race de `onSubmit`). Ver `tests/e2e/helpers.ts`.
+
+**Correr contra el build de producción:** la suite completa puede dar flakies en dev (`pnpm dev`, Turbopack) por la compilación en caliente bajo paralelismo. Contra `pnpm build && pnpm start` corre estable (104 passed / 0 failed / 16 skipped — admin sin creds). CI usa `pnpm start`.
+
 
 ---
 

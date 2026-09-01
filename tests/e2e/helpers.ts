@@ -92,6 +92,90 @@ export async function expectNoServerError(page: Page) {
   await expect(page.getByText('Error del servidor', { exact: false })).toHaveCount(0)
 }
 
+/**
+ * Rellena un input controlado ESCRIBIENDO (eventos `input` reales) y espera a
+ * que React hidrate y su `onChange` lo sincronice a `value`.
+ *
+ * Por qué no `fill()`: escribe el .value del DOM directamente, pero en un input
+ * controlado React lo deshace en el siguiente render porque su ESTADO interno
+ * sigue siendo `''`. Resultado: un submit posterior valida un `''` y la UI no
+ * muestra el error esperado (fallos de auth en WebKit). `pressSequentially`
+ * emite eventos `input` sintéticos que el `onChange` de React SÍ procesa y
+ * propaga a su estado, de modo que el valor queda de verdad en React.
+ *
+ * Antes de la hidratación escribir se resetea a '' — igual que `searchStation`,
+ * esta función reintenta hasta que el valor ESCRIBIDO se mantiene en React
+ * (señal de que onChange ya está montado y el estado quedó sincronizado).
+ */
+export async function findSettledInput(
+  page: Page,
+  locator: import('@playwright/test').Locator,
+  value: string
+) {
+  const deadline = Date.now() + 20_000
+  while (Date.now() < deadline) {
+    await locator.fill('')
+    await locator.pressSequentially(value, { delay: 5 })
+    let settled = false
+    for (let i = 0; i < 10; i++) {
+      await page.waitForTimeout(120)
+      if ((await locator.inputValue()) === value) {
+        settled = true
+        break
+      }
+    }
+    if (settled) {
+      // Doble confirmación para no adelantarnos a una hidratación tardía.
+      await page.waitForTimeout(150)
+      if ((await locator.inputValue()) === value) return
+    }
+  }
+  // Último intento con el matcher normal para tener un error legible
+  await expect(locator).toHaveValue(value, { timeout: 5_000 })
+}
+
+/**
+ * Espera a que el submit del cliente haya montado su `onSubmit` y luego valida.
+ *
+ * Tras `findSettledInput` (estado de React ya sincronizado), el primer click aún
+ * puede caer ANTES de que el `onSubmit` del form esté enganchado (race de
+ * paralelismo) y derivar en un submit NATIVO a `/login?`. Autocuramos: si el
+ * error inline no aparece, reintentamos el click (el estado de React ya está
+ * sincronizado), recargando y re-escribiendo solo si el submit nativo navegó.
+ *
+ * @param fields pares [locator, valor original] por si hay que re-sincronizar.
+ */
+export async function submitUntilValidation(
+  page: Page,
+  button: import('@playwright/test').Locator,
+  fields: Array<[import('@playwright/test').Locator, string]>
+) {
+  const deadline = Date.now() + 20_000
+  while (Date.now() < deadline) {
+    await button.click()
+    try {
+      await page.locator('form p.text-red-400').first().waitFor({
+        state: 'visible',
+        timeout: 800,
+      })
+      return
+    } catch {
+      // submit nativo o el error aún no pintó: reintentamos.
+    }
+    if (/\/login\?/.test(page.url()) || /\/registro\?/.test(page.url())) {
+      // El submit nativo navegó y barrió los valores: recargar y re-sincronizar
+      // con findSettledInput (maneja la hidratación que sigue al domcontentloaded).
+      await page.goto(new URL(page.url()).pathname, { waitUntil: 'domcontentloaded' })
+      await page.waitForSelector('form', { state: 'visible' })
+      for (const [locator, value] of fields) {
+        await findSettledInput(page, locator, value)
+      }
+    }
+  }
+  // Último intento con el matcher normal para tener un error legible
+  await expect(page.locator('form p.text-red-400').first()).toBeVisible({ timeout: 5_000 })
+}
+
 /** Registra los pageerror de la página filtrando los artefactos conocidos.
  *  Devuelve { collect, errors, dispose } para usar con beforeEach/afterEach. */
 export function createPageErrorCollector(page: Page) {
