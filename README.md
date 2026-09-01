@@ -38,10 +38,10 @@ TrenATiempo es una webapp **mobile-first** que muestra en tiempo real los horari
 | Auth | Supabase Auth (email + Google) |
 | Estilos | Tailwind CSS v4 |
 | i18n | next-intl (6 idiomas: es, ca, gl, eu, en, fr) |
-| PWA | @ducanh2912/next-pwa + Workbox |
+| PWA | @serwist/next |
 | Push | web-push (VAPID) |
 | Animaciones | Motion (Framer Motion) |
-| Testing | Vitest + Playwright |
+| Testing | Vitest + Playwright (Mobile Chrome + Mobile Safari WebKit) |
 | Hosting | Vercel (región: mad1) |
 
 ## Inicio Rápido
@@ -95,6 +95,35 @@ pnpm test         # Tests unitarios (Vitest)
 pnpm test:e2e     # Tests E2E (Playwright)
 pnpm analyze      # Análisis de bundle
 ```
+
+### Tests E2E
+
+`pnpm test:e2e` corre sobre **dos projects móviles** en paralelo:
+
+| Project | Motor |
+|---|---|
+| `Mobile Chrome` (Pixel 5) | Chromium |
+| `Mobile Safari (WebKit)` (iPhone 13) | **WebKit** — el motor de iOS |
+
+El project de WebKit es clave para detectar bugs que solo aparecen en iPhone/iOS (p. ej. el crash de la global `Notification` que tiraba la página de estación al "Error del servidor"). Ejecutar solo WebKit:
+
+```bash
+pnpm exec playwright test tests/e2e/estacion.spec.ts --project="Mobile Safari (WebKit)"
+```
+
+**Dependencias de sistema (Linux/Ubuntu):** para arrancar los browsers de Playwright:
+
+```bash
+sudo apt install -y --no-install-recommends libgtk-4-1 libgraphene-1.0-0
+pnpm exec playwright install-deps webkit chromium firefox
+pnpm exec playwright install
+```
+
+Los browsers se descargan a `~/.cache/ms-playwright` (sin sudo).
+
+**Prueba de regresión rápida de la home + búsqueda:** `pnpm exec playwright test tests/e2e/home.spec.ts tests/e2e/viaje.spec.ts`
+
+> Estaciones de referencia para validar horarios (área Granollers/La Selva): Sant Celoni `79104`, Granollers Centre `79100`, Granollers-Canovelles `77006`, Les Franqueses-Granollers Nord `79109`. Tren de ejemplo para `/viaje`: `5142M15734R11`.
 
 ### Actualización de datos
 

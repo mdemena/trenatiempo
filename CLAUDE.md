@@ -24,7 +24,7 @@
 | Base de Datos | **Supabase** (PostgreSQL) | Auth, Realtime, RLS, Storage |
 | Auth | **Supabase Auth** (email/pass + Google OAuth) | Incluido en Supabase |
 | Notificaciones Push | **Web Push API** + **VAPID** | PWA nativa |
-| PWA | **next-pwa** | Service Worker, offline, installable |
+| PWA | **@serwist/next** | Service Worker, offline, installable |
 | i18n | **next-intl** | Internacionalización con App Router, mensajes tipados |
 | Testing | **Vitest** + **Playwright** | Unit + E2E |
 | CI/CD | **GitHub Actions** | Deploy en Vercel |
@@ -635,8 +635,27 @@ ALTER TABLE public.profiles
 ## 8. PWA & Push Notifications
 
 - `manifest.json` con iconos, theme-color, display: standalone.
-- Service Worker via `next-pwa` para caché offline de estaciones y últimos horarios consultados.
+- Service Worker via Serwist (`@serwist/next`) para caché offline de estaciones y últimos horarios consultados.
 - Web Push (VAPID): al suscribirse a un viaje, se guarda el `PushSubscription` en Supabase. El backend envía notificaciones via `web-push` npm package.
+
+### ⚠️ La global `Notification` (bug crítico iOS WebKit)
+
+La global `Notification` **no existe en todos los contextos web** (p. ej. WebKit/iOS en modo privado o sin soporte push). Acceder a ella sin guardarla lanza un `ReferenceError: Can't find variable: Notification` durante el render.
+
+Ese error, al ocurrir en pleno render de un componente cliente, era capturado por el error boundary de Next y **tiraba la página entera de estación** al "Error del servidor" en iPhone (Chrome iOS y Safari), aunque en desktop funcionaba.
+
+**Regla obligatoria:** antes de tocar `Notification`, `navigator.serviceWorker`, `PushManager`, `localStorage`, etc., verificar que existen:
+
+```ts
+// Correcto — `typeof Notification` antes de usarla
+if (typeof window !== 'undefined'
+    && typeof Notification !== 'undefined'
+    && Notification.permission === 'denied') { ... }
+
+// Especialmente en useState/useMemo (render-phase): un throw aquí crashea la página
+```
+
+Nunca acceder a estas globals con solo `typeof window !== 'undefined'` como guarda: eso protege el SSR pero **no** protege de que la propia global no exista en WebKit. Ver `src/components/pwa/PushPermission.tsx`.
 
 ---
 
@@ -711,7 +730,7 @@ pnpm dev
 
 # Tests
 pnpm test           # Vitest unit tests
-pnpm test:e2e       # Playwright
+pnpm test:e2e       # Playwright E2E (Mobile Chrome + Mobile Safari WebKit)
 
 # Build producción
 pnpm build
@@ -719,6 +738,43 @@ pnpm start
 ```
 
 > **Nota:** La Supabase CLI no se usa en este proyecto (Docker no disponible). Ver sección 12b para el workflow manual.
+
+### Tests E2E (Playwright)
+
+El config (`playwright.config.ts`) corre sobre **dos projects** para cubrir el stack móvil real:
+
+| Project | Dispositivo | Motor |
+|---|---|---|
+| `Mobile Chrome` | Pixel 5 | Chromium |
+| `Mobile Safari (WebKit)` | iPhone 13 | **WebKit** (el motor de iOS) |
+
+El project de WebKit es el que permite reproducir/regresionar bugs específicos de iPhone/iOS. Ejecutar solo un project:
+
+```bash
+pnpm exec playwright test tests/e2e/estacion.spec.ts --project="Mobile Safari (WebKit)"
+```
+
+**Dependencias de sistema (Linux/Ubuntu 22.04):** para que WebKit/Chromium/Firefox arranquen hacen falta librerías del sistema:
+
+```bash
+sudo apt update
+sudo apt install -y --no-install-recommends libgtk-4-1 libgraphene-1.0-0
+pnpm exec playwright install-deps webkit chromium firefox
+pnpm exec playwright install
+```
+
+Los browsers se descargan a `~/.cache/ms-playwright` (no requieren sudo).
+
+**Tests E2E existentes:** `tests/e2e/estacion.spec.ts`, `home.spec.ts`, `viaje.spec.ts`, `auth.spec.ts`, `admin.spec.ts`, `pwa.spec.ts`, `offline.spec.ts`.
+
+**Estaciones de referencia** (verificables manualmente por el equipo, área Granollers/La Selva): Sant Celoni `79104` (Cercanías R2/R2N/R11 + Regional), Granollers Centre `79100` (R2/R2N/R8), Granollers-Canovelles `77006`, Les Franqueses-Granollers Nord `79109`. Tren de ejemplo para `/viaje`: `5142M15734R11` (Barcelona-Sants → Figueres, pasa por Sant Celoni). Prueba de Regresión rápida tras tocar la home: `pnpm exec playwright test tests/e2e/home.spec.ts tests/e2e/viaje.spec.ts`
+
+**Trucos de los specs (`tests/e2e/helpers.ts`):**
+- **Cookie de consentimiento:** el banner de cookies es un overlay bloqueante (`z-100`). Los tests inyectan `trenatiempo_consent` en el context (`setConsentCookie`) antes de navegar para que nunca aparezca.
+- **Home tiene DOS comboboxes** (buscador de estación + selector de fecha). Desambiguar por nombre accesible: `getByRole('combobox', { name: 'Buscar estación...' })`.
+- **Hidratación de React dev server:** `fill()` sobre un input SSR no hidratado se resetea a `''`. `searchStation()` autocura: re-escribe la query cada vez que el valor se pierde y espera a que aparezcan opciones en un bucle (robusto bajo carga paralela contra Turbopack).
+
+> Nota: con el Service Worker bloqueado (`serviceWorkers:'block'` en el config), Serwist lanza un `pageerror` en `_registration.waiting` al registrarse con resultado vacío. Es un artefacto del test (no un fallo de la app) y se filtra en el spec de estación.
 
 ---
 
@@ -791,6 +847,8 @@ chore(deps): update next to 15.x
 ### GitHub Actions
 - **PR**: lint + typecheck + unit tests.
 - **Push a main**: build + deploy a Vercel + E2E tests.
+
+> **E2E en CI:** el job `e2e` de `ci.yml` está desactivado (`if: false`) pendiente de una instancia de Supabase de test (los tests E2E de auth/admin requieren credenciales reales). Los tests de estación (`estacion.spec.ts`) sí se pueden ejecutar localmente contra el dev server sin credenciales.
 
 ---
 
