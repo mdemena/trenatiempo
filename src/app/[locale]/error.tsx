@@ -9,11 +9,12 @@ export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
+  error: Error & { digest?: string; message?: string }
   reset: () => void
 }) {
   const t = useTranslations('errors')
   const router = useRouter()
+  const message = typeof error?.message === 'string' ? error.message : ''
 
   useEffect(() => {
     console.error(error)
@@ -45,6 +46,11 @@ export default function Error({
         <p className="text-base font-semibold text-rail-cream">{t('serverError')}</p>
         {error.digest && (
           <p className="mt-1 font-mono text-xs text-rail-cream/30">{error.digest}</p>
+        )}
+        {message && (
+          <p className="mx-auto mt-2 max-w-[90vw] break-words font-mono text-xs text-rail-amber/70">
+            {message}
+          </p>
         )}
       </div>
       <div className="flex gap-3">

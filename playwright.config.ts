@@ -23,6 +23,10 @@ export default defineConfig({
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     },
+    {
+      name: 'Mobile Safari (WebKit)',
+      use: { ...devices['iPhone 13'] },
+    },
   ],
   // Start a local server only when not pointing at a remote deployment.
   // In CI: use the production build (pnpm start) — the E2E job builds first.

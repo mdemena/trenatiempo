@@ -27,8 +27,18 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
   const router = useRouter()
   const user = useUserStore((s) => s.user)
 
+  // `Notification` no existe en todos los contextos web (p.ej. WebKit/iOS
+  // sin soporte push o en algunos modos privados). Acceder a él sin guardarlo
+  // lanzaba un ReferenceError durante el render que tiraba toda la página de
+  // estación al error boundary ("Error del servidor").
   const [status, setStatus] = useState<Status>(() => {
-    if (typeof window !== 'undefined' && Notification.permission === 'denied') return 'denied'
+    if (
+      typeof window !== 'undefined' &&
+      typeof Notification !== 'undefined' &&
+      Notification.permission === 'denied'
+    ) {
+      return 'denied'
+    }
     return 'idle'
   })
   const [endpoint, setEndpoint] = useState<string | null>(null)
@@ -88,7 +98,6 @@ export function PushPermission({ tripCode, className }: PushPermissionProps) {
         setStatus('denied')
         return
       }
-
       let swRegistration = await navigator.serviceWorker.getRegistration()
       if (!swRegistration) {
         try {
