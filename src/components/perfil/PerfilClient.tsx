@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { LogOut, ChevronRight, MapPin, Train, BellRing, Settings2, ShieldCheck } from 'lucide-react'
+import { LogOut, ChevronRight, MapPin, Train, BellRing, Settings2, ShieldCheck, LayoutDashboard } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { signOut } from '@/lib/supabase/auth-helpers'
@@ -137,7 +137,9 @@ interface PerfilClientProps {
 
 export function PerfilClient({ user, profile }: PerfilClientProps) {
   const t = useTranslations('profile')
+  const ta = useTranslations('admin')
   const tc = useTranslations('cookies')
+  const router = useRouter()
   const displayName = profile?.full_name ?? user.email ?? '–'
   const initials = (profile?.full_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()
   const stationCount = useFavoritesStore((s) => s.stations.length)
@@ -264,6 +266,25 @@ export function PerfilClient({ user, profile }: PerfilClientProps) {
           href="/alertas"
         />
       </Section>
+
+      {/* Admin backoffice link (solo admins) */}
+      {profile?.role === 'admin' && (
+        <Section title={ta('title')}>
+          <button
+            onClick={() => router.push('/admin')}
+            className="flex w-full items-center gap-3 rounded-2xl bg-rail-surface px-4 py-3 text-left transition hover:bg-white/5"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-amber/10 text-rail-amber">
+              <LayoutDashboard className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-rail-cream">{ta('title')}</p>
+              <p className="mt-0.5 text-[11px] text-rail-cream/35">Backoffice</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-rail-cream/20" />
+          </button>
+        </Section>
+      )}
 
       {/* Sign out */}
       <div className="px-4">
