@@ -68,7 +68,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
 
-  # ─── E2E Tests (Chromium + WebKit) — merge gate ─────────────────────────────
+  # ─── E2E Tests (Chromium: desktop + mobile) — merge gate ────────────────────
   # Corre contra una instancia real de Supabase con las estaciones seedeadas.
   # Los specs de auth/admin se auto-desactivan si faltan las E2E_* creds.
   e2e:
@@ -98,7 +98,7 @@ jobs:
           NEXT_PUBLIC_APP_URL: http://localhost:3000
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium webkit
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E Tests
         run: pnpm test:e2e

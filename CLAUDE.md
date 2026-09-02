@@ -730,7 +730,7 @@ pnpm dev
 
 # Tests
 pnpm test           # Vitest unit tests
-pnpm test:e2e       # Playwright E2E (Mobile Chrome + Mobile Safari WebKit)
+pnpm test:e2e       # Playwright E2E (Chromium: Desktop Chrome + Mobile Chrome)
 
 # Build producción
 pnpm build
@@ -741,25 +741,25 @@ pnpm start
 
 ### Tests E2E (Playwright)
 
-El config (`playwright.config.ts`) corre sobre **dos projects** para cubrir el stack móvil real:
+El config (`playwright.config.ts`) corre sobre **dos projects** de Chromium para cubrir desktop y móvil:
 
 | Project | Dispositivo | Motor |
 |---|---|---|
+| `Desktop Chrome` | Desktop (1280×720) | Chromium |
 | `Mobile Chrome` | Pixel 5 | Chromium |
-| `Mobile Safari (WebKit)` | iPhone 13 | **WebKit** (el motor de iOS) |
 
-El project de WebKit es el que permite reproducir/regresionar bugs específicos de iPhone/iOS. Ejecutar solo un project:
+Ejecutar solo un project:
 
 ```bash
-pnpm exec playwright test tests/e2e/estacion.spec.ts --project="Mobile Safari (WebKit)"
+pnpm exec playwright test tests/e2e/estacion.spec.ts --project="Desktop Chrome"
 ```
 
-**Dependencias de sistema (Linux/Ubuntu 22.04):** para que WebKit/Chromium/Firefox arranquen hacen falta librerías del sistema:
+**Dependencias de sistema (Linux/Ubuntu 22.04):** para que Chromium arranque hacen falta librerías del sistema:
 
 ```bash
 sudo apt update
 sudo apt install -y --no-install-recommends libgtk-4-1 libgraphene-1.0-0
-pnpm exec playwright install-deps webkit chromium firefox
+pnpm exec playwright install-deps chromium
 pnpm exec playwright install
 ```
 
@@ -860,12 +860,20 @@ VERCEL_ORG_ID       # de .vercel/project.json (orgId), o del dashboard
 VERCEL_PROJECT_ID   # de .vercel/project.json (projectId)
 ```
 
+### Pull Requests — política de generación (obligatorio)
+
+Cuando se pida "generar un PR", hacer **solo** hasta generar/actualizar el PR y entregar el enlace para revisión:
+
+1. Commit + push de la rama de trabajo (p. ej. `development`).
+2. Reutilizar el PR abierto si ya existe desde esa rama hacia `main`; en caso contrario crearlo.
+3. **NO hacer merge** del PR en ningún caso: el merge lo lanza manualmente el usuario tras revisar. Pasar el enlace del PR y, opcionalmente, el estado de CI (merge gate) sin mergear.
+
 **Configuración obligatoria en el dashboard de Vercel** (para que NUNCA despliegue por su cuenta mientras corre CI):
 
 1. **Project → Settings → Git → Ignored Build Step →** poner un comando que siempre salga con `exit 0` (p. ej. `true`). Convención invertida: **exit 0 = skip el build**, exit ≥1 = build. Así Vercel ignora todos los deploys disparados por git (pushes y PRs) y el único path de deploy es el job del workflow.
 2. **Environment Variables:** las `NEXT_PUBLIC_*` (SUPABASE_URL, SUPABASE_ANON_KEY, APP_URL) deben estar tipadas como `Encrypted` (normal), **NO** como `Sensitive`. Las variables `Sensitive` no se exponen a `vercel pull`/builds por CLI (Vercel CLI issue #17183) y `vercel pull` con valor vacío escribe `VAR=""` que con `output: 'standalone'` se hornea en `.next/standalone/.env` y suplanta a la inyección en runtime (incidente May 2026 `invalid_token`).
 
-**E2E en CI:** corre contra la misma instancia de Supabase (necesita `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` con las estaciones seedeadas vía `seeds.yml`). Instala Chromium + WebKit (`playwright install --with-deps chromium webkit`). Los tests de auth/admin se auto-desactivan si no hay `E2E_*` creds (`test.skip`); el resto (home/estacion/viaje/pwa/offline) corre siempre. En PRs desde forks los secretos no están disponibles → el job no puede ejecutarse (aceptable para un repo personal/privado).
+**E2E en CI:** corre contra la misma instancia de Supabase (necesita `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` con las estaciones seedeadas vía `seeds.yml`). Instala Chromium (`playwright install --with-deps chromium`). Los tests de auth/admin se auto-desactivan si no hay `E2E_*` creds (`test.skip`); el resto (home/estacion/viaje/pwa/offline) corre siempre. En PRs desde forks los secretos no están disponibles → el job no puede ejecutarse (aceptable para un repo personal/privado).
 
 > Nota: los nuevos specs inyectan la cookie de consentimiento (`setConsentCookie`) también en `auth.spec.ts` y `admin.spec.ts`, porque el banner bloquea el click en los botones de submit (`dialog "Tu privacidad importa"`). Los 6 fallos de auth en suite completa eran este banner, no los selectores.
 
