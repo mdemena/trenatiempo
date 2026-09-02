@@ -9,15 +9,35 @@ export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
+  error: Error & { digest?: string; message?: string }
   reset: () => void
 }) {
   const t = useTranslations('errors')
   const router = useRouter()
+  const message = typeof error?.message === 'string' ? error.message : ''
 
   useEffect(() => {
     console.error(error)
   }, [error])
+
+  // Un error de hidratación/servidor suele deberse a un Service Worker obsoleto
+  // que sirve HTML/chunks de un build anterior. Fuerza una carga limpia:
+  // desregistra el SW y vacía su caché antes de recargar.
+  async function hardReload() {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(registrations.map((r) => r.unregister()))
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys()
+        await Promise.all(keys.map((k) => caches.delete(k)))
+      }
+    } catch {
+      // si falla la limpieza seguimos con la recarga normal
+    }
+    location.reload()
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-rail-navy px-6 text-center">
@@ -26,6 +46,11 @@ export default function Error({
         <p className="text-base font-semibold text-rail-cream">{t('serverError')}</p>
         {error.digest && (
           <p className="mt-1 font-mono text-xs text-rail-cream/30">{error.digest}</p>
+        )}
+        {message && (
+          <p className="mx-auto mt-2 max-w-[90vw] break-words font-mono text-xs text-rail-amber/70">
+            {message}
+          </p>
         )}
       </div>
       <div className="flex gap-3">
@@ -36,7 +61,10 @@ export default function Error({
           {t('goBack')}
         </button>
         <button
-          onClick={reset}
+          onClick={() => {
+            reset()
+            void hardReload()
+          }}
           className="rounded-xl bg-rail-amber px-5 py-2.5 text-sm font-semibold text-rail-navy hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-amber"
         >
           {t('retry')}
@@ -45,3 +73,4 @@ export default function Error({
     </div>
   )
 }
+

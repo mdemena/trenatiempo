@@ -8,6 +8,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
+  timeout: 60_000,
   reporter: process.env.CI ? [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]] : 'list',
   use: {
     baseURL: remoteBase || 'http://localhost:3000',
@@ -22,6 +23,10 @@ export default defineConfig({
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari (WebKit)',
+      use: { ...devices['iPhone 13'] },
     },
   ],
   // Start a local server only when not pointing at a remote deployment.

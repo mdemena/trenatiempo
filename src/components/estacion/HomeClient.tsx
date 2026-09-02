@@ -34,11 +34,17 @@ function addToRecent(station: Estacion, prev: Estacion[]): Estacion[] {
   return next
 }
 
+// Referencia estable para getServerSnapshot: si se devuelve un array nuevo en
+// cada render, React no puede reconciliar el snapshot y lanza
+// "getServerSnapshot should be cached to avoid an infinite loop", que en
+// producción desemboca en el error boundary (Error del servidor).
+const EMPTY_STATIONS: Estacion[] = []
+
 let recentCache: Estacion[] = []
 let lastRaw: string | null = null
 
 function getRecentSnapshot(): Estacion[] {
-  if (typeof window === 'undefined') return []
+  if (typeof window === 'undefined') return EMPTY_STATIONS
   const raw = localStorage.getItem(RECENT_KEY) ?? '[]'
   if (raw !== lastRaw) {
     try {
@@ -48,7 +54,9 @@ function getRecentSnapshot(): Estacion[] {
     }
     lastRaw = raw
   }
-  return recentCache
+  // Devuelve la misma referencia vacía que getServerSnapshot si no hay favoritos,
+  // para que React no detecte un cambio de snapshot durante la hidratación.
+  return recentCache.length === 0 ? EMPTY_STATIONS : recentCache
 }
 
 function subscribe(onStoreChange: () => void) {
@@ -101,7 +109,7 @@ function EmptyState({ title, description }: { title: string; description?: strin
 export function HomeClient() {
   const t = useTranslations()
   const router = useRouter()
-  const recent = useSyncExternalStore(subscribe, getRecentSnapshot, () => [])
+  const recent = useSyncExternalStore(subscribe, getRecentSnapshot, () => EMPTY_STATIONS)
   const [tab, setTab] = useState<Tab>('recent')
   // Fecha de viaje seleccionada (null = hoy)
   const [fecha, setFecha] = useState<string | null>(null)

@@ -31,7 +31,7 @@ export default async function EstacionPage({
   if (!station) notFound()
 
   return (
-    <div className="flex h-dvh flex-col bg-rail-navy">
+    <div className="flex h-dvh min-h-0 flex-col bg-rail-navy">
       {/* Client section: header + DatePicker + FilterBar + TrainList */}
       <Suspense fallback={null}>
         <EstacionClient station={station} maxFecha={maxScheduleDate} />

@@ -8,6 +8,7 @@ import { SessionProvider } from '@/components/auth/SessionProvider'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { LayoutShell } from '@/components/layout/LayoutShell'
 import { GoogleTagManager } from '@/components/analytics/GoogleTagManager'
+import { SerwistProvider } from '@/components/pwa/SerwistProvider'
 import './globals.css'
 import 'flag-icons/css/flag-icons.min.css'
 
@@ -71,15 +72,17 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${syne.variable} ${dmSans.variable}`}>
       <body>
         <GoogleTagManager />
-        <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone={timeZone}>
-          <SessionProvider>
-            <ThemeProvider>
-              <LayoutShell>
-                {children}
-              </LayoutShell>
-            </ThemeProvider>
-          </SessionProvider>
-        </NextIntlClientProvider>
+        <SerwistProvider>
+          <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone={timeZone}>
+            <SessionProvider>
+              <ThemeProvider>
+                <LayoutShell>
+                  {children}
+                </LayoutShell>
+              </ThemeProvider>
+            </SessionProvider>
+          </NextIntlClientProvider>
+        </SerwistProvider>
       </body>
     </html>
   )

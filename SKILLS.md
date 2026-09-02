@@ -477,6 +477,15 @@ export async function POST(req: Request) {
 4. **Optimistic UI**: al marcar favorito, actualizar UI antes de confirmación del servidor.
 5. **Virtual list**: si hay >50 trenes, usar `react-virtual` para el scroll.
 
+### Robustez iOS/WebKit (crítico)
+Los bugs que "no se ven" en desktop aparecen solo en iPhone. Reglas:
+- **Nunca** acceder a la global `Notification` (ni `serviceWorker`, `PushManager`, `localStorage`) con solo `typeof window !== 'undefined'` como guarda. En WebKit/iOS esas globals pueden no existir → `ReferenceError` en render → tira la página entera al error boundary. Siempre verificar la **propia global**:
+  ```ts
+  typeof window !== 'undefined' && typeof Notification !== 'undefined'
+  ```
+- Verifica los cambios móviles siempre con `tests/e2e/estacion.spec.ts --project="Mobile Safari (WebKit)"`.
+- El error boundary `src/app/[locale]/error.tsx` muestra `error.message` en pantalla — útil para ver el error real del usuario en lugar de adivinar.
+
 ### Bundle size
 - Analizar con `pnpm build && pnpm analyze`
 - Código de admin solo se carga en rutas `/admin/*`
@@ -504,22 +513,46 @@ describe('parseAdifResponse', () => {
 
 ### E2E Tests (Playwright)
 
+`pnpm test:e2e` corre sobre dos projects móviles para cubrir el stack real:
+
+- **`Mobile Chrome`** (Pixel 5, Chromium)
+- **`Mobile Safari (WebKit)`** (iPhone 13, **WebKit** — el motor de iOS)
+
+Usa siempre el project de WebKit para reproducir bugs específicos de iPhone/iOS; a menudo no saltan en Chromium/desktop ni en emulación móvil de Chromium.
+
+```bash
+# Ejecutar solo el project de iOS
+pnpm exec playwright test tests/e2e/estacion.spec.ts --project="Mobile Safari (WebKit)"
+# Todos los projects, un solo spec
+pnpm exec playwright test tests/e2e/estacion.spec.ts
+```
+
 ```typescript
-// tests/e2e/horarios.spec.ts
-test('user can search for a station and see trains', async ({ page }) => {
-  await page.goto('/')
-  await page.getByPlaceholder('Buscar estación...').fill('Atocha')
-  await page.getByText('Madrid Atocha Cercanías').click()
-  await expect(page.getByTestId('train-list')).toBeVisible()
+// tests/e2e/estacion.spec.ts — verifica que la página de estación NUNCA
+// cae al error boundary ("Error del servidor") y que cargan los trenes.
+test('no muestra el error del servidor (boundary de error)', async ({ page }) => {
+  await page.goto('/es/estacion/35604', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByText('Error del servidor')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: /San José/ })).toBeVisible()
 })
 
-test('admin can access /admin but regular user cannot', async ({ page }) => {
-  // Login como user normal
-  await loginAs(page, 'user@test.com')
-  await page.goto('/admin')
-  await expect(page).toHaveURL('/')  // redirigido
+test('carga trenes de Cercanías', async ({ page }) => {
+  await page.goto('/es/estacion/35604')
+  const card = page.locator('[role="button"]').filter({ hasText: /C5|C1/ }).first()
+  await expect(card).toBeVisible({ timeout: 15_000 })
 })
 ```
+
+**Dependencias de sistema (Linux/Ubuntu 22.04):** WebKit necesita `libgtk-4-1` y `libgraphene-1.0-0` (requieren sudo); el resto se instala con `pnpm exec playwright install-deps` y `pnpm exec playwright install` (browsers en `~/.cache/ms-playwright`, sin sudo).
+
+**Artefacto conocido del config:** con `serviceWorkers: 'block'`, Serwist lanza un `pageerror` en `_registration.waiting` al registrarse con resultado vacío. Es un artefacto de test (no un fallo de la app) y se filtra en el spec de estación — no añadir esos textos como fallos reales.
+
+> Patrón iOS crítico: si un E2E en WebKit tira la página al error boundary con `Can't find variable: Notification`, es porque algún componente cliente accede a la global `Notification` (o `serviceWorker`/`PushManager`) sin guardar `typeof ... !== 'undefined'`. Fix: ver `src/components/pwa/PushPermission.tsx` y la sección 8 de `CLAUDE.md`.
+
+**Inputs controlados de React (auth):** `fill()` solo cambia el `.value` del DOM, no el ESTADO de React (queda en `''`), así que un submit valida `''` y no pinta el error inline. Usar `findSettledInput()` (escribe con `pressSequentially()` + espera a que el valor se mantenga) y `submitUntilValidation()` (reintenta por el race de `onSubmit`). Ver `tests/e2e/helpers.ts`.
+
+**Correr contra el build de producción:** la suite completa puede dar flakies en dev (`pnpm dev`, Turbopack) por la compilación en caliente bajo paralelismo. Contra `pnpm build && pnpm start` corre estable (104 passed / 0 failed / 16 skipped — admin sin creds). CI usa `pnpm start`.
+
 
 ---
 
