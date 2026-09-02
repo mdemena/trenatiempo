@@ -21,12 +21,12 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      name: 'Desktop Chrome',
+      use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'Mobile Safari (WebKit)',
-      use: { ...devices['iPhone 13'] },
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
     },
   ],
   // Start a local server only when not pointing at a remote deployment.
