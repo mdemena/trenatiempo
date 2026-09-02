@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTimeZone } from 'next-intl/server'
-import { Syne, DM_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { SessionProvider } from '@/components/auth/SessionProvider'
@@ -11,18 +10,6 @@ import { GoogleTagManager } from '@/components/analytics/GoogleTagManager'
 import { SerwistProvider } from '@/components/pwa/SerwistProvider'
 import './globals.css'
 import 'flag-icons/css/flag-icons.min.css'
-
-const syne = Syne({
-  subsets: ['latin'],
-  variable: '--font-syne',
-  display: 'swap',
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  display: 'swap',
-})
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -69,21 +56,19 @@ export default async function LocaleLayout({
   const timeZone = await getTimeZone()
 
   return (
-    <html lang={locale} className={`${syne.variable} ${dmSans.variable}`}>
-      <body>
-        <GoogleTagManager />
-        <SerwistProvider>
-          <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone={timeZone}>
-            <SessionProvider>
-              <ThemeProvider>
-                <LayoutShell>
-                  {children}
-                </LayoutShell>
-              </ThemeProvider>
-            </SessionProvider>
-          </NextIntlClientProvider>
-        </SerwistProvider>
-      </body>
-    </html>
+    <>
+      <GoogleTagManager />
+      <SerwistProvider>
+        <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone={timeZone}>
+          <SessionProvider>
+            <ThemeProvider>
+              <LayoutShell>
+                {children}
+              </LayoutShell>
+            </ThemeProvider>
+          </SessionProvider>
+        </NextIntlClientProvider>
+      </SerwistProvider>
+    </>
   )
 }

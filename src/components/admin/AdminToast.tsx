@@ -47,19 +47,19 @@ function ToastItem({
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className={`flex min-w-64 items-center gap-3 rounded-xl border px-4 py-3 shadow-lg ${
         toast.type === 'success'
-          ? 'border-green-200 bg-white text-green-700'
-          : 'border-red-200 bg-white text-red-600'
+          ? 'border-rail-green/30 bg-rail-surface text-rail-green'
+          : 'border-red-500/30 bg-rail-surface text-red-400'
       }`}
     >
       {toast.type === 'success' ? (
-        <CheckCircle className="h-4 w-4 shrink-0 text-green-500" />
+        <CheckCircle className="h-4 w-4 shrink-0 text-rail-green" />
       ) : (
-        <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+        <XCircle className="h-4 w-4 shrink-0 text-red-400" />
       )}
-      <span className="flex-1 text-sm font-medium">{toast.text}</span>
+      <span className="flex-1 text-sm font-medium text-rail-cream">{toast.text}</span>
       <button
         onClick={() => onDismiss(toast.id)}
-        className="ml-1 text-gray-400 hover:text-gray-600 transition"
+        className="ml-1 text-rail-cream/50 transition hover:text-rail-cream"
       >
         <X className="h-3.5 w-3.5" />
       </button>

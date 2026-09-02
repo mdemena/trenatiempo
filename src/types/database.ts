@@ -63,6 +63,7 @@ export interface Database {
           lng: number | null
           province: string | null
           region: string | null
+          municipality: string | null
           types: string[]
           active: boolean
           created_at: string
@@ -76,6 +77,7 @@ export interface Database {
           lng?: number | null
           province?: string | null
           region?: string | null
+          municipality?: string | null
           types?: string[]
           active?: boolean
         }
@@ -86,6 +88,7 @@ export interface Database {
           lng?: number | null
           province?: string | null
           region?: string | null
+          municipality?: string | null
           types?: string[]
           active?: boolean
         }

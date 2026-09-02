@@ -1,7 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/server'
-import { LayoutGrid, Users } from 'lucide-react'
+import { LayoutGrid, Users, MapPin } from 'lucide-react'
 import Link from 'next/link'
+import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import '../[locale]/globals.css'
 
 // ─── Server-side admin verification (extra layer on top of middleware) ────────
 
@@ -27,6 +30,7 @@ async function getAdminUser() {
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutGrid },
   { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
+  { href: '/admin/estaciones', label: 'Estaciones', icon: MapPin },
 ]
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
@@ -42,53 +46,34 @@ export default async function AdminLayout({
   if (!adminUser) redirect('/es/login?returnUrl=/admin')
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900">
-      {/* Sidebar — desktop */}
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-gray-200 bg-white md:flex">
-        <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
-          <span className="font-bold text-gray-900">TrenATiempo</span>
-          <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
-            Admin
-          </span>
-        </div>
+    <ThemeProvider>
+      <div className="relative flex min-h-dvh bg-rail-navy text-rail-cream">
+        {/* Ambient glow */}
+        <div className="pointer-events-none fixed -top-32 left-1/4 h-80 w-80 -translate-x-1/2 rounded-full bg-rail-amber/[0.07] blur-[120px]" />
 
-        <nav className="flex-1 space-y-0.5 p-3">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="border-t border-gray-100 px-4 py-3">
-          <p className="text-xs text-gray-500">
-            {adminUser.full_name ?? adminUser.email ?? 'Admin'}
-          </p>
-          <p className="text-[11px] text-gray-400">Administrador</p>
-        </div>
-      </aside>
+        {/* Sidebar — desktop */}
+        <AdminSidebar
+          adminName={adminUser.full_name ?? adminUser.email ?? 'Admin'}
+        />
 
       {/* Top nav — mobile */}
-      <div className="flex w-full flex-col md:hidden">
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
+      <div className="flex w-full flex-col">
+        <header className="flex items-center justify-between border-b border-rail-border bg-rail-surface/40 px-4 py-3 backdrop-blur md:hidden">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-gray-900">TrenATiempo</span>
-            <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
+            <span className="font-display text-lg font-extrabold tracking-tight text-rail-cream">
+              TrenATiempo
+            </span>
+            <span className="rounded-full bg-rail-amber/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-rail-amber">
               Admin
             </span>
           </div>
-          <nav className="flex gap-3">
+          <nav className="flex gap-2">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
                 title={label}
-                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-gray-600 transition hover:bg-gray-100"
+                className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rail-cream/60 transition hover:bg-rail-surface hover:text-rail-cream"
               >
                 <Icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{label}</span>
@@ -96,11 +81,9 @@ export default async function AdminLayout({
             ))}
           </nav>
         </header>
-        <main className="flex-1 p-4">{children}</main>
+        <main className="relative flex-1 p-4 md:p-6">{children}</main>
       </div>
-
-      {/* Main content — desktop */}
-      <main className="hidden flex-1 overflow-y-auto p-6 md:block">{children}</main>
-    </div>
+      </div>
+    </ThemeProvider>
   )
 }

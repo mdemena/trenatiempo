@@ -123,33 +123,33 @@ export function UserTable({ currentAdminId }: UserTableProps) {
           placeholder="Buscar por nombre o email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          className="flex-1 rounded-xl border border-rail-border bg-rail-surface/40 px-3 py-2 text-sm text-rail-cream placeholder:text-rail-cream/30 focus:border-rail-amber/40 focus:outline-none focus:ring-2 focus:ring-rail-amber/20"
         />
 
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          className="rounded-xl border border-rail-border bg-rail-surface/40 px-3 py-2 text-sm text-rail-cream focus:border-rail-amber/40 focus:outline-none focus:ring-2 focus:ring-rail-amber/20"
         >
-          <option value="all">Todos los roles</option>
-          <option value="user">Usuario</option>
-          <option value="admin">Admin</option>
+          <option value="all" className="bg-rail-navy">Todos los roles</option>
+          <option value="user" className="bg-rail-navy">Usuario</option>
+          <option value="admin" className="bg-rail-navy">Admin</option>
         </select>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          className="rounded-xl border border-rail-border bg-rail-surface/40 px-3 py-2 text-sm text-rail-cream focus:border-rail-amber/40 focus:outline-none focus:ring-2 focus:ring-rail-amber/20"
         >
-          <option value="all">Todos los estados</option>
-          <option value="active">Activos</option>
-          <option value="inactive">Inactivos</option>
+          <option value="all" className="bg-rail-navy">Todos los estados</option>
+          <option value="active" className="bg-rail-navy">Activos</option>
+          <option value="inactive" className="bg-rail-navy">Inactivos</option>
         </select>
 
         <button
           onClick={() => exportCsv(users)}
           disabled={users.length === 0}
-          className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+          className="flex items-center gap-1.5 rounded-xl border border-rail-border px-3 py-2 text-sm text-rail-cream/70 transition hover:border-rail-amber/30 hover:text-rail-cream disabled:opacity-40"
         >
           <Download className="h-3.5 w-3.5" />
           Exportar CSV
@@ -157,10 +157,10 @@ export function UserTable({ currentAdminId }: UserTableProps) {
       </div>
 
       {/* Table wrapper */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-rail-border bg-rail-surface/40">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 text-xs font-medium uppercase tracking-wide text-gray-400">
+            <tr className="border-b border-rail-border text-xs font-medium uppercase tracking-widest text-rail-cream/40">
               <th className="px-4 py-3 text-left">Nombre / Email</th>
               <th className="hidden px-4 py-3 text-left md:table-cell">Rol</th>
               <th className="hidden px-4 py-3 text-left lg:table-cell">Idioma</th>
@@ -174,13 +174,13 @@ export function UserTable({ currentAdminId }: UserTableProps) {
             {loading && (
               <tr>
                 <td colSpan={7} className="py-12 text-center">
-                  <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-indigo-500" />
+                  <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-rail-border border-t-rail-amber" />
                 </td>
               </tr>
             )}
             {!loading && users.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-sm text-gray-400">
+                <td colSpan={7} className="py-12 text-center text-sm text-rail-cream/40">
                   Sin resultados
                 </td>
               </tr>
@@ -189,7 +189,7 @@ export function UserTable({ currentAdminId }: UserTableProps) {
               users.map((user) => (
                 <tr
                   key={user.id}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50"
+                  className="border-b border-rail-border/60 last:border-0 hover:bg-rail-surface/60"
                 >
                   {/* Name / email */}
                   <td className="px-4 py-3">
@@ -202,17 +202,17 @@ export function UserTable({ currentAdminId }: UserTableProps) {
                           className="h-7 w-7 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-rail-amber/15 text-xs font-bold text-rail-amber">
                           {(user.full_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-gray-800">
+                        <p className="truncate font-medium text-rail-cream">
                           {user.full_name ?? '–'}
                         </p>
                         <p
                           className={`truncate text-xs ${
-                            user.active ? 'text-gray-400' : 'text-gray-300 line-through'
+                            user.active ? 'text-rail-cream/40' : 'text-rail-cream/25 line-through'
                           }`}
                         >
                           {user.email}
@@ -226,8 +226,8 @@ export function UserTable({ currentAdminId }: UserTableProps) {
                     <span
                       className={
                         user.role === 'admin'
-                          ? 'rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700'
-                          : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600'
+                          ? 'rounded-full bg-rail-green/15 px-2 py-0.5 text-xs font-medium text-rail-green'
+                          : 'rounded-full bg-rail-surface px-2 py-0.5 text-xs font-medium text-rail-cream/60'
                       }
                     >
                       {user.role === 'admin' ? 'Admin' : 'Usuario'}
@@ -235,7 +235,7 @@ export function UserTable({ currentAdminId }: UserTableProps) {
                   </td>
 
                   {/* Locale */}
-                  <td className="hidden px-4 py-3 text-xs text-gray-400 lg:table-cell">
+                  <td className="hidden px-4 py-3 text-xs text-rail-cream/40 lg:table-cell">
                     {user.preferred_locale.toUpperCase()}
                   </td>
 
@@ -244,22 +244,22 @@ export function UserTable({ currentAdminId }: UserTableProps) {
                     <div className="flex items-center gap-1.5">
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${
-                          user.active ? 'bg-green-500' : 'bg-red-400'
+                          user.active ? 'bg-rail-green' : 'bg-red-400'
                         }`}
                       />
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-rail-cream/50">
                         {user.active ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
                   </td>
 
                   {/* Last seen */}
-                  <td className="hidden px-4 py-3 text-xs text-gray-400 xl:table-cell">
+                  <td className="hidden px-4 py-3 text-xs text-rail-cream/40 xl:table-cell">
                     {formatRelative(user.last_seen)}
                   </td>
 
                   {/* Created at */}
-                  <td className="hidden px-4 py-3 text-xs text-gray-400 xl:table-cell">
+                  <td className="hidden px-4 py-3 text-xs text-rail-cream/40 xl:table-cell">
                     {new Date(user.created_at).toLocaleDateString('es-ES')}
                   </td>
 
@@ -267,7 +267,7 @@ export function UserTable({ currentAdminId }: UserTableProps) {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => setEditingUser(user)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-600 transition hover:bg-gray-100"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-rail-border px-2.5 py-1.5 text-xs text-rail-cream/70 transition hover:border-rail-amber/30 hover:text-rail-cream"
                       aria-label={`Editar ${user.full_name ?? user.email}`}
                     >
                       <Pencil className="h-3 w-3" />
@@ -282,7 +282,7 @@ export function UserTable({ currentAdminId }: UserTableProps) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+        <div className="mt-4 flex items-center justify-between text-sm text-rail-cream/50">
           <p>
             {total} usuarios · página {page} de {totalPages}
           </p>
@@ -290,7 +290,7 @@ export function UserTable({ currentAdminId }: UserTableProps) {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="rounded-lg border border-gray-200 p-1.5 transition hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-lg border border-rail-border p-1.5 transition hover:bg-rail-surface disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -303,8 +303,8 @@ export function UserTable({ currentAdminId }: UserTableProps) {
                   onClick={() => setPage(p)}
                   className={`min-w-[32px] rounded-lg border px-2 py-1.5 text-xs transition ${
                     p === page
-                      ? 'border-indigo-300 bg-indigo-50 font-semibold text-indigo-700'
-                      : 'border-gray-200 hover:bg-gray-100'
+                      ? 'border-rail-amber/40 bg-rail-amber/15 font-semibold text-rail-amber'
+                      : 'border-rail-border hover:bg-rail-surface'
                   }`}
                 >
                   {p}
@@ -314,7 +314,7 @@ export function UserTable({ currentAdminId }: UserTableProps) {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="rounded-lg border border-gray-200 p-1.5 transition hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-lg border border-rail-border p-1.5 transition hover:bg-rail-surface disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
