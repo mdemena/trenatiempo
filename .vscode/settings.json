@@ -1,7 +1,6 @@
 {
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "javascript.updateImportsOnFileMove.enabled": "always",
-  "typescript.preferences.importModuleSpecifier": "relative",
+  "js/ts.preferences.updateImportsOnFileMove.enabled": "always",
+  "js/ts.preferences.importModuleSpecifier": "relative",
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
@@ -16,5 +15,6 @@
   "tailwindCSS.experimental.classRegex": [],
   "files.associations": {
     "*.css": "tailwindcss"
-  }
+  },
+  "remote.autoForwardPortsFallback": 0
 }
