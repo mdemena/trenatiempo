@@ -849,18 +849,16 @@ chore(deps): update next to 15.x
 ```
 
 ### GitHub Actions (`ci.yml`)
-Pipeline: `quality` (lint+typecheck+unit) → `build` → `deploy`.
+Pipeline: `quality` (lint+typecheck+unit) → `build` → `deploy` (webhook a Vercel).
 
 - **Solo corre al hacer merge a `main`**: el workflow se dispara únicamente en `push` a `main` (no en PRs ni en pushes a `develop`).
 - El job `deploy` despliega a Vercel **solo después** de que quality (unit tests) + build hayan pasado.
 - **E2E fuera de CI**: los tests E2E no bloquean el deploy ni CI; se lanzan **manualmente desde local** (`pnpm test:e2e`).
 
-El job `deploy` usa el patrón oficial de Vercel CLI → `vercel pull --environment=production` → `vercel build --prod` → `vercel deploy --prebuilt --prod` (sube el artefacto ya construido, Vercel no re-compila). Requiere 3 secrets en GitHub:
+El job `deploy` **no usa Vercel CLI**: dispara el **Deploy Hook** (webhook) de Vercel con un `curl -X POST` al secret `VERCEL_DEPLOY_HOOK` para que **Vercel construya y despliegue con sus propias env vars del dashboard**. Así se evita el fallo de `vercel pull`/`--prebuilt` que horneaba `VAR=""` en el artefacto (incidente May 2026). Requiere 1 secret en GitHub:
 
 ```bash
-VERCEL_TOKEN        # https://vercel.com/account/tokens
-VERCEL_ORG_ID       # de .vercel/project.json (orgId), o del dashboard
-VERCEL_PROJECT_ID   # de .vercel/project.json (projectId)
+VERCEL_DEPLOY_HOOK    # URL del Deploy Hook creado en Vercel → Settings → Deploy Hooks
 ```
 
 ### Pull Requests — política de generación (obligatorio)
@@ -873,8 +871,9 @@ Cuando se pida "generar un PR", hacer **solo** hasta generar/actualizar el PR y 
 
 **Configuración obligatoria en el dashboard de Vercel** (para que NUNCA despliegue por su cuenta mientras corre CI):
 
-1. **Project → Settings → Git → Ignored Build Step →** poner un comando que siempre salga con `exit 0` (p. ej. `true`). Convención invertida: **exit 0 = skip el build**, exit ≥1 = build. Así Vercel ignora todos los deploys disparados por git (pushes y PRs) y el único path de deploy es el job del workflow.
-2. **Environment Variables:** las `NEXT_PUBLIC_*` (SUPABASE_URL, SUPABASE_ANON_KEY, APP_URL) deben estar tipadas como `Encrypted` (normal), **NO** como `Sensitive`. Las variables `Sensitive` no se exponen a `vercel pull`/builds por CLI (Vercel CLI issue #17183) y `vercel pull` con valor vacío escribe `VAR=""` que con `output: 'standalone'` se hornea en `.next/standalone/.env` y suplanta a la inyección en runtime (incidente May 2026 `invalid_token`).
+1. **Project → Settings → Git → Ignored Build Step →** poner un comando que siempre salga con `exit 0` (p. ej. `true`). Convención invertida: **exit 0 = skip el build**, exit ≥1 = build. Así Vercel ignora todos los deploys disparados por git (pushes y PRs) y el único path de deploy es el job del workflow (webhook).
+2. **Project → Settings → Deploy Hooks →** crear un hook de deploy del entorno de producción y copiar su URL al secret `VERCEL_DEPLOY_HOOK` de GitHub.
+3. **Environment Variables:** las `NEXT_PUBLIC_*` (SUPABASE_URL, SUPABASE_ANON_KEY, APP_URL) y `SUPABASE_SERVICE_ROLE_KEY` deben estar tipadas como `Encrypted` (normal), **NO** como `Sensitive`, para que Vercel las use en su build/runtime.
 
 **E2E en CI:** corre contra la misma instancia de Supabase (necesita `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` con las estaciones seedeadas vía `seeds.yml`). Instala Chromium (`playwright install --with-deps chromium`). El resto (home/estacion/viaje/pwa/offline) corre siempre. En PRs desde forks los secretos no están disponibles → el job no puede ejecutarse (aceptable para un repo personal/privado).
 
