@@ -70,7 +70,7 @@ jobs:
 
   # ─── E2E Tests (Chromium: desktop + mobile) — merge gate ────────────────────
   # Corre contra una instancia real de Supabase con las estaciones seedeadas.
-  # Los specs de auth/admin se auto-desactivan si faltan las E2E_* creds.
+  # El panel admin se testea manualmente (fuera de E2E).
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -107,10 +107,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
-          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
-          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
-          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
 
       - uses: actions/upload-artifact@v4
         if: failure()

@@ -765,7 +765,9 @@ pnpm exec playwright install
 
 Los browsers se descargan a `~/.cache/ms-playwright` (no requieren sudo).
 
-**Tests E2E existentes:** `tests/e2e/estacion.spec.ts`, `home.spec.ts`, `viaje.spec.ts`, `auth.spec.ts`, `admin.spec.ts`, `pwa.spec.ts`, `offline.spec.ts`.
+**Tests E2E existentes:** `tests/e2e/estacion.spec.ts`, `home.spec.ts`, `viaje.spec.ts`, `auth.spec.ts`, `pwa.spec.ts`, `offline.spec.ts`.
+
+> **Admin fuera de E2E:** la cobertura E2E del panel admin (`admin.spec.ts`) fue retirada a petición del equipo. El panel solo lo usa el admin y se testea manualmente; los E2E cubren únicamente flujos públicos/auth.
 
 **Estaciones de referencia** (verificables manualmente por el equipo, área Granollers/La Selva): Sant Celoni `79104` (Cercanías R2/R2N/R11 + Regional), Granollers Centre `79100` (R2/R2N/R8), Granollers-Canovelles `77006`, Les Franqueses-Granollers Nord `79109`. Tren de ejemplo para `/viaje`: `5142M15734R11` (Barcelona-Sants → Figueres, pasa por Sant Celoni). Prueba de Regresión rápida tras tocar la home: `pnpm exec playwright test tests/e2e/home.spec.ts tests/e2e/viaje.spec.ts`
 
@@ -873,9 +875,9 @@ Cuando se pida "generar un PR", hacer **solo** hasta generar/actualizar el PR y 
 1. **Project → Settings → Git → Ignored Build Step →** poner un comando que siempre salga con `exit 0` (p. ej. `true`). Convención invertida: **exit 0 = skip el build**, exit ≥1 = build. Así Vercel ignora todos los deploys disparados por git (pushes y PRs) y el único path de deploy es el job del workflow.
 2. **Environment Variables:** las `NEXT_PUBLIC_*` (SUPABASE_URL, SUPABASE_ANON_KEY, APP_URL) deben estar tipadas como `Encrypted` (normal), **NO** como `Sensitive`. Las variables `Sensitive` no se exponen a `vercel pull`/builds por CLI (Vercel CLI issue #17183) y `vercel pull` con valor vacío escribe `VAR=""` que con `output: 'standalone'` se hornea en `.next/standalone/.env` y suplanta a la inyección en runtime (incidente May 2026 `invalid_token`).
 
-**E2E en CI:** corre contra la misma instancia de Supabase (necesita `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` con las estaciones seedeadas vía `seeds.yml`). Instala Chromium (`playwright install --with-deps chromium`). Los tests de auth/admin se auto-desactivan si no hay `E2E_*` creds (`test.skip`); el resto (home/estacion/viaje/pwa/offline) corre siempre. En PRs desde forks los secretos no están disponibles → el job no puede ejecutarse (aceptable para un repo personal/privado).
+**E2E en CI:** corre contra la misma instancia de Supabase (necesita `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` con las estaciones seedeadas vía `seeds.yml`). Instala Chromium (`playwright install --with-deps chromium`). El resto (home/estacion/viaje/pwa/offline) corre siempre. En PRs desde forks los secretos no están disponibles → el job no puede ejecutarse (aceptable para un repo personal/privado).
 
-> Nota: los nuevos specs inyectan la cookie de consentimiento (`setConsentCookie`) también en `auth.spec.ts` y `admin.spec.ts`, porque el banner bloquea el click en los botones de submit (`dialog "Tu privacidad importa"`). Los 6 fallos de auth en suite completa eran este banner, no los selectores.
+> Nota: los specs inyectan la cookie de consentimiento (`setConsentCookie`) en `auth.spec.ts` (y en el retirado `admin.spec.ts`), porque el banner bloquea el click en los botones de submit (`dialog "Tu privacidad importa"`). Los 6 fallos de auth en suite completa eran este banner, no los selectores.
 
 ---
 
