@@ -1,10 +1,9 @@
 name: CI/CD
 
 on:
+  # Solo se lanza al hacer merge a main (push). No corre en PRs ni pushes a develop.
   push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
