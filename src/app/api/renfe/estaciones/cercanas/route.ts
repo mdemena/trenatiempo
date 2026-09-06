@@ -21,10 +21,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url)
   const parsed = QuerySchema.safeParse({
-    lat: searchParams.get('lat'),
-    lng: searchParams.get('lng'),
-    limit: searchParams.get('limit'),
-    radio: searchParams.get('radio'),
+    lat: searchParams.get('lat') ?? undefined,
+    lng: searchParams.get('lng') ?? undefined,
+    limit: searchParams.get('limit') ?? undefined,
+    radio: searchParams.get('radio') ?? undefined,
   })
 
   if (!parsed.success) {
@@ -35,14 +35,24 @@ export async function GET(request: Request) {
   }
 
   const { lat, lng, limit, radio } = parsed.data
-  const estaciones = await getNearestStations(lat, lng, limit, radio)
 
-  return NextResponse.json(
-    { estaciones, total: estaciones.length, lat, lng },
-    {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
-      },
-    }
-  )
+  try {
+    const estaciones = await getNearestStations(lat, lng, limit, radio)
+
+    return NextResponse.json(
+      { estaciones, total: estaciones.length, lat, lng },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    )
+  } catch (err) {
+    const message =
+      err instanceof Error && /Supabase misconfigured/.test(err.message)
+        ? 'Configuración de base de datos incompleta en el servidor.'
+        : 'Error interno del servidor.'
+    console.error('estaciones-cercanas failed:', err)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }

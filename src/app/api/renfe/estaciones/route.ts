@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const parsed = QuerySchema.safeParse({
     q: searchParams.get('q'),
-    limit: searchParams.get('limit'),
+    limit: searchParams.get('limit') ?? undefined,
   })
 
   if (!parsed.success) {
@@ -38,15 +38,25 @@ export async function GET(request: Request) {
   }
 
   const { q, limit } = parsed.data
-  const estaciones = await searchStations(q, limit)
 
-  return NextResponse.json(
-    { estaciones, total: estaciones.length },
-    {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-        'X-RateLimit-Remaining': String(rl.remaining),
-      },
-    }
-  )
+  try {
+    const estaciones = await searchStations(q, limit)
+
+    return NextResponse.json(
+      { estaciones, total: estaciones.length },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+          'X-RateLimit-Remaining': String(rl.remaining),
+        },
+      }
+    )
+  } catch (err) {
+    const message =
+      err instanceof Error && /Supabase misconfigured/.test(err.message)
+        ? 'Configuración de base de datos incompleta en el servidor.'
+        : 'Error interno del servidor.'
+    console.error('estaciones failed:', err)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }
