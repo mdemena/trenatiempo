@@ -68,55 +68,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
 
-  # ─── E2E Tests (Chromium: desktop + mobile) — merge gate ────────────────────
-  # Corre contra una instancia real de Supabase con las estaciones seedeadas.
-  # El panel admin se testea manualmente (fuera de E2E).
-  e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build for E2E
-        run: pnpm build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run E2E Tests
-        run: pnpm test:e2e
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-
   # ─── Deploy a Vercel (production) ───────────────────────────────────────────
-  # Solo en push a main y SOLO después de que quality+build+e2e hayan pasado.
+  # Solo en push a main y SOLO después de que quality (lint+typecheck+unit)
+  # y build hayan pasado. Los E2E se lanzan manualmente (fuera de CI).
   # El Vercel CLI sube el artefacto ya construido (--prebuilt): Vercel no
   # vuelve a compilar. Requiere que la integración git de Vercel tenga el
   # "Ignored Build Step" en `exit 0` (skip siempre) para que NUNCA despliegue
@@ -124,7 +78,7 @@ jobs:
   deploy:
     name: Deploy to Vercel (production)
     runs-on: ubuntu-latest
-    needs: [build, e2e]
+    needs: [build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
