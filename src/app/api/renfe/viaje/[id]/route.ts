@@ -166,10 +166,20 @@ export async function GET(
 
     // Fetch station names for all stop_ids
     const stopIds = stopTimesRaw.map((r) => r.stop_id)
-    const stationsResult = await db
-      .from('stations')
-      .select('id, name')
-      .in('id', stopIds)
+    let stationsResult: { data: Array<{ id: string; name: string }> | null }
+    try {
+      stationsResult = await db
+        .from('stations')
+        .select('id, name')
+        .in('id', stopIds)
+    } catch (err) {
+      const message =
+        err instanceof Error && /Supabase misconfigured/.test(err.message)
+          ? 'Configuración de base de datos incompleta en el servidor.'
+          : 'Error interno al cargar el viaje.'
+      console.error('viaje stations failed:', err)
+      return NextResponse.json({ error: message }, { status: 500 })
+    }
 
     const nameMap = new Map<string, string>()
     if (stationsResult.data) {

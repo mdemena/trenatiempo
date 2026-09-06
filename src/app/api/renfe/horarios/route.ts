@@ -178,20 +178,22 @@ export async function GET(request: Request) {
   const isToday = targetDate === today
   const db = supabaseAdmin as unknown as DB
 
-  // ── Static schedule via RPC (calendar-aware) ─────────────────────────────
-  const staticQuery = db.rpc('get_stop_departures', {
-    p_stop_id: stopId,
-    p_date: targetDate,
-    p_feed: tipo,
-    p_min_time: isToday ? nowGtfsTime() : null,
-  })
+  let horariosResult: { horarios: HorarioEntry[]; updatedAt: number; stale: boolean }
+  try {
+    // ── Static schedule via RPC (calendar-aware) ─────────────────────────────
+    const staticQuery = db.rpc('get_stop_departures', {
+      p_stop_id: stopId,
+      p_date: targetDate,
+      p_feed: tipo,
+      p_min_time: isToday ? nowGtfsTime() : null,
+    })
 
-  // Real-time feeds only make sense for today's trains.
-  const [tripResult, vehicleResult, staticResult] = await Promise.allSettled([
-    isToday ? fetchTripUpdates(tipo) : Promise.resolve(null),
-    isToday ? fetchVehiclePositions(tipo) : Promise.resolve(null),
-    staticQuery,
-  ])
+    // Real-time feeds only make sense for today's trains.
+    const [tripResult, vehicleResult, staticResult] = await Promise.allSettled([
+      isToday ? fetchTripUpdates(tipo) : Promise.resolve(null),
+      isToday ? fetchVehiclePositions(tipo) : Promise.resolve(null),
+      staticQuery,
+    ])
 
   const tripFeedResult = tripResult.status === 'fulfilled' ? tripResult.value : null
   const vehicleFeedResult = vehicleResult.status === 'fulfilled' ? vehicleResult.value : null
@@ -309,26 +311,34 @@ export async function GET(request: Request) {
     horarios = []
   }
 
-  const response: HorariosResponse = {
-    horarios,
-    updatedAt: tripFeedResult?.fetchedAt ?? Date.now(),
-    stale: stale || (isToday && stopTimes.length === 0),
-    fecha: targetDate,
-    realtime: isToday,
-  }
+    const response: HorariosResponse = {
+      horarios,
+      updatedAt: tripFeedResult?.fetchedAt ?? Date.now(),
+      stale: stale || (isToday && stopTimes.length === 0),
+      fecha: targetDate,
+      realtime: isToday,
+    }
 
-  return NextResponse.json(response, {
-    headers: {
-      // Future dates are pure static data — cache them much more aggressively.
-      'Cache-Control': isToday
-        ? 'public, s-maxage=15, stale-while-revalidate=30'
-        : 'public, s-maxage=300, stale-while-revalidate=600',
-      'X-Stale': String(response.stale),
-      'X-Source': isToday
-        ? stopTimes.length > 0
-          ? 'static+rt'
-          : 'rt-only'
-        : 'static-future',
-    },
-  })
+    return NextResponse.json(response, {
+      headers: {
+        // Future dates are pure static data — cache them much more aggressively.
+        'Cache-Control': isToday
+          ? 'public, s-maxage=15, stale-while-revalidate=30'
+          : 'public, s-maxage=300, stale-while-revalidate=600',
+        'X-Stale': String(response.stale),
+        'X-Source': isToday
+          ? stopTimes.length > 0
+            ? 'static+rt'
+            : 'rt-only'
+          : 'static-future',
+      },
+    })
+  } catch (err) {
+    const message =
+      err instanceof Error && /Supabase misconfigured/.test(err.message)
+        ? 'Configuración de base de datos incompleta en el servidor.'
+        : 'Error interno al cargar horarios.'
+    console.error('horarios failed:', err)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }

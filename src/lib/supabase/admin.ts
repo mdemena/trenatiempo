@@ -14,14 +14,19 @@ let _client: AdminClient | undefined
 
 function getClient(): AdminClient {
   if (!_client) {
-    _client = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: { persistSession: false, autoRefreshToken: false },
-        global: { fetch: timedFetch },
-      }
-    )
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!url || !key) {
+      throw new Error(
+        'Supabase misconfigured: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required (server-side). Check the env vars in the deployment.'
+      )
+    }
+
+    _client = createClient<Database>(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: timedFetch },
+    })
   }
   return _client
 }
