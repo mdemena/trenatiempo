@@ -851,7 +851,7 @@ chore(deps): update next to 15.x
 ### GitHub Actions (`ci.yml`)
 Pipeline: `quality` (lint+typecheck+unit) → `build` → `deploy` (webhook a Vercel).
 
-- **Solo corre al hacer merge a `main`**: el workflow se dispara únicamente en `push` a `main` (no en PRs ni en pushes a `develop`).
+- **Solo corre al hacer merge a `main`**: el workflow se dispara en `push` a `main` (no en PRs ni en pushes a `develop`)** o manualmente** con el botón "Run workflow" de GitHub (`workflow_dispatch`).
 - El job `deploy` despliega a Vercel **solo después** de que quality (unit tests) + build hayan pasado.
 - **E2E fuera de CI**: los tests E2E no bloquean el deploy ni CI; se lanzan **manualmente desde local** (`pnpm test:e2e`).
 

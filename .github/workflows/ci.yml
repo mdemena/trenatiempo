@@ -1,9 +1,11 @@
 name: CI/CD
 
 on:
-  # Solo se lanza al hacer merge a main (push). No corre en PRs ni pushes a develop.
+  # Se lanza al hacer merge a main (push) o manualmente desde el botón
+  # "Run workflow" de GitHub. No corre en PRs ni pushes a develop.
   push:
     branches: [main]
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -68,11 +70,11 @@ jobs:
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
 
   # ─── Deploy a Vercel (production) ───────────────────────────────────────────
-  # Solo en push a main y SOLO después de que quality (lint+typecheck+unit)
-  # y build hayan pasado. No construimos con Vercel CLI --prebuilt: eso hornea
-  # las env vars del runner y produjo el fallo en producción. En su lugar
-  # disparamos el Deploy Hook (webhook) de Vercel para que Vercel construya y
-  # despliegue con SUS propias env vars del dashboard.
+  # En push a main o manual (workflow_dispatch sobre main) y SOLO después de
+  # que quality (lint+typecheck+unit) y build hayan pasado. No construimos con
+  # Vercel CLI --prebuilt: eso hornea las env vars del runner y produjo el fallo
+  # en producción. En su lugar disparamos el Deploy Hook (webhook) de Vercel
+  # para que Vercel construya y despliegue con SUS propias env vars del dashboard.
   # Requiere: (1) en Vercel → Settings → Deploy Hooks, crear un hook y guardar
   # su URL en el secret VERCEL_DEPLOY_HOOK de GitHub; (2) dejar el "Ignored
   # Build Step" en `exit 0` (skip siempre) para que la integración git de Vercel
@@ -81,7 +83,7 @@ jobs:
     name: Deploy to Vercel (production)
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     steps:
       - name: Trigger Vercel Deploy Hook
         run: |
