@@ -11,6 +11,14 @@
     {
       "path": "/api/cron/seed",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/cron/monitor-push",
+      "schedule": "0 5 * * *"
     }
   ],
   "headers": [

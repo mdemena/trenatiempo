@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
+  return handle(request)
+}
+
+// Vercel Cron invoca con GET; POST se mantiene para triggers manuales.
+export async function GET(request: Request) {
+  return handle(request)
+}
+
+async function handle(request: Request) {
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

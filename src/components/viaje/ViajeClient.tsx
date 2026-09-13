@@ -189,6 +189,12 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
   const { bg: badgeBg, text: badgeText } = getRouteColors(lineCode ?? '')
   const shortLine = lineCode ? routeShortName(lineCode) : null
 
+  // Avisos de llegada con sentido solo para la corrida de hoy (sin feed en futuro).
+  const isToday = fechaISO === todayISO()
+  const userStop = userStopId && tren
+    ? tren.paradas.find((p) => p.stopId === userStopId)
+    : undefined
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Fixed header — always visible */}
@@ -224,7 +230,14 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
           {tren && (
             <div className="flex shrink-0 gap-1">
               <FavoriteButton type="trip" id={tren.id} lineName={tren.routeId} />
-              <PushPermission tripCode={tren.id} />
+              {isToday && (
+                <PushPermission
+                  tripCode={tren.id}
+                  stationId={userStopId}
+                  stationName={userStop?.nombre}
+                  serviceDate={fechaISO}
+                />
+              )}
             </div>
           )}
         </div>

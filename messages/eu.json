@@ -108,7 +108,15 @@
     "noPositionInfo": "Posizio-informaziorik ez dago",
     "pushDenied": "Jakinarazpenen baimena ukatua",
     "yourStop": "Zure geltokia",
-    "inTransit": "Trantsitatzen"
+    "inTransit": "Trantsitatzen",
+    "pushDialogTitle": "Tren honen alertak",
+    "pushDialogStation": "Geltokian: {station}",
+    "pushNotifyDelay": "Atzerapenak",
+    "pushNotifyDelayDesc": "Trenak 5 minutu baino gehiagoko atzerapena duenean abisatu",
+    "pushNotifyArrival": "Iritsiera",
+    "pushNotifyArrivalDesc": "Zure geltokira iritsi baino ~10 minutu lehenago abisatu",
+    "pushSave": "Gorde",
+    "pushCancel": "Utzi"
   },
   "auth": {
     "login": "Saioa hasi",

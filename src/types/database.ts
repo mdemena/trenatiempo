@@ -169,6 +169,14 @@ export interface Database {
           p256dh: string
           auth: string
           trip_code: string | null
+          station_id: string | null
+          notify_delay: boolean
+          notify_arrival: boolean
+          delay_threshold_sec: number
+          arrival_threshold_sec: number
+          service_date: string | null
+          last_delay_sent_at: string | null
+          last_arrival_sent_at: string | null
           active: boolean
           created_at: string
         }
@@ -179,17 +187,71 @@ export interface Database {
           p256dh: string
           auth: string
           trip_code?: string | null
+          station_id?: string | null
+          notify_delay?: boolean
+          notify_arrival?: boolean
+          delay_threshold_sec?: number
+          arrival_threshold_sec?: number
+          service_date?: string | null
+          last_delay_sent_at?: string | null
+          last_arrival_sent_at?: string | null
           active?: boolean
         }
         Update: {
           active?: boolean
           trip_code?: string | null
+          station_id?: string | null
+          notify_delay?: boolean
+          notify_arrival?: boolean
+          delay_threshold_sec?: number
+          arrival_threshold_sec?: number
+          service_date?: string | null
+          last_delay_sent_at?: string | null
+          last_arrival_sent_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: 'push_subscriptions_user_id_fkey'
             columns: ['user_id']
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'push_subscriptions_station_id_fkey'
+            columns: ['station_id']
+            referencedRelation: 'stations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      push_events: {
+        Row: {
+          id: string
+          subscription_id: string
+          trip_code: string
+          event_type: 'delay' | 'arrival'
+          service_date: string
+          payload: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          subscription_id: string
+          trip_code: string
+          event_type: 'delay' | 'arrival'
+          service_date: string
+          payload?: Json | null
+        }
+        Update: {
+          event_type?: 'delay' | 'arrival'
+          service_date?: string
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'push_events_subscription_id_fkey'
+            columns: ['subscription_id']
+            referencedRelation: 'push_subscriptions'
             referencedColumns: ['id']
           }
         ]

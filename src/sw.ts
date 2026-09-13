@@ -96,3 +96,82 @@ const serwist = new Serwist({
 })
 
 serwist.addEventListeners()
+
+// ─── Push notifications ────────────────────────────────────────────────────────
+// `self` (WorkerGlobalScope) no expone los eventos push/notificationclick ni
+// `clients`; usamos el scope real de Service Worker para el tipado.
+
+const swScope = self as unknown as ServiceWorkerGlobalScope
+
+interface PushNotificationData {
+  url?: string
+  tripCode?: string
+  serviceDate?: string
+  type?: string
+}
+
+const NOTIFICATION_OPTIONS = {
+  icon: '/icons/icon-192.png',
+  badge: '/icons/icon-192.png',
+  actions: [
+    {
+      action: 'open',
+      title: 'Abrir',
+    },
+  ],
+} as const
+
+swScope.addEventListener('push', (event) => {
+  if (!event.data) return
+
+  let payload: { title?: string; body?: string; data?: PushNotificationData } | null = null
+  try {
+    payload = event.data.json()
+  } catch {
+    return
+  }
+  if (!payload || !payload.title) return
+
+  // Guarda defensiva: Notification no existe en algunos contextos WebKit.
+  if (typeof Notification === 'undefined') return
+
+  const { data } = payload
+  event.waitUntil(
+    swScope.registration.showNotification(payload.title, {
+      body: payload.body ?? '',
+      ...NOTIFICATION_OPTIONS,
+      data: data ?? {},
+      // Misma etiqueta para un mismo tren/tipo/día → las notificaciones
+      // repetidas se reemplazan en lugar de apilarse.
+      ...(data?.tripCode
+        ? { tag: `${data.type ?? 'alert'}-${data.tripCode}-${data.serviceDate ?? ''}` }
+        : {}),
+    })
+  )
+})
+
+swScope.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+
+  const target = event.notification.data?.url ?? '/'
+  const absoluteUrl = new URL(target, swScope.location.origin).href
+
+  event.waitUntil(
+    (async () => {
+      const windowClients = await swScope.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
+      for (const client of windowClients) {
+        if ('navigate' in client && 'focus' in client) {
+          await client.navigate(absoluteUrl)
+          await client.focus()
+          return
+        }
+      }
+      if (swScope.clients.openWindow) {
+        await swScope.clients.openWindow(absoluteUrl)
+      }
+    })()
+  )
+})

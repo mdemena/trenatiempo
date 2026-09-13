@@ -10,6 +10,8 @@ import {
 } from '@/lib/renfe/gtfs-rt'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit'
+import { gtfsTimeToUnix, todayISO } from '@/lib/renfe/time'
+import { maybeRunPushMonitor } from '@/lib/push/monitor-run'
 import type { Tren, Parada, TipoServicio } from '@/lib/renfe/types'
 
 // Margen sobre los timeouts internos (Renfe 5s, Supabase 8s) para que la
@@ -35,45 +37,6 @@ function inferTipo(routeId: string): TipoServicio {
   if (/^(AVE|AVS|AVI|ALC|ALD|ALS)/.test(upper)) return 'ave'
   if (/^R\d/.test(upper) || upper.startsWith('MD')) return 'md'
   return 'md'
-}
-
-function todayISO(): string {
-  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' })
-}
-
-/** Converts a GTFS "HH:MM:SS" (Madrid local time, h may be ≥ 24) to a Unix timestamp (seconds). */
-function gtfsTimeToUnix(gtfsTime: string, todayIso: string): number {
-  const parts = gtfsTime.split(':').map(Number)
-  const h = parts[0] ?? 0
-  const m = parts[1] ?? 0
-  const s = parts[2] ?? 0
-
-  // Hours ≥ 24 indicate next-calendar-day service
-  const dayOffset = Math.floor(h / 24)
-  const adjH = h % 24
-
-  // Advance date if overflow
-  const base = new Date(todayIso + 'T00:00:00Z')
-  base.setUTCDate(base.getUTCDate() + dayOffset)
-  const adjustedISO = base.toISOString().slice(0, 10)
-
-  // Determine Madrid UTC offset by comparing Madrid hour at UTC noon
-  const noonUTC = new Date(adjustedISO + 'T12:00:00Z')
-  const madridHourAtNoon = parseInt(
-    new Intl.DateTimeFormat('en', {
-      timeZone: 'Europe/Madrid',
-      hour: '2-digit',
-      hour12: false,
-    }).format(noonUTC),
-    10
-  )
-  const offsetHours = madridHourAtNoon - 12 // e.g. +2 in summer, +1 in winter
-
-  // Madrid midnight in UTC
-  const madridMidnightMs =
-    new Date(adjustedISO + 'T00:00:00Z').getTime() - offsetHours * 3600 * 1000
-
-  return Math.floor(madridMidnightMs / 1000) + adjH * 3600 + m * 60 + s
 }
 
 export async function GET(
@@ -113,6 +76,9 @@ export async function GET(
   }
 
   const isToday = targetDate === today
+
+  // Piggyback best-effort: aprovecha las lecturas de hoy para el monitor de push.
+  if (isToday) maybeRunPushMonitor(tipo)
 
   // Fetch GTFS-RT and static schedule in parallel
    

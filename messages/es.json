@@ -108,7 +108,15 @@
     "noPositionInfo": "Sin información de posición",
     "pushDenied": "Permiso de notificaciones denegado",
     "yourStop": "Tu parada",
-    "inTransit": "En tránsito"
+    "inTransit": "En tránsito",
+    "pushDialogTitle": "Alertas de este tren",
+    "pushDialogStation": "En {station}",
+    "pushNotifyDelay": "Retrasos",
+    "pushNotifyDelayDesc": "Avisa cuando el tren lleve más de 5 minutos de retraso",
+    "pushNotifyArrival": "Llegada",
+    "pushNotifyArrivalDesc": "Avisa unos 10 minutos antes de que llegue a tu parada",
+    "pushSave": "Guardar",
+    "pushCancel": "Cancelar"
   },
   "auth": {
     "login": "Iniciar sesión",

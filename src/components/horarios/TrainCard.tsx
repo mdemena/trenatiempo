@@ -10,6 +10,7 @@ import type { HorarioEntry } from '@/lib/renfe/types'
 import { TrainTypeIcon } from './TrainTypeIcon'
 import { FavoriteButton } from '@/components/favorites/FavoriteButton'
 import { PushPermission } from '@/components/pwa/PushPermission'
+import { todayISO } from '@/lib/utils/dates'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,10 @@ export function TrainCard({ tren, index, stopId, fecha }: TrainCardProps) {
   const router = useRouter()
 
   const delayMin = Math.round(tren.delaySeg / 60)
+
+  // El aviso de llegada tiene sentido para la corrida de hoy: en fechas
+  // futuras no hay feed en tiempo real, así que se oculta la campana.
+  const isToday = !fecha || fecha === todayISO()
 
   // Show real departure if delayed, strike-through the scheduled one
   const displayTime = gtfsToHHMM(tren.salidaReal ?? tren.salidaProgramada)
@@ -130,7 +135,7 @@ export function TrainCard({ tren, index, stopId, fecha }: TrainCardProps) {
 
       {/* Notification bell + Favorite button */}
       <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-        <PushPermission tripCode={tren.tripId} />
+        {isToday && <PushPermission tripCode={tren.tripId} stationId={stopId} />}
         <FavoriteButton type="trip" id={tren.tripId} lineName={tren.routeId} />
       </div>
 
