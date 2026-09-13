@@ -14,6 +14,7 @@ import {
 // el API de viaje.
 
 let REF_TRIP_ID = ''
+let REF_NUM = ''
 let REF_ORIGIN = ''
 let REF_DEST = ''
 
@@ -26,7 +27,7 @@ async function resolveReference(request: APIRequestContext) {
   expect(horariosRes.ok()).toBeTruthy()
 
   const data = (await horariosRes.json()) as {
-    horarios?: Array<{ tripId: string; routeId?: string; destino?: string }>
+    horarios?: Array<{ tripId: string; routeId?: string; destino?: string; numTren?: string }>
   }
   // Preferir hacia la costa (Figueres/Girona/Portbou) para guardar el espíritu
   // original (Barcelona-Sants → Figueres); si no, cualquier R11 sirve.
@@ -47,6 +48,7 @@ async function resolveReference(request: APIRequestContext) {
   expect(paradas.some((p) => p.stopId === REF_STATIONS.santCeloni.id)).toBeTruthy()
 
   REF_TRIP_ID = entry.tripId
+  REF_NUM = entry.numTren ?? entry.tripId
   REF_ORIGIN = paradas[0].nombre
   REF_DEST = paradas[paradas.length - 1].nombre
 }
@@ -68,9 +70,9 @@ test.describe('Viaje — detalle del trayecto', () => {
     })
     await expectNoServerError(page)
 
-    // El título del tren (código ADIF) es visible
+    // El número de tren (resuelto desde la API de horarios) es visible
     await expect(
-      page.getByText(REF_TRIP_ID, { exact: true }).first()
+      page.getByText(REF_NUM, { exact: true }).first()
     ).toBeVisible({ timeout: 15_000 })
   })
 

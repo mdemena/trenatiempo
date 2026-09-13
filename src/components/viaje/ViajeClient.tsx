@@ -10,13 +10,9 @@ import { StopTimeline } from './StopTimeline'
 import { FavoriteButton } from '@/components/favorites/FavoriteButton'
 import { PushPermission } from '@/components/pwa/PushPermission'
 import { getRouteColors, routeShortName } from '@/lib/renfe/route-colors'
+import { extractRouteId, extractTrainNumber } from '@/lib/renfe/trip-id'
 import { formatTime, formatDate } from '@/lib/utils'
 import { todayISO, isISODate } from '@/lib/utils/dates'
-
-function parseTripId(tripId: string): { numTren: string | null; lineCode: string | null } {
-  const match = tripId.match(/X(\d+)([A-Za-z0-9]+)$/)
-  return { numTren: match?.[1] ?? null, lineCode: match?.[2] ?? null }
-}
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -185,12 +181,11 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
   const fecha = searchParams.get('fecha')
   const fechaISO = fecha && isISODate(fecha) ? fecha : todayISO()
   const { tren, loading, error, stale, refresh } = useViaje(tripId, fecha)
-  const { numTren, lineCode } = parseTripId(tripId)
+  const lineCode = extractRouteId(tripId)
+  const numTren = extractTrainNumber(tripId, lineCode)
   const { bg: badgeBg, text: badgeText } = getRouteColors(lineCode ?? '')
   const shortLine = lineCode ? routeShortName(lineCode) : null
 
-  // Avisos de llegada con sentido solo para la corrida de hoy (sin feed en futuro).
-  const isToday = fechaISO === todayISO()
   const userStop = userStopId && tren
     ? tren.paradas.find((p) => p.stopId === userStopId)
     : undefined
@@ -230,14 +225,14 @@ export function ViajeClient({ tripId, userStopId }: ViajeClientProps) {
           {tren && (
             <div className="flex shrink-0 gap-1">
               <FavoriteButton type="trip" id={tren.id} lineName={tren.routeId} />
-              {isToday && (
-                <PushPermission
-                  tripCode={tren.id}
-                  stationId={userStopId}
-                  stationName={userStop?.nombre}
-                  serviceDate={fechaISO}
-                />
-              )}
+              <PushPermission
+                tripCode={tren.id}
+                trainNumber={numTren ?? undefined}
+                routeId={lineCode ?? undefined}
+                stationId={userStopId}
+                stationName={userStop?.nombre}
+                serviceDate={fechaISO}
+              />
             </div>
           )}
         </div>

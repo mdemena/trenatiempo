@@ -9,8 +9,10 @@ import { Spinner } from '@/components/ui/Spinner'
 interface Subscription {
   id: string
   trip_code: string
+  train_number: string | null
+  route_id: string | null
   endpoint: string
-  /** Fecha de la corrida suscrita (ISO). */
+  /** Fecha desde la que se suscribió (informativa). */
   service_date: string | null
   created_at: string
 }
@@ -51,9 +53,13 @@ export default function AlertasPage() {
       await fetch('/api/push/subscribe', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        // tripCode limita el borrado a ESTA alerta; sin él se borrarían todas
-        // las suscripciones del dispositivo.
-        body: JSON.stringify({ endpoint: sub.endpoint, tripCode: sub.trip_code }),
+        // trainNumber+routeId identifican al tren (durable entre días); sin
+        // ellos se cae a tripCode (compatibilidad con filas legacy).
+        body: JSON.stringify(
+          sub.train_number
+            ? { endpoint: sub.endpoint, trainNumber: sub.train_number, routeId: sub.route_id }
+            : { endpoint: sub.endpoint, tripCode: sub.trip_code }
+        ),
       })
       localStorage.removeItem(`push_sub_${sub.trip_code}`)
     } catch {
@@ -85,16 +91,9 @@ export default function AlertasPage() {
                 <Bell className="h-4 w-4 shrink-0 text-rail-amber" aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-rail-cream">
-                    {t('train', { id: sub.trip_code })}
+                    {t('train', { id: sub.train_number ?? sub.trip_code })}
                   </p>
-                  <p className="text-xs text-rail-cream/40">
-                    {sub.service_date
-                      ? new Date(`${sub.service_date}T12:00:00`).toLocaleDateString(
-                          undefined,
-                          { weekday: 'short', day: 'numeric', month: 'short' }
-                        )
-                      : new Date(sub.created_at).toLocaleDateString('es-ES')}
-                  </p>
+                  <p className="text-xs text-rail-cream/40">{t('everyDay')}</p>
                 </div>
                 <Link
                   href={`/viaje/${sub.trip_code}${sub.service_date ? `?fecha=${sub.service_date}` : ''}`}

@@ -36,11 +36,20 @@ describe('inferFeed', () => {
   it('C10 → cercanias', () => {
     expect(inferFeed('C10')).toBe('cercanias')
   })
-  it('R11 / MD → md', () => {
-    expect(inferFeed('R11')).toBe('md')
-    expect(inferFeed('MD')).toBe('md')
+  it('líneas R y buses → cercanias', () => {
+    expect(inferFeed('R11')).toBe('cercanias')
+    expect(inferFeed('R2S')).toBe('cercanias')
+    expect(inferFeed('BUS')).toBe('cercanias')
+    expect(inferFeed('RG1')).toBe('cercanias')
+    expect(inferFeed('RL3')).toBe('cercanias')
   })
-  it('sin routeId → md', () => {
+  it('Media Distancia / AV / Larga distancia → md', () => {
+    expect(inferFeed('MD')).toBe('md')
+    expect(inferFeed('ALVIA')).toBe('md')
+    expect(inferFeed('AVE')).toBe('md')
+    expect(inferFeed('REGIONAL')).toBe('md')
+  })
+  it('sin routeId → md (riesgo asumido: solo fallback legacy)', () => {
     expect(inferFeed(null)).toBe('md')
     expect(inferFeed(undefined)).toBe('md')
   })

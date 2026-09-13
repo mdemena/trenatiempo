@@ -1,6 +1,14 @@
 # Spec: Alertas push por tren (retraso + llegada ~10 min)
 
-> Fecha: 2026-09-13 · Estado: **para revisión** · Rama objetivo: `development` → PR
+> Fecha: 2026-09-13 · Estado: **implementado (v1)** · Rama objetivo: `development` → PR
+>
+> **Amendment (2026-09-13): suscripción recurrente por tren.** La v1 ataba la
+> suscripción a la corrida de un día (`service_date`). Tras verificar los datos
+> (el mismo tren tiene un `trip_id` distinto por fecha de servicio — ej. tren
+> 15726 R11 → `5154D15726R11` un día, `5155L15726R11` otro), se cambió el modelo:
+> la suscripción se ancla al **tren (número + línea)** y avisa **todos los días
+> que circule**, permitiendo suscribirse desde cualquier fecha (hoy o futura).
+> Ver `supabase/migrations/008_push_train_identity.sql` y el flujo en CLAUDE.md §8.
 
 ## Objective
 

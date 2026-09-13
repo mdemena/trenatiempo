@@ -211,6 +211,7 @@
     "emptyDescription": "Subscribe to a train from its detail page",
     "unsubscribe": "Remove alert",
     "train": "Train {id}",
+    "everyDay": "Every day",
     "view": "View"
   },
   "cookies": {

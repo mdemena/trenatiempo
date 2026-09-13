@@ -202,6 +202,7 @@
     "emptyDescription": "Subscriu-te a un tren des de la seva pàgina de detall",
     "unsubscribe": "Cancel·lar alerta",
     "train": "Tren {id}",
+    "everyDay": "Tots els dies",
     "view": "Veure"
   },
   "errors": {

@@ -1,6 +1,10 @@
 // Orquestación del monitor de alertas push: lee suscripciones, consulta
 // GTFS-RT + horario estático y decide qué notificaciones disparar.
 //
+// La suscripción es al TREN (train_number + route_id) para TODOS los días que
+// circule, así que cada día resolver a qué trip_id concreto corresponde el
+// tren (el mismo tren tiene trip_ids distintos según la fecha de servicio).
+//
 // Se ejecuta por dos vías:
 //   - Cron (Vercel) → /api/cron/monitor-push (Hobby: 1/día; Pro: cada minuto).
 //   - Piggyback → maybeRunPushMonitor() desde /horarios y /viaje cuando la
@@ -31,6 +35,8 @@ interface SubscriptionRow {
   p256dh: string
   auth: string
   trip_code: string | null
+  train_number: string | null
+  route_id: string | null
   station_id: string | null
   notify_delay: boolean
   notify_arrival: boolean
@@ -49,12 +55,30 @@ interface StaticStopKey {
   routeId: string | null
 }
 
+interface TripRow {
+  trip_id: string
+  service_id: string
+  feed_source: string
+}
+
+interface DayFlags {
+  monday: boolean
+  tuesday: boolean
+  wednesday: boolean
+  thursday: boolean
+  friday: boolean
+  saturday: boolean
+  sunday: boolean
+}
+
 export interface MonitorRunResult {
   checked: number
   sent: Array<{ id: string; tripCode: string; eventType: 'delay' | 'arrival' }>
   dryRun: boolean
   skippedFeedFreshness: number
   skippedNoTripUpdate: number
+  /** Trenes suscritos que hoy no circulan (según el calendario GTFS). */
+  skippedNoServiceToday: number
   errors: number
 }
 
@@ -71,6 +95,23 @@ function lastSentAtUnix(sub: SubscriptionRow): { delay: number | null; arrival: 
   }
 }
 
+/** Clave de agrupación: identidad de tren (número + línea), con fallback al
+ *  trip_code para suscripciones legacy (comportamiento por día). */
+function tripIdentityKey(sub: SubscriptionRow): string {
+  return `${sub.train_number ?? sub.trip_code}::${sub.route_id ?? ''}`
+}
+
+/** `true` si el servicio GTFS opera hoy (rango + día de la semana). */
+function serviceRunsToday(
+  svc: DayFlags & { start_date: string; end_date: string },
+  today: string
+): boolean {
+  const dow = new Date(`${today}T12:00:00Z`).getUTCDay()
+  // getUTCDay(): 0 = domingo … 6 = sábado
+  const flags = [svc.sunday, svc.monday, svc.tuesday, svc.wednesday, svc.thursday, svc.friday, svc.saturday]
+  return svc.start_date <= today && today <= svc.end_date && flags[dow] === true
+}
+
 export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<MonitorRunResult> {
   const dryRun = options?.dryRun ?? false
   const Result: MonitorRunResult = {
@@ -79,6 +120,7 @@ export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<Mo
     dryRun,
     skippedFeedFreshness: 0,
     skippedNoTripUpdate: 0,
+    skippedNoServiceToday: 0,
     errors: 0,
   }
 
@@ -86,15 +128,13 @@ export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<Mo
   const nowISO = new Date(nowSec * 1000).toISOString()
   const serviceDate = todayISO()
 
-  // 1. Suscripciones activas de esta corrida (hoy) y con estación+aviso
+  // 1. Suscripciones activas con estación y algún aviso (TODAS, no solo hoy)
   const { data: subs, error: subsError } = await supabaseAdmin
     .from('push_subscriptions')
     .select(
-      'id, endpoint, p256dh, auth, trip_code, station_id, notify_delay, notify_arrival, delay_threshold_sec, arrival_threshold_sec, service_date, last_delay_sent_at, last_arrival_sent_at'
+      'id, endpoint, p256dh, auth, trip_code, train_number, route_id, station_id, notify_delay, notify_arrival, delay_threshold_sec, arrival_threshold_sec, service_date, last_delay_sent_at, last_arrival_sent_at'
     )
-    .eq('service_date', serviceDate)
     .eq('active', true)
-    .not('trip_code', 'is', null)
     .not('station_id', 'is', null)
     .or('notify_delay.eq.true,notify_arrival.eq.true')
 
@@ -115,19 +155,41 @@ export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<Mo
     stationNames.set(s.id, s.name)
   }
 
-  // 3. Agrupar por tren
-  const byTrip = new Map<string, SubscriptionRow[]>()
+  // 3. Agrupar por tren (número + línea)
+  const byTrain = new Map<string, { trainNumber: string; routeId: string | null; subs: SubscriptionRow[] }>()
   for (const sub of rows) {
-    if (!sub.trip_code) continue
-    const list = byTrip.get(sub.trip_code)
-    if (list) list.push(sub)
-    else byTrip.set(sub.trip_code, [sub])
+    const key = tripIdentityKey(sub)
+    const group = byTrain.get(key)
+    if (group) group.subs.push(sub)
+    else
+      byTrain.set(key, {
+        trainNumber: sub.train_number ?? sub.trip_code ?? '',
+        routeId: sub.route_id,
+        subs: [sub],
+      })
   }
 
-  // 4. Por tren: datos estáticos + feed RT + evaluar cada suscripción
-  for (const [tripCode, tripSubs] of byTrip) {
-    const stationIdsForTrip = [...new Set(tripSubs.map((s) => s.station_id).filter(Boolean))] as string[]
+  // 4. Por tren: resolver el trip de hoy, datos estáticos, feed RT, evaluar
+  for (const group of byTrain.values()) {
+    const stationIdsForTrip = [...new Set(group.subs.map((s) => s.station_id).filter(Boolean))] as string[]
     if (stationIdsForTrip.length === 0) continue
+
+    // 4a. Resolver el trip_id de HOY del tren (o legacy: usa su trip_code)
+    let tripCode = group.trainNumber
+    if (group.routeId) {
+      const resolved = await resolveTodayTrip(group.trainNumber, group.routeId, serviceDate)
+      if (resolved.type === 'no-service') {
+        Result.skippedNoServiceToday += group.subs.length
+        continue
+      }
+      if (resolved.type === 'error') {
+        Result.errors += group.subs.length
+        continue
+      }
+      tripCode = resolved.tripId
+    }
+    const tripSubs = group.subs
+    const routeIdForFeed = group.routeId ?? null
 
     let stopRows: Array<{ trip_id: string; stop_id: string; departure_time: string; route_id: string | null }> = []
     try {
@@ -139,7 +201,12 @@ export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<Mo
         .limit(100)
       stopRows = (data ?? []) as typeof stopRows
     } catch {
-      Result.errors += 1
+      Result.errors += group.subs.length
+      continue
+    }
+
+    if (stopRows.length === 0) {
+      Result.skippedNoServiceToday += tripSubs.length
       continue
     }
 
@@ -153,15 +220,15 @@ export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<Mo
       })
     }
 
-    // Feed RT del tipo inferido por la línea del primer dato estático
-    const routeId = stopRows[0]?.route_id ?? ''
+    // Feed RT según la línea del primer dato estático
+    const routeId = routeIdForFeed ?? stopRows[0]?.route_id ?? ''
     const feedType: FeedType = inferFeed(routeId)
 
     let feedResult
     try {
       feedResult = await fetchTripUpdates(feedType)
     } catch {
-      Result.errors += 1
+      Result.errors += tripSubs.length
       continue
     }
 
@@ -184,7 +251,7 @@ export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<Mo
         const rtStop = tripUpdate.stopTimeUpdate?.find((u) => u.stopId === stationId)
         const delaySec = resolveDelaySec(rtStop, tripUpdate)
         const stationName = stationNames.get(stationId) ?? stationId
-        const tripRef = formatTripRef(tripCode)
+        const tripRef = sub.train_number ?? formatTripRef(tripCode)
         const lastSent = lastSentAtUnix(sub)
 
         const predictedArrivalSec =
@@ -291,6 +358,75 @@ export async function runPushMonitor(options?: { dryRun?: boolean }): Promise<Mo
   }
 
   return Result
+}
+
+type ResolveResult =
+  | { type: 'ok'; tripId: string }
+  | { type: 'no-service'; tripId: string | null }
+  | { type: 'error'; tripId: string | null }
+
+/**
+ * Dado tren (número + línea) y una fecha, encuentra el trip_id de GTFS que
+ * circula ese día. El mismo tren físico tiene un trip_id distinto por fecha de
+ * servicio ("5154D15726R11" un día, "5155L15726R11" otro), así que se cruza
+ * gtfs_trips (búsqueda por número+línea) con el calendario gtfs_services y las
+ * excepciones (gtfs_service_exceptions) para saber qué servicio está activo.
+ */
+async function resolveTodayTrip(
+  trainNumber: string,
+  routeId: string,
+  today: string
+): Promise<ResolveResult> {
+  try {
+    const { data: trips, error: tripsError } = await supabaseAdmin
+      .from('gtfs_trips')
+      .select('trip_id, service_id, feed_source')
+      .ilike('trip_id', `%${trainNumber}%`)
+      .eq('route_id', routeId)
+      .limit(200)
+
+    if (tripsError) return { type: 'error', tripId: null }
+    const tripRows = (trips ?? []) as unknown as TripRow[]
+    if (tripRows.length === 0) return { type: 'no-service', tripId: null }
+
+    const serviceIds = [...new Set(tripRows.map((t) => t.service_id))]
+
+    const { data: services, error: svcError } = await supabaseAdmin
+      .from('gtfs_services')
+      .select('service_id, start_date, end_date, monday, tuesday, wednesday, thursday, friday, saturday, sunday')
+      .in('service_id', serviceIds)
+      .limit(300)
+    if (svcError) return { type: 'error', tripId: null }
+
+    const { data: exceptions, error: excError } = await supabaseAdmin
+      .from('gtfs_service_exceptions')
+      .select('service_id, exception_type')
+      .in('service_id', serviceIds)
+      .eq('exception_date', today)
+      .limit(100)
+    if (excError) return { type: 'error', tripId: null }
+
+    const activeToday = new Map<string, boolean>()
+    const removedToday = new Set<string>()
+    for (const e of (exceptions ?? []) as unknown as Array<{
+      service_id: string
+      exception_type: number
+    }>) {
+      // 1 = servicio añadido, 2 = servicio suprimido
+      if (e.exception_type === 2) removedToday.add(e.service_id)
+    }
+
+    for (const svc of (services ?? []) as Array<DayFlags & { service_id: string; start_date: string; end_date: string }>) {
+      const runs = serviceRunsToday(svc, today)
+      if (runs && !removedToday.has(svc.service_id)) activeToday.set(svc.service_id, true)
+    }
+
+    const trip = tripRows.find((t) => activeToday.get(t.service_id))
+    if (!trip) return { type: 'no-service', tripId: null }
+    return { type: 'ok', tripId: trip.trip_id }
+  } catch {
+    return { type: 'error', tripId: null }
+  }
 }
 
 // ─── Piggyback (Hobby best-effort) ────────────────────────────────────────────

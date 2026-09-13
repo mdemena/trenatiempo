@@ -18,6 +18,7 @@ import {
   unixToMadridTime,
 } from '@/lib/renfe/time'
 import { maybeRunPushMonitor } from '@/lib/push/monitor-run'
+import { extractTrainNumber } from '@/lib/renfe/trip-id'
 import type { HorarioEntry, HorariosResponse } from '@/lib/renfe/types'
 
 // Margen sobre los timeouts internos (Renfe 5s, Supabase 8s) para que la
@@ -35,12 +36,6 @@ const QuerySchema = z.object({
     .regex(ISO_DATE, 'fecha debe tener formato YYYY-MM-DD')
     .optional(),
 })
-
-/** Extracts the numeric train identifier from a GTFS tripId like "5116X15734R11" → "15734". */
-function extractNumTren(tripId: string): string | undefined {
-  const match = tripId.match(/X(\d+)/)
-  return match?.[1]
-}
 
 type DB = { from: (t: string) => any; rpc: (fn: string, args?: Record<string, unknown>) => any }
 
@@ -238,7 +233,7 @@ export async function GET(request: Request) {
         anden,
         estado: resolveEstado(delaySeg, isToday ? rtStop?.scheduleRelationship : undefined),
         destino: destByTrip.get(st.trip_id),
-        numTren: extractNumTren(st.trip_id),
+        numTren: extractTrainNumber(st.trip_id, st.route_id) ?? undefined,
       }
     })
   } else if (tripFeedResult) {
@@ -277,7 +272,7 @@ export async function GET(request: Request) {
         cancelado: stopUpdate.scheduleRelationship === 'CANCELED',
         anden: vehicle?.vehicle?.label ? parseAnden(vehicle.vehicle.label) : undefined,
         estado: resolveEstado(delaySeg, stopUpdate.scheduleRelationship),
-        numTren: extractNumTren(tu.trip.tripId),
+        numTren: extractTrainNumber(tu.trip.tripId, tu.trip.routeId) ?? undefined,
         // destino not available in RT-only mode
       })
     }

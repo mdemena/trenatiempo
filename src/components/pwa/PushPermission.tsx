@@ -21,17 +21,23 @@ type Status = 'idle' | 'requesting' | 'subscribed' | 'denied'
 
 interface PushPermissionProps {
   tripCode: string
+  /** Identidad durable del tren (número + línea). La suscripción es al tren,
+   *  no a la corrida del día, así que avisa todos los días que circule. */
+  trainNumber?: string
+  routeId?: string
   /** Estación a la que se refiere la alerta de llegada (id GTFS). */
   stationId?: string
   /** Nombre legible para el diálogo (opcional). */
   stationName?: string
-  /** Fecha ISO de la corrida suscrita; por defecto hoy en el API. */
+  /** Fecha ISO de la corrida vista al suscribirse; informativa. */
   serviceDate?: string
   className?: string
 }
 
 export function PushPermission({
   tripCode,
+  trainNumber,
+  routeId,
   stationId,
   stationName,
   serviceDate,
@@ -72,7 +78,14 @@ export function PushPermission({
       .then((r) => (r.ok ? r.json() : []))
       .then((subs) => {
         const match = subs.find(
-          (s: { trip_code: string; endpoint: string }) => s.trip_code === tripCode
+          (s: {
+            trip_code: string | null
+            train_number: string | null
+            route_id: string | null
+            endpoint: string
+          }) =>
+            (trainNumber && s.train_number === trainNumber && s.route_id === routeId) ||
+            (!trainNumber && s.trip_code === tripCode)
         )
         if (match) {
           setEndpoint(match.endpoint)
@@ -81,7 +94,7 @@ export function PushPermission({
         }
       })
       .catch((e) => console.error('Fetch subscriptions failed:', e))
-  }, [tripCode, user])
+  }, [tripCode, trainNumber, routeId, user])
 
   // Evita el scroll del fondo mientras el diálogo está abierto
   useEffect(() => {
@@ -105,7 +118,11 @@ export function PushPermission({
       await fetch('/api/push/subscribe', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: ep, tripCode }),
+        body: JSON.stringify(
+          trainNumber
+            ? { endpoint: ep, trainNumber, routeId }
+            : { endpoint: ep, tripCode }
+        ),
       })
     }
     localStorage.removeItem(`push_sub_${tripCode}`)
@@ -160,6 +177,8 @@ export function PushPermission({
         body: JSON.stringify({
           subscription: sub.toJSON(),
           tripCode,
+          trainNumber,
+          routeId,
           ...(stationId ? { stationId } : {}),
           ...(serviceDate ? { serviceDate } : {}),
           notifyDelay,
