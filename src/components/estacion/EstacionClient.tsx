@@ -30,7 +30,7 @@ export function EstacionClient({ station, maxFecha }: EstacionClientProps) {
   const fecha =
     fechaParam && isISODate(fechaParam) && fechaParam >= todayISO() ? fechaParam : null
 
-  const { trenes, loading, error, stale, updatedAt, refresh } = useHorarios(
+  const { trenes, loading, error, stale, updatedAt, realtime, refresh } = useHorarios(
     station.id,
     tipo,
     fecha
@@ -97,6 +97,7 @@ export function EstacionClient({ station, maxFecha }: EstacionClientProps) {
           onRetry={refresh}
           stopId={station.id}
           fecha={fecha}
+          realtime={realtime}
         />
       </div>
     </div>

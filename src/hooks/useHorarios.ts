@@ -12,6 +12,8 @@ interface HorariosState {
   loading: boolean
   error: boolean
   stale: boolean
+  /** true cuando la consulta es de hoy (datos en tiempo real); false en fechas futuras */
+  realtime: boolean
 }
 
 const INTERVAL_MS: Record<TipoFiltro, number> = {
@@ -22,7 +24,7 @@ const INTERVAL_MS: Record<TipoFiltro, number> = {
 
 type HorariosAction =
   | { type: 'LOADING' }
-  | { type: 'SUCCESS'; trenes: HorarioEntry[]; updatedAt: number; stale: boolean }
+  | { type: 'SUCCESS'; trenes: HorarioEntry[]; updatedAt: number; stale: boolean; realtime: boolean }
   | { type: 'ERROR'; trenes: HorarioEntry[] }
 
 function horariosReducer(state: HorariosState, action: HorariosAction): HorariosState {
@@ -36,6 +38,7 @@ function horariosReducer(state: HorariosState, action: HorariosAction): Horarios
         loading: false,
         error: false,
         stale: action.stale,
+        realtime: action.realtime,
       }
     case 'ERROR':
       return { ...state, trenes: action.trenes, loading: false, error: true, stale: true }
@@ -73,6 +76,7 @@ const initialState: HorariosState = {
   loading: false,
   error: false,
   stale: false,
+  realtime: true,
 }
 
 export function useHorarios(
@@ -95,6 +99,7 @@ export function useHorarios(
       let merged: HorarioEntry[]
       let updatedAt: number
       let stale: boolean
+      let realtime = true
 
       if (tipo === 'all') {
         const [cerRes, mdRes] = await Promise.allSettled([
@@ -110,11 +115,13 @@ export function useHorarios(
           ok.push(...cerRes.value.horarios)
           latestAt = Math.max(latestAt, cerRes.value.updatedAt)
           isStale = isStale || cerRes.value.stale
+          realtime = realtime && cerRes.value.realtime
         }
         if (mdRes.status === 'fulfilled') {
           ok.push(...mdRes.value.horarios)
           latestAt = Math.max(latestAt, mdRes.value.updatedAt)
           isStale = isStale || mdRes.value.stale
+          realtime = realtime && mdRes.value.realtime
         }
         if (ok.length === 0 && cerRes.status === 'rejected' && mdRes.status === 'rejected') {
           throw new Error('All feeds failed')
@@ -141,12 +148,13 @@ export function useHorarios(
         merged = data.horarios
         updatedAt = data.updatedAt
         stale = data.stale
+        realtime = data.realtime
       }
 
       // En fechas futuras se muestran todos los trenes del día (sin filtro de hora)
       const trenes = targetFecha ? merged : filterFuture(merged)
       prevTrenes.current = trenes
-      dispatch({ type: 'SUCCESS', trenes, updatedAt, stale })
+      dispatch({ type: 'SUCCESS', trenes, updatedAt, stale, realtime })
     } catch {
       dispatch({ type: 'ERROR', trenes: prevTrenes.current })
     }
