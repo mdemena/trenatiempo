@@ -77,7 +77,7 @@ describe('POST /api/push/subscribe', () => {
     expect(mockUpsert).not.toHaveBeenCalled()
   })
 
-  it('acepta flags explícitos y guarda station_id', async () => {
+  it('acepta flags explícitos y guarda identidad de tren derivada', async () => {
     const { POST } = await import('@/app/api/push/subscribe/route')
     const res = await POST(
       makeRequest('POST', 'http://localhost/api/push/subscribe', {
@@ -94,12 +94,33 @@ describe('POST /api/push/subscribe', () => {
         user_id: USER_ID,
         endpoint: FAKE_SUB.endpoint,
         trip_code: '5142X15734R11',
+        train_number: '15734',
+        route_id: 'R11',
         station_id: '79104',
         notify_delay: true,
         notify_arrival: true,
         service_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       }),
-      { onConflict: 'user_id,endpoint,trip_code' }
+      { onConflict: 'user_id,endpoint,train_number,route_id' }
+    )
+  })
+
+  it('acepta identidad explícita trainNumber+routeId', async () => {
+    const { POST } = await import('@/app/api/push/subscribe/route')
+    const res = await POST(
+      makeRequest('POST', 'http://localhost/api/push/subscribe', {
+        subscription: FAKE_SUB,
+        tripCode: '5154D15726R11',
+        trainNumber: '15726',
+        routeId: 'R11',
+        notifyDelay: true,
+        notifyArrival: false,
+      })
+    )
+    expect(res.status).toBe(200)
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ train_number: '15726', route_id: 'R11' }),
+      expect.anything()
     )
   })
 
@@ -155,7 +176,21 @@ describe('POST /api/push/subscribe', () => {
     expect(res.status).toBe(400)
   })
 
-  it('rechaza serviceDate futura', async () => {
+  it('rechaza sin tripCode ni identidad de tren', async () => {
+    const { POST } = await import('@/app/api/push/subscribe/route')
+    const res = await POST(
+      makeRequest('POST', 'http://localhost/api/push/subscribe', {
+        subscription: FAKE_SUB,
+        endpoint: FAKE_SUB.endpoint,
+        notifyDelay: true,
+        notifyArrival: false,
+      })
+    )
+    expect(res.status).toBe(400)
+    expect(mockUpsert).not.toHaveBeenCalled()
+  })
+
+  it('acepta serviceDate futura (la suscripción es al tren, no a la corrida)', async () => {
     const { POST } = await import('@/app/api/push/subscribe/route')
     const res = await POST(
       makeRequest('POST', 'http://localhost/api/push/subscribe', {
@@ -167,7 +202,11 @@ describe('POST /api/push/subscribe', () => {
         serviceDate: '2999-01-01',
       })
     )
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(200)
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ service_date: '2999-01-01' }),
+      expect.anything()
+    )
   })
 })
 
@@ -205,6 +244,24 @@ describe('DELETE /api/push/subscribe', () => {
     const chain = mockDeleteChain[0]
     expect(chain.eq).toHaveBeenCalledWith('endpoint', FAKE_SUB.endpoint)
     expect(chain.eq).toHaveBeenCalledWith('user_id', USER_ID)
+    expect(chain.eq).not.toHaveBeenCalledWith('trip_code', expect.anything())
+  })
+
+  it('borra por identidad de tren (trainNumber+routeId)', async () => {
+    const { DELETE } = await import('@/app/api/push/subscribe/route')
+    const res = await DELETE(
+      makeRequest('DELETE', 'http://localhost/api/push/subscribe', {
+        endpoint: FAKE_SUB.endpoint,
+        trainNumber: '15726',
+        routeId: 'R11',
+      })
+    )
+    expect(res.status).toBe(200)
+    const chain = mockDeleteChain[0]
+    expect(chain.eq).toHaveBeenCalledWith('endpoint', FAKE_SUB.endpoint)
+    expect(chain.eq).toHaveBeenCalledWith('user_id', USER_ID)
+    expect(chain.eq).toHaveBeenCalledWith('train_number', '15726')
+    expect(chain.eq).toHaveBeenCalledWith('route_id', 'R11')
     expect(chain.eq).not.toHaveBeenCalledWith('trip_code', expect.anything())
   })
 })

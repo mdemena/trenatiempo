@@ -211,6 +211,7 @@
     "emptyDescription": "Suscríbete a un tren desde su página de detalle",
     "unsubscribe": "Cancelar alerta",
     "train": "Tren {id}",
+    "everyDay": "Todos los días",
     "view": "Ver"
   },
   "cookies": {

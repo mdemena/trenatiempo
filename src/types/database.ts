@@ -169,6 +169,8 @@ export interface Database {
           p256dh: string
           auth: string
           trip_code: string | null
+          train_number: string | null
+          route_id: string | null
           station_id: string | null
           notify_delay: boolean
           notify_arrival: boolean
@@ -187,6 +189,8 @@ export interface Database {
           p256dh: string
           auth: string
           trip_code?: string | null
+          train_number?: string | null
+          route_id?: string | null
           station_id?: string | null
           notify_delay?: boolean
           notify_arrival?: boolean
@@ -200,6 +204,8 @@ export interface Database {
         Update: {
           active?: boolean
           trip_code?: string | null
+          train_number?: string | null
+          route_id?: string | null
           station_id?: string | null
           notify_delay?: boolean
           notify_arrival?: boolean

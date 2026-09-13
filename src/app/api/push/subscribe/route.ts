@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { todayISO } from '@/lib/renfe/time'
+import { extractRouteId, extractTrainNumber } from '@/lib/renfe/trip-id'
 import {
   DELAY_THRESHOLD_DEFAULT_SEC,
   ARRIVAL_THRESHOLD_DEFAULT_SEC,
@@ -17,9 +18,15 @@ const subscriptionSchema = z.object({
       auth: z.string().min(1),
     }),
   }),
+  /** trip_id de la corrida vista al suscribirse (identificativo/de enlace).
+   *  La suscripción es al TREN, no a este trip concreto. */
   tripCode: z.string().optional(),
   stationId: z.string().optional(),
-  /** Fecha ISO (yyyy-mm-dd) de la corrida suscrita. Por defecto hoy. Nunca futura. */
+  /** Identidad durable del tren: número + línea. Si no se envían, se derivan
+   *  de tripCode (compatibilidad con clientes sin actualizar). */
+  trainNumber: z.string().regex(/^\d{1,8}$/, 'trainNumber debe ser numérico').optional(),
+  routeId: z.string().max(20).optional(),
+  /** Fecha desde la que se suscribió (informativa; NO ata la suscripción). */
   serviceDate: z.string().regex(ISO_DATE, 'serviceDate debe tener formato YYYY-MM-DD').optional(),
   notifyDelay: z.boolean().optional(),
   notifyArrival: z.boolean().optional(),
@@ -49,14 +56,26 @@ const subscriptionSchema = z.object({
 
 const deleteSchema = z.object({
   endpoint: z.string().url(),
-  /** Filtra por tren para no borrar otras suscripciones del dispositivo. */
+  /** Filtra por tren (trip_code o identidad número+línea) para no borrar
+   *  otras suscripciones del dispositivo. */
   tripCode: z.string().optional(),
+  trainNumber: z.string().regex(/^\d{1,8}$/).optional(),
+  routeId: z.string().max(20).optional(),
 })
 
 function resolveNotifyFlags(data: z.infer<typeof subscriptionSchema>) {
   const notifyDelay = data.notifyDelay ?? true
   const notifyArrival = data.notifyArrival ?? (data.stationId ? true : false)
   return { notifyDelay, notifyArrival }
+}
+
+function resolveTrainIdentity(
+  data: z.infer<typeof subscriptionSchema>
+): { trainNumber: string | null; routeId: string | null } {
+  const trainNumber =
+    data.trainNumber ?? (data.tripCode ? extractTrainNumber(data.tripCode, data.routeId) : null)
+  const routeId = data.routeId ?? (data.tripCode ? extractRouteId(data.tripCode) : null)
+  return { trainNumber, routeId }
 }
 
 // ─── POST /api/push/subscribe ─────────────────────────────────────────────────
@@ -84,9 +103,10 @@ export async function POST(request: Request) {
   const today = todayISO()
   const serviceDate = data.serviceDate ?? today
 
-  if (serviceDate > today) {
+  const { trainNumber, routeId } = resolveTrainIdentity(data)
+  if (!trainNumber) {
     return NextResponse.json(
-      { error: 'No se puede suscribir a una fecha futura' },
+      { error: 'No se puede identificar el tren: envía tripCode o trainNumber+routeId' },
       { status: 400 }
     )
   }
@@ -102,6 +122,8 @@ export async function POST(request: Request) {
         p256dh: data.subscription.keys.p256dh,
         auth: data.subscription.keys.auth,
         trip_code: data.tripCode ?? null,
+        train_number: trainNumber,
+        route_id: routeId,
         station_id: data.stationId ?? null,
         notify_delay: notifyDelay,
         notify_arrival: notifyArrival,
@@ -110,14 +132,14 @@ export async function POST(request: Request) {
         service_date: serviceDate,
         active: true,
       },
-      { onConflict: 'user_id,endpoint,trip_code' }
+      { onConflict: 'user_id,endpoint,train_number,route_id' }
     )
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, trainNumber, routeId })
 }
 
 // ─── DELETE /api/push/subscribe ───────────────────────────────────────────────
@@ -144,11 +166,13 @@ export async function DELETE(request: Request) {
     .eq('endpoint', parsed.data.endpoint)
     .eq('user_id', user.id)
 
-  // Con tripCode se borra SOLO la suscripción de ese tren; sin él se mantiene el
-  // comportamiento histórico (todas las de ese endpoint del usuario) para
-  // clientes sin actualizar.
+  // Filtro por tren: con tripCode se borra la suscripción de ese tren; si el
+  // cliente envía trainNumber+routeId (identidad) se borra por tren. Sin
+  // filtro se mantiene el comportamiento histórico (todas las del endpoint).
   if (parsed.data.tripCode) {
     query = query.eq('trip_code', parsed.data.tripCode)
+  } else if (parsed.data.trainNumber && parsed.data.routeId) {
+    query = query.eq('train_number', parsed.data.trainNumber).eq('route_id', parsed.data.routeId)
   }
 
   const { error, data: deleted } = await query.select('id')

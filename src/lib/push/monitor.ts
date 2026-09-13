@@ -23,11 +23,16 @@ export const DELAY_COOLDOWN_SEC = 30 * 60
 export const MAX_FEED_AGE_SEC = 5 * 60
 
 /**
- * Infiere el feed que alimenta un tren a partir de su línea:
- * `C\d` → cercanías, resto → MD. Mismo criterio que `inferTipo` en /viaje.
+ * Infiere el feed GTFS-RT que alimenta un tren a partir de su línea.
+ * En el import estático las líneas C* Y R* (R11, R3, R2S…) van al feed de
+ * `cercanias` (gtfsrt.renfe.com), mientras que AV/LD/MD (AVE, ALVIA, MD…) van
+ * al feed de `md`. Ojo: no usar "todo lo que no sea C → md": las R y los buses
+ * de sustitución también viven en el feed de cercanías.
  */
 export function inferFeed(routeId: string | null | undefined): FeedType {
-  return /^C\d/i.test((routeId ?? '').trim()) ? 'cercanias' : 'md'
+  const r = (routeId ?? '').trim().toUpperCase()
+  if (/^[CR]\d/.test(r) || /^(BUS|RG\d|RL\d)/.test(r)) return 'cercanias'
+  return 'md'
 }
 
 /** Delay de una parada en el feed: departure ?? arrival ?? 0. */

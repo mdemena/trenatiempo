@@ -640,31 +640,55 @@ ALTER TABLE public.profiles
 
 ### Alertas por tren (retrasos y llegada)
 
+La suscripción es **al tren (número + línea), recurrente todos los días que
+circule**, no a la corrida de un día. El mismo tren tiene un `trip_id` distinto
+por fecha de servicio (ej. tren 15726 R11 → `5154D15726R11` un día,
+`5155L15726R11` otro), así que el monitor resuelve cada día el `trip_id`
+correcto. Permite suscribirse desde cualquier fecha (hoy o futura).
+
 Flujo completo:
 
-1. **Suscribirse** — `PushPermission` (campana) abre un diálogo con dos opciones:
-   *Retrasos* (≥ 5 min, por defecto) y *Llegada* (~10 min antes en la estación vista).
-   El POST a `/api/push/subscribe` guarda `{ trip_code, station_id, notify_delay,
-   notify_arrival, service_date, delay_threshold_sec, arrival_threshold_sec }`.
-   UNIQUE `(user_id, endpoint, trip_code)`: un dispositivo puede seguir varios trenes.
-2. **Monitor** — `/api/cron/monitor-push` (schedule diario en `vercel.json`, autenticado
-   con `Bearer CRON_SECRET`). Como Hobby limita los crons a 1/día, además hay
-   **piggyback** fire-and-forget (`maybeRunPushMonitor`, `src/lib/push/monitor-run.ts`)
-   desde `/api/renfe/horarios` y `/api/renfe/viaje` cuando la consulta es de hoy,
-   throttled 30s vía `adif_cache`. En Vercel Pro, subir el schedule a `* * * * *`.
-3. **Decisión** — lógica pura en `src/lib/push/monitor.ts`: combina GTFS-RT
-   (`trip_updates`) del feed inferido (`C\d` → cercanias, resto → md) con el horario
-   estático (`gtfs_stop_times.departure_time`, que es la única columna de hora que hay).
-   Solo procesa suscripciones con `service_date = hoy` y feeds frescos (< 5 min).
+1. **Suscribirse** — `PushPermission` (campana, visible en **cualquier fecha**)
+   abre un diálogo con dos opciones: *Retrasos* (≥ 5 min, por defecto) y
+   *Llegada* (~10 min antes en la estación vista). El POST a
+   `/api/push/subscribe` guarda `{ trip_code, train_number, route_id, station_id,
+   notify_delay, notify_arrival, service_date (informativa), delay_threshold_sec,
+   arrival_threshold_sec }`. `train_number`/`route_id` se derivan del `trip_code`
+   si el cliente no los envía. UNIQUE `(user_id, endpoint, train_number, route_id)`
+   (migración `008`; columnas `train_number`/`route_id` backfilleadas desde
+   `trip_code` identificando la línea y el número). Un dispositivo puede seguir
+   varios trenes.
+2. **Monitor** — `/api/cron/monitor-push` (schedule diario en `vercel.json`,
+   autenticado con `Bearer CRON_SECRET`). Como Hobby limita los crons a 1/día,
+   además hay **piggyback** fire-and-forget (`maybeRunPushMonitor`,
+   `src/lib/push/monitor-run.ts`) desde `/api/renfe/horarios` y `/api/renfe/viaje`
+   cuando la consulta es de hoy, throttled 30s vía `adif_cache`. En Vercel Pro,
+   subir el schedule a `* * * * *`.
+3. **Decisión** — `runPushMonitor` carga TODAS las suscripciones activas (sin
+   filtro por día), las agrupa por `(train_number, route_id)` y por tren resuelve
+   el `trip_id` de HOY: `gtfs_trips` (`ilike %num%` + `route_id`) cruzado con el
+   calendario `gtfs_services` (rango + día de semana) y `gtfs_service_exceptions`
+   (type 1 añade, type 2 elimina). Sin servicio ese día → `skippedNoServiceToday`.
+   Luego combina el horario estático (`gtfs_stop_times.departure_time` — única
+   columna de hora que hay) con el GTFS-RT (`trip_updates`) del feed inferido por
+   `inferFeed` (monitor.ts): `^[CR]\d` o `BUS|RG\d|RL\d` → **cercanias**, resto →
+   md (ojo: las líneas R viven en el feed de cercanías, no en md). Solo feeds
+   frescos (< 5 min).
 4. **Anti-duplicado** — antes de enviar se inserta una fila en `push_events`
-   (UNIQUE `(subscription_id, trip_code, event_type, service_date)`); si la unicidad
-   falla (código 23505), otro disparo ya envió ese evento. `last_delay_sent_at` /
-   `last_arrival_sent_at` dan el cooldown de 30 min.
+   (UNIQUE `(subscription_id, trip_code, event_type, service_date)`); si la
+   unicidad falla (código 23505), otro disparo ya envió ese evento.
+   `last_delay_sent_at` / `last_arrival_sent_at` dan el cooldown de 30 min.
 5. **Notificar** — `sendPushNotification` (web-push). El service worker (`src/sw.ts`)
    pinta la notificación (`push` event) y abre el viaje (`notificationclick`).
+   El título usa `train_number` (fallback `formatTripRef`).
+
+Extractor de identidad de tren: `src/lib/renfe/trip-id.ts`
+(`extractTrainNumber`/`extractRouteId`, con unit tests). Se usa también en
+`/api/renfe/horarios` para rellenar `numTren` (incluidas líneas R, que antes solo
+aparecía con el patrón `X\d+`).
 
 Tests: `tests/unit/lib/push/monitor.test.ts`, `tests/unit/lib/push/monitor-run.test.ts`,
-`tests/unit/api/push-subscribe.test.ts`.
+`tests/unit/api/push-subscribe.test.ts`, `tests/unit/lib/renfe/trip-id.test.ts`.
 
 ### ⚠️ La global `Notification` (bug crítico iOS WebKit)
 
@@ -857,6 +881,7 @@ Tras aplicar una migration en el Dashboard, actualizar manualmente `src/types/da
 | `supabase/migrations/005_fix_get_stop_departures_route_id.sql` | Fix función get_stop_departures (route_id) | Aplicar en Dashboard |
 | `supabase/migrations/006_add_stations_municipality.sql` | Municipio en stations (búsqueda/admin) | Aplicar en Dashboard |
 | `supabase/migrations/007_push_trip_alerts.sql` | Alertas push por tren: notify_delay/notify_arrival/station_id/service_date/last_*_sent_at, UNIQUE (user_id, endpoint, trip_code), tabla push_events | Aplicar en Dashboard |
+| `supabase/migrations/008_push_train_identity.sql` | Suscripción recurrente por tren: columnas train_number/route_id (backfill desde trip_code), UNIQUE (user_id, endpoint, train_number, route_id) | Aplicar en Dashboard |
 
 ### Variables de entorno necesarias
 
