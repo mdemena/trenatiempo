@@ -871,9 +871,18 @@ Cuando se pida "generar un PR", hacer **solo** hasta generar/actualizar el PR y 
 
 **Configuración obligatoria en el dashboard de Vercel** (para que NUNCA despliegue por su cuenta mientras corre CI):
 
-1. **Project → Settings → Git → Ignored Build Step →** poner un comando que siempre salga con `exit 0` (p. ej. `true`). Convención invertida: **exit 0 = skip el build**, exit ≥1 = build. Así Vercel ignora todos los deploys disparados por git (pushes y PRs) y el único path de deploy es el job del workflow (webhook).
+1. **Desactivar autodeploys de git vía `vercel.json`, NO vía Ignored Build Step.** En el root del repo, `vercel.json` debe tener:
+   ```json
+   {
+     "git": { "deploymentEnabled": { "main": false } }
+   }
+   ```
+   Así Vercel ignora pushes y PRs a `main`, pero **sigue construyendo los Deploy Hooks**. ⚠️ **NO usar "Project → Settings → Git → Ignored Build Step"** con un comando que salga con `exit 0`: ese flag cancela **también** los builds disparados por Deploy Hook (issue Vercel #10812) y deja a producción sin desplegar (incidente Sep 2026).
 2. **Project → Settings → Deploy Hooks →** crear un hook de deploy del entorno de producción y copiar su URL al secret `VERCEL_DEPLOY_HOOK` de GitHub.
-3. **Environment Variables:** las `NEXT_PUBLIC_*` (SUPABASE_URL, SUPABASE_ANON_KEY, APP_URL) y `SUPABASE_SERVICE_ROLE_KEY` deben estar tipadas como `Encrypted` (normal), **NO** como `Sensitive`, para que Vercel las use en su build/runtime.
+3. **Environment Variables:** respetar el tipado por prefijo:
+   - Variables públicas `NEXT_PUBLIC_*` (SUPABASE_URL, SUPABASE_ANON_KEY, APP_URL) → tipo **`Config`** (o `Plain` si la UI no ofrece `Config`). Son públicas por diseño (viajan en el bundle del navegador); Vercel **no permite** marcarlas `Encrypted`/`Sensitive` ("Remove the public framework prefix..."). ⚠️ NO es necesario marcarlas `Sensitive`: eso hacía que `vercel pull` hornease `VAR=""` (incidente May 2026).
+   - Secretos de servidor sin prefijo (`SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_KEY`) → tipo **`Encrypted`** (normal), **NO** `Sensitive` (idem incidente May 2026: `vercel pull` las horneaba vacías).
+   - **Verificar que `NEXT_PUBLIC_SUPABASE_URL` existe** en el dashboard: sin ella, `src/lib/supabase/admin.ts` lanza "Supabase misconfigured" y todas las rutas que usan Supabase responden 500 (incidente Sep 2026).
 
 **E2E en CI:** corre contra la misma instancia de Supabase (necesita `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` con las estaciones seedeadas vía `seeds.yml`). Instala Chromium (`playwright install --with-deps chromium`). El resto (home/estacion/viaje/pwa/offline) corre siempre. En PRs desde forks los secretos no están disponibles → el job no puede ejecutarse (aceptable para un repo personal/privado).
 
