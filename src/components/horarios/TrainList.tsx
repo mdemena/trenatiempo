@@ -57,8 +57,10 @@ interface TrainListProps {
   updatedAt: number | null
   onRetry: () => void
   stopId: string
-  /** Fecha consultada; presente (≠ hoy) cuando se muestran horarios programados */
+  /** Fecha consultada (ISO) o null = hoy; se propaga al detalle del viaje */
   fecha?: string | null
+  /** true = datos en tiempo real (hoy); false = horario programado (fecha futura) */
+  realtime?: boolean
 }
 
 export function TrainList({
@@ -70,15 +72,16 @@ export function TrainList({
   onRetry,
   stopId,
   fecha,
+  realtime = true,
 }: TrainListProps) {
   const t = useTranslations()
   const isInitialLoad = loading && trenes.length === 0
-  const isFutureDate = !!fecha
+  const isFutureDate = !realtime
 
   return (
     <div className="flex-1 px-4 pb-4">
       {/* Future-date notice */}
-      {isFutureDate && (
+      {isFutureDate && fecha && (
         <div className="mb-3 flex items-center gap-2 rounded-xl bg-rail-amber/10 px-3.5 py-2.5 text-xs text-rail-amber ring-1 ring-rail-amber/20">
           <CalendarDays className="h-4 w-4 shrink-0" />
           <span>{t('horarios.futureNotice', { date: fecha })}</span>
