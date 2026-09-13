@@ -108,7 +108,15 @@
     "noPositionInfo": "Aucune information de position",
     "pushDenied": "Permission de notification refusée",
     "yourStop": "Votre arrêt",
-    "inTransit": "En transit"
+    "inTransit": "En transit",
+    "pushDialogTitle": "Alertes pour ce train",
+    "pushDialogStation": "À {station}",
+    "pushNotifyDelay": "Retards",
+    "pushNotifyDelayDesc": "Prévient lorsque le train a plus de 5 minutes de retard",
+    "pushNotifyArrival": "Arrivée",
+    "pushNotifyArrivalDesc": "Prévient ~10 minutes avant l'arrivée à votre arrêt",
+    "pushSave": "Enregistrer",
+    "pushCancel": "Annuler"
   },
   "auth": {
     "login": "Se connecter",

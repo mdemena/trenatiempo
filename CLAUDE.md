@@ -638,6 +638,34 @@ ALTER TABLE public.profiles
 - Service Worker via Serwist (`@serwist/next`) para caché offline de estaciones y últimos horarios consultados.
 - Web Push (VAPID): al suscribirse a un viaje, se guarda el `PushSubscription` en Supabase. El backend envía notificaciones via `web-push` npm package.
 
+### Alertas por tren (retrasos y llegada)
+
+Flujo completo:
+
+1. **Suscribirse** — `PushPermission` (campana) abre un diálogo con dos opciones:
+   *Retrasos* (≥ 5 min, por defecto) y *Llegada* (~10 min antes en la estación vista).
+   El POST a `/api/push/subscribe` guarda `{ trip_code, station_id, notify_delay,
+   notify_arrival, service_date, delay_threshold_sec, arrival_threshold_sec }`.
+   UNIQUE `(user_id, endpoint, trip_code)`: un dispositivo puede seguir varios trenes.
+2. **Monitor** — `/api/cron/monitor-push` (schedule diario en `vercel.json`, autenticado
+   con `Bearer CRON_SECRET`). Como Hobby limita los crons a 1/día, además hay
+   **piggyback** fire-and-forget (`maybeRunPushMonitor`, `src/lib/push/monitor-run.ts`)
+   desde `/api/renfe/horarios` y `/api/renfe/viaje` cuando la consulta es de hoy,
+   throttled 30s vía `adif_cache`. En Vercel Pro, subir el schedule a `* * * * *`.
+3. **Decisión** — lógica pura en `src/lib/push/monitor.ts`: combina GTFS-RT
+   (`trip_updates`) del feed inferido (`C\d` → cercanias, resto → md) con el horario
+   estático (`gtfs_stop_times.departure_time`, que es la única columna de hora que hay).
+   Solo procesa suscripciones con `service_date = hoy` y feeds frescos (< 5 min).
+4. **Anti-duplicado** — antes de enviar se inserta una fila en `push_events`
+   (UNIQUE `(subscription_id, trip_code, event_type, service_date)`); si la unicidad
+   falla (código 23505), otro disparo ya envió ese evento. `last_delay_sent_at` /
+   `last_arrival_sent_at` dan el cooldown de 30 min.
+5. **Notificar** — `sendPushNotification` (web-push). El service worker (`src/sw.ts`)
+   pinta la notificación (`push` event) y abre el viaje (`notificationclick`).
+
+Tests: `tests/unit/lib/push/monitor.test.ts`, `tests/unit/lib/push/monitor-run.test.ts`,
+`tests/unit/api/push-subscribe.test.ts`.
+
 ### ⚠️ La global `Notification` (bug crítico iOS WebKit)
 
 La global `Notification` **no existe en todos los contextos web** (p. ej. WebKit/iOS en modo privado o sin soporte push). Acceder a ella sin guardarla lanza un `ReferenceError: Can't find variable: Notification` durante el render.
@@ -708,6 +736,9 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...   # Solo backend, nunca al cliente
 VAPID_PUBLIC_KEY=BM...
 VAPID_PRIVATE_KEY=xxx
 VAPID_MAILTO=admin@[tudominio].app
+
+# Cron Jobs (protege /api/cron/*)
+CRON_SECRET=openssl-rand-hex-32
 
 # i18n
 NEXT_PUBLIC_DEFAULT_LOCALE=es
@@ -819,6 +850,13 @@ Tras aplicar una migration en el Dashboard, actualizar manualmente `src/types/da
 | Fichero | Descripción | Estado |
 |---|---|---|
 | `supabase/migrations/001_initial_schema.sql` | Schema inicial: profiles, stations, favorites, push_subscriptions, trip_reports, adif_cache | Aplicar en Dashboard |
+| `supabase/migrations/002_consent_choice.sql` | Preferencias de consentimiento de cookies | Aplicar en Dashboard |
+| `supabase/migrations/002_gtfs_stop_times.sql` | Tabla GTFS static (stop_times/trips), importación horarios | Aplicar en Dashboard |
+| `supabase/migrations/003_add_feed_source.sql` | Columna feed_source en tablas GTFS | Aplicar en Dashboard |
+| `supabase/migrations/004_gtfs_calendar.sql` | Calendario de servicio GTFS (días de operación) | Aplicar en Dashboard |
+| `supabase/migrations/005_fix_get_stop_departures_route_id.sql` | Fix función get_stop_departures (route_id) | Aplicar en Dashboard |
+| `supabase/migrations/006_add_stations_municipality.sql` | Municipio en stations (búsqueda/admin) | Aplicar en Dashboard |
+| `supabase/migrations/007_push_trip_alerts.sql` | Alertas push por tren: notify_delay/notify_arrival/station_id/service_date/last_*_sent_at, UNIQUE (user_id, endpoint, trip_code), tabla push_events | Aplicar en Dashboard |
 
 ### Variables de entorno necesarias
 

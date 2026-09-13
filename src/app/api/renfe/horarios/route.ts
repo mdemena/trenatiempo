@@ -10,6 +10,14 @@ import {
 } from '@/lib/renfe/gtfs-rt'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit'
+import {
+  gtfsTimeToSeconds,
+  secondsToGtfsTime,
+  nowGtfsTime,
+  todayISO,
+  unixToMadridTime,
+} from '@/lib/renfe/time'
+import { maybeRunPushMonitor } from '@/lib/push/monitor-run'
 import type { HorarioEntry, HorariosResponse } from '@/lib/renfe/types'
 
 // Margen sobre los timeouts internos (Renfe 5s, Supabase 8s) para que la
@@ -27,42 +35,6 @@ const QuerySchema = z.object({
     .regex(ISO_DATE, 'fecha debe tener formato YYYY-MM-DD')
     .optional(),
 })
-
-function gtfsTimeToSeconds(time: string): number {
-  const [h, m, s] = time.split(':').map(Number)
-  return (h ?? 0) * 3600 + (m ?? 0) * 60 + (s ?? 0)
-}
-
-function secondsToGtfsTime(secs: number): string {
-  const h = Math.floor(secs / 3600)
-  const m = Math.floor((secs % 3600) / 60)
-  const s = secs % 60
-  return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':')
-}
-
-function nowGtfsTime(): string {
-  const now = new Date()
-  const madrid = new Date(now.toLocaleString('sv-SE', { timeZone: 'Europe/Madrid' }))
-  return secondsToGtfsTime(
-    madrid.getHours() * 3600 + madrid.getMinutes() * 60 + madrid.getSeconds()
-  )
-}
-
-function todayISO(): string {
-  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' })
-}
-
-/** Converts a Unix timestamp string/number to "HH:MM:SS" in Europe/Madrid timezone. */
-function unixToMadridTime(raw: unknown): string {
-  const sec = parseInt(String(raw ?? 0), 10)
-  return new Date(sec * 1000).toLocaleTimeString('es-ES', {
-    timeZone: 'Europe/Madrid',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  })
-}
 
 /** Extracts the numeric train identifier from a GTFS tripId like "5116X15734R11" → "15734". */
 function extractNumTren(tripId: string): string | undefined {
@@ -177,6 +149,10 @@ export async function GET(request: Request) {
 
   const isToday = targetDate === today
   const db = supabaseAdmin as unknown as DB
+
+  // Piggyback best-effort: se aprovechan las lecturas de hoy para que el
+  // monitor de push detecte retrasos llegadas (fire-and-forget, throttle 30s).
+  if (isToday) maybeRunPushMonitor(tipo)
 
   let horariosResult: { horarios: HorarioEntry[]; updatedAt: number; stale: boolean }
   try {

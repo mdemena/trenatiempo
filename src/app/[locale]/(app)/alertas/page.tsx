@@ -10,6 +10,8 @@ interface Subscription {
   id: string
   trip_code: string
   endpoint: string
+  /** Fecha de la corrida suscrita (ISO). */
+  service_date: string | null
   created_at: string
 }
 
@@ -49,7 +51,9 @@ export default function AlertasPage() {
       await fetch('/api/push/subscribe', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: sub.endpoint }),
+        // tripCode limita el borrado a ESTA alerta; sin él se borrarían todas
+        // las suscripciones del dispositivo.
+        body: JSON.stringify({ endpoint: sub.endpoint, tripCode: sub.trip_code }),
       })
       localStorage.removeItem(`push_sub_${sub.trip_code}`)
     } catch {
@@ -84,11 +88,16 @@ export default function AlertasPage() {
                     {t('train', { id: sub.trip_code })}
                   </p>
                   <p className="text-xs text-rail-cream/40">
-                    {new Date(sub.created_at).toLocaleDateString('es-ES')}
+                    {sub.service_date
+                      ? new Date(`${sub.service_date}T12:00:00`).toLocaleDateString(
+                          undefined,
+                          { weekday: 'short', day: 'numeric', month: 'short' }
+                        )
+                      : new Date(sub.created_at).toLocaleDateString('es-ES')}
                   </p>
                 </div>
                 <Link
-                  href={`/viaje/${sub.trip_code}`}
+                  href={`/viaje/${sub.trip_code}${sub.service_date ? `?fecha=${sub.service_date}` : ''}`}
                   className="mr-2 text-xs text-rail-amber/70 hover:text-rail-amber"
                 >
                   {t('view')}

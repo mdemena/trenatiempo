@@ -13,7 +13,9 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('push_subscriptions')
-    .select('id, trip_code, endpoint, created_at')
+    .select(
+      'id, trip_code, station_id, notify_delay, notify_arrival, service_date, endpoint, created_at'
+    )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 

@@ -108,7 +108,15 @@
     "cancelledBanner": "Aquest tren ha estat cancel·lat",
     "noPositionInfo": "Sense informació de posició",
     "yourStop": "La teva parada",
-    "inTransit": "En trànsit"
+    "inTransit": "En trànsit",
+    "pushDialogTitle": "Alertes d'aquest tren",
+    "pushDialogStation": "A {station}",
+    "pushNotifyDelay": "Retards",
+    "pushNotifyDelayDesc": "Avisa quan el tren porti més de 5 minuts de retard",
+    "pushNotifyArrival": "Arribada",
+    "pushNotifyArrivalDesc": "Avisa uns 10 minuts abans que arribi a la teva parada",
+    "pushSave": "Desa",
+    "pushCancel": "Cancel·la"
   },
   "auth": {
     "login": "Inicia sessió",
