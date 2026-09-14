@@ -212,7 +212,8 @@
     "unsubscribe": "Supprimer l alerte",
     "train": "Train {id}",
     "everyDay": "Tous les jours",
-    "view": "Voir"
+    "view": "Voir",
+    "loadError": "Impossible de charger vos alertes"
   },
   "cookies": {
     "title": "Votre vie privée compte",

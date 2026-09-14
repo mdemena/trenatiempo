@@ -17,6 +17,7 @@ export async function GET() {
       'id, trip_code, train_number, route_id, station_id, notify_delay, notify_arrival, service_date, endpoint, created_at'
     )
     .eq('user_id', user.id)
+    .eq('active', true)
     .order('created_at', { ascending: false })
 
   if (error) {

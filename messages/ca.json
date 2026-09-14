@@ -203,7 +203,8 @@
     "unsubscribe": "Cancel·lar alerta",
     "train": "Tren {id}",
     "everyDay": "Tots els dies",
-    "view": "Veure"
+    "view": "Veure",
+    "loadError": "No s'han pogut carregar les teves alertes"
   },
   "errors": {
     "notFound": "Pàgina no trobada",

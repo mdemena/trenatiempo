@@ -19,30 +19,42 @@ interface Subscription {
 
 export default function AlertasPage() {
   const t = useTranslations('alertas')
+  const tc = useTranslations('common')
   const [subs, setSubs] = useState<Subscription[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [removing, setRemoving] = useState<string | null>(null)
+  // Reintento: incrementarlo re-ejecuta el effect que carga las alertas.
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let ignore = false
 
-    async function load() {
+    async function doLoad() {
       try {
         const res = await fetch('/api/push/subscriptions')
-        if (!ignore && res.ok) {
-          const data = await res.json() as Subscription[]
+        if (!res.ok) throw new Error(`GET subscriptions → ${res.status}`)
+        const data = await res.json() as Subscription[]
+        if (!ignore) {
           setSubs(data)
+          setError(false)
         }
       } catch {
-        // silently ignore
+        if (!ignore) setError(true)
       } finally {
         if (!ignore) setLoading(false)
       }
     }
 
-    load()
+    doLoad()
     return () => { ignore = true }
-  }, [])
+  }, [attempt])
+
+  const retry = () => {
+    setLoading(true)
+    setError(false)
+    setAttempt((a) => a + 1)
+  }
 
   async function handleRemove(sub: Subscription) {
     setRemoving(sub.id)
@@ -78,6 +90,16 @@ export default function AlertasPage() {
         {loading ? (
           <div className="flex justify-center pt-16">
             <Spinner size="lg" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-4 pt-20 text-center">
+            <p className="text-sm text-rail-cream/50">{t('loadError')}</p>
+            <button
+              onClick={retry}
+              className="rounded-xl bg-white/8 px-4 py-2 text-sm text-rail-cream/70 transition hover:bg-white/12"
+            >
+              {tc('retry')}
+            </button>
           </div>
         ) : subs.length === 0 ? (
           <EmptyState />

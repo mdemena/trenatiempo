@@ -212,7 +212,8 @@
     "unsubscribe": "Cancelar alerta",
     "train": "Tren {id}",
     "everyDay": "Todos os días",
-    "view": "Ver"
+    "view": "Ver",
+    "loadError": "Non se puideron cargar as túas alertas"
   },
   "cookies": {
     "title": "A túa privacidade importa",

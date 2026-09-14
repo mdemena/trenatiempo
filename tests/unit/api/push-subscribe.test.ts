@@ -264,4 +264,21 @@ describe('DELETE /api/push/subscribe', () => {
     expect(chain.eq).toHaveBeenCalledWith('route_id', 'R11')
     expect(chain.eq).not.toHaveBeenCalledWith('trip_code', expect.anything())
   })
+
+  it('borra por trainNumber sin routeId (MD sin línea)', async () => {
+    const { DELETE } = await import('@/app/api/push/subscribe/route')
+    const res = await DELETE(
+      makeRequest('DELETE', 'http://localhost/api/push/subscribe', {
+        endpoint: FAKE_SUB.endpoint,
+        trainNumber: '001921',
+      })
+    )
+    expect(res.status).toBe(200)
+    const chain = mockDeleteChain[0]
+    expect(chain.eq).toHaveBeenCalledWith('endpoint', FAKE_SUB.endpoint)
+    expect(chain.eq).toHaveBeenCalledWith('user_id', USER_ID)
+    expect(chain.eq).toHaveBeenCalledWith('train_number', '001921')
+    expect(chain.eq).not.toHaveBeenCalledWith('route_id', expect.anything())
+    expect(chain.eq).not.toHaveBeenCalledWith('trip_code', expect.anything())
+  })
 })
