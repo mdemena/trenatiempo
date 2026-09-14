@@ -882,6 +882,7 @@ Tras aplicar una migration en el Dashboard, actualizar manualmente `src/types/da
 | `supabase/migrations/006_add_stations_municipality.sql` | Municipio en stations (búsqueda/admin) | Aplicar en Dashboard |
 | `supabase/migrations/007_push_trip_alerts.sql` | Alertas push por tren: notify_delay/notify_arrival/station_id/service_date/last_*_sent_at, UNIQUE (user_id, endpoint, trip_code), tabla push_events | Aplicar en Dashboard |
 | `supabase/migrations/008_push_train_identity.sql` | Suscripción recurrente por tren: columnas train_number/route_id (backfill desde trip_code), UNIQUE (user_id, endpoint, train_number, route_id) | Aplicar en Dashboard |
+| `supabase/migrations/009_fix_push_train_identity.sql` | Fix de 008: suelta el UNIQUE (user_id, endpoint, trip_code) de 007 (provocaba 23505 en el ON CONFLICT) y re-backfillea route_id ('' → NULL/línea real) | Aplicar en Dashboard |
 
 ### Variables de entorno necesarias
 

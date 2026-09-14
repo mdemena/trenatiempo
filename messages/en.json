@@ -212,7 +212,8 @@
     "unsubscribe": "Remove alert",
     "train": "Train {id}",
     "everyDay": "Every day",
-    "view": "View"
+    "view": "View",
+    "loadError": "Could not load your alerts"
   },
   "cookies": {
     "title": "Your privacy matters",

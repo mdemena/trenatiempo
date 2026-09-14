@@ -166,13 +166,16 @@ export async function DELETE(request: Request) {
     .eq('endpoint', parsed.data.endpoint)
     .eq('user_id', user.id)
 
-  // Filtro por tren: con tripCode se borra la suscripción de ese tren; si el
-  // cliente envía trainNumber+routeId (identidad) se borra por tren. Sin
-  // filtro se mantiene el comportamiento histórico (todas las del endpoint).
+  // Filtro por tren. Con tripCode se borra la suscripción de ese trip; si el
+  // cliente envía trainNumber (identidad durable) se borra por tren — con
+  // routeId como refinamiento (si no se conoce, p.ej. MD sin línea, basta el
+  // número). Sin filtro se mantiene el comportamiento histórico (todas las del
+  // endpoint).
   if (parsed.data.tripCode) {
     query = query.eq('trip_code', parsed.data.tripCode)
-  } else if (parsed.data.trainNumber && parsed.data.routeId) {
-    query = query.eq('train_number', parsed.data.trainNumber).eq('route_id', parsed.data.routeId)
+  } else if (parsed.data.trainNumber) {
+    query = query.eq('train_number', parsed.data.trainNumber)
+    if (parsed.data.routeId) query = query.eq('route_id', parsed.data.routeId)
   }
 
   const { error, data: deleted } = await query.select('id')

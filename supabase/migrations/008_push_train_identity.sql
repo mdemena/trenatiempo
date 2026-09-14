@@ -19,12 +19,14 @@ WHERE train_number IS NULL
 -- Cercanías: "5154D15726R11" → número "15726", línea "R11"
 --            "6265J71110C2"  → número "71110", línea "C2"
 --            "4770M00024BUS" → número "00024", línea "BUS"
+-- (La v1 de este fichero usaba `\2` con 1 sola pareja de captura: en vez de la
+-- línea dejaba route_id a ''. La migration 009 lo corrige en bases existentes.)
 UPDATE public.push_subscriptions
 SET
-  train_number = regexp_replace(trip_code, '^.*?(\d{4,})[A-Za-z]+\d*[A-Za-z]*$', '\1'),
-  route_id = regexp_replace(trip_code, '^.*?(\d{4,})[A-Za-z]+\d*[A-Za-z]*$', '\2')
+  train_number = regexp_replace(trip_code, '^\d+[A-Za-z](\d+)([A-Za-z]\d*[A-Za-z]*)$', '\1'),
+  route_id = regexp_replace(trip_code, '^\d+[A-Za-z](\d+)([A-Za-z]\d*[A-Za-z]*)$', '\2')
 WHERE train_number IS NULL
-  AND trip_code ~ '[A-Za-z]+\d*[A-Za-z]*$';
+  AND trip_code ~ '^\d+[A-Za-z](\d+)([A-Za-z]\d*[A-Za-z]*)$';
 
 -- Cercanías con guion: "C1-23537" → número "23537", línea "C1"
 UPDATE public.push_subscriptions

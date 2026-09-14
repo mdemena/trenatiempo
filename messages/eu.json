@@ -212,7 +212,8 @@
     "unsubscribe": "Alerta bertan behera utzi",
     "train": "Trena {id}",
     "everyDay": "Egun guztietan",
-    "view": "Ikusi"
+    "view": "Ikusi",
+    "loadError": "Ezin izan dira zure alertak kargatu"
   },
   "cookies": {
     "title": "Zure pribatutasuna garrantzitsua da",
