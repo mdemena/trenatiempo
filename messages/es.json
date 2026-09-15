@@ -213,7 +213,9 @@
     "train": "Tren {id}",
     "everyDay": "Todos los días",
     "view": "Ver",
-    "loadError": "No se pudieron cargar tus alertas"
+    "loadError": "No se pudieron cargar tus alertas",
+    "device": "Aviso en {device}",
+    "deviceUnknown": "el navegador"
   },
   "cookies": {
     "title": "Tu privacidad importa",

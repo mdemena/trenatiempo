@@ -179,6 +179,9 @@ export interface Database {
           service_date: string | null
           last_delay_sent_at: string | null
           last_arrival_sent_at: string | null
+          device_browser: string | null
+          device_os: string | null
+          device_model: string | null
           active: boolean
           created_at: string
         }
@@ -199,6 +202,9 @@ export interface Database {
           service_date?: string | null
           last_delay_sent_at?: string | null
           last_arrival_sent_at?: string | null
+          device_browser?: string | null
+          device_os?: string | null
+          device_model?: string | null
           active?: boolean
         }
         Update: {
@@ -214,6 +220,9 @@ export interface Database {
           service_date?: string | null
           last_delay_sent_at?: string | null
           last_arrival_sent_at?: string | null
+          device_browser?: string | null
+          device_os?: string | null
+          device_model?: string | null
         }
         Relationships: [
           {

@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { AnimatePresence, motion } from 'motion/react'
 import { useUserStore } from '@/store/userStore'
+import { getDeviceInfo } from '@/lib/push/device'
 import { cn } from '@/lib/utils'
 import { Spinner } from '@/components/ui/Spinner'
 import { Switch } from '@/components/ui/Switch'
@@ -67,6 +68,22 @@ export function PushPermission({
   const [notifyArrival, setNotifyArrival] = useState(true)
   const fetchedRef = useRef(false)
 
+  // Endpoint de ESTE navegador: el push llega al endpoint del navegador que se
+  // suscribió, así que la campana solo debe encenderse si la fila del servidor
+  // pertenece a este dispositivo (no al móvil/desktop del mismo usuario).
+  async function getCurrentDeviceEndpoint(tripCode: string): Promise<string | null> {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration()
+        const sub = reg ? await reg.pushManager.getSubscription() : null
+        if (sub?.endpoint) return sub.endpoint
+      } catch {
+        // sin SW activo → caemos a localStorage
+      }
+    }
+    return localStorage.getItem(`push_sub_${tripCode}`)
+  }
+
   // Check subscription server-side on mount
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
@@ -76,18 +93,24 @@ export function PushPermission({
 
     fetch('/api/push/subscriptions')
       .then((r) => (r.ok ? r.json() : []))
-      .then((subs) => {
-        const match = subs.find(
-          (s: {
-            trip_code: string | null
-            train_number: string | null
-            route_id: string | null
-            endpoint: string
-          }) =>
-            (trainNumber && s.train_number === trainNumber && s.route_id === routeId) ||
-            (!trainNumber && s.trip_code === tripCode)
+      .then(async (subs) => {
+        // Solo encender si la suscripción es de ESTE navegador/dispositivo.
+        // Puede haber varias filas para el mismo tren (otros dispositivos), así
+        // que buscamos la que coincide con el endpoint local, no la primera.
+        const currentEndpoint = await getCurrentDeviceEndpoint(tripCode)
+        const match = (subs as Array<{
+          trip_code: string | null
+          train_number: string | null
+          route_id: string | null
+          endpoint: string
+        }>).find(
+          (s) =>
+            currentEndpoint &&
+            s.endpoint === currentEndpoint &&
+            ((trainNumber && s.train_number === trainNumber && s.route_id === routeId) ||
+              (!trainNumber && s.trip_code === tripCode))
         )
-        if (match) {
+        if (match && currentEndpoint && match.endpoint === currentEndpoint) {
           setEndpoint(match.endpoint)
           setStatus('subscribed')
           localStorage.setItem(`push_sub_${tripCode}`, match.endpoint)
@@ -171,6 +194,10 @@ export function PushPermission({
         ).buffer as ArrayBuffer,
       })
 
+      // Navegador/dispositivo en el que se recibe la push (se guarda en campos
+      // separados para mostrarlo en la lista de alertas).
+      const deviceInfo = await getDeviceInfo()
+
       await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -183,6 +210,15 @@ export function PushPermission({
           ...(serviceDate ? { serviceDate } : {}),
           notifyDelay,
           notifyArrival,
+          ...(deviceInfo
+            ? {
+                device: {
+                  ...(deviceInfo.browser ? { browser: deviceInfo.browser } : {}),
+                  ...(deviceInfo.os ? { os: deviceInfo.os } : {}),
+                  ...(deviceInfo.model ? { model: deviceInfo.model } : {}),
+                },
+              }
+            : {}),
         }),
       })
 

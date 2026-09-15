@@ -32,6 +32,16 @@ const subscriptionSchema = z.object({
   notifyArrival: z.boolean().optional(),
   delayThresholdSec: z.number().int().min(60).max(3600).optional(),
   arrivalThresholdSec: z.number().int().min(60).max(3600).optional(),
+  /** Navegador/dispositivo que registra la suscripción (para la lista de
+   *  alertas). Se rellena desde el cliente con la mejor API disponible:
+   *  Client Hints en Chromium, fallback a User-Agent en el resto. */
+  device: z
+    .object({
+      browser: z.string().max(40).optional(),
+      os: z.string().max(40).optional(),
+      model: z.string().max(60).optional(),
+    })
+    .optional(),
 }).superRefine((data, ctx) => {
   // Sin flags explícitos → comportamiento antiguo: aviso de retraso siempre,
   // aviso de llegada solo si conocemos la estación.
@@ -130,6 +140,9 @@ export async function POST(request: Request) {
         delay_threshold_sec: data.delayThresholdSec ?? DELAY_THRESHOLD_DEFAULT_SEC,
         arrival_threshold_sec: data.arrivalThresholdSec ?? ARRIVAL_THRESHOLD_DEFAULT_SEC,
         service_date: serviceDate,
+        device_browser: data.device?.browser ?? null,
+        device_os: data.device?.os ?? null,
+        device_model: data.device?.model ?? null,
         active: true,
       },
       { onConflict: 'user_id,endpoint,train_number,route_id' }
