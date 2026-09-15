@@ -116,7 +116,8 @@
     "pushNotifyArrival": "Arrival",
     "pushNotifyArrivalDesc": "Notify about 10 minutes before it reaches your stop",
     "pushSave": "Save",
-    "pushCancel": "Cancel"
+    "pushCancel": "Cancel",
+    "pushNotifyArrivalNeedStop": "Alerts you about 10 minutes before it reaches your stop. Open this train from Alerts to set one."
   },
   "auth": {
     "login": "Log in",

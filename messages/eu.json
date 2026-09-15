@@ -116,7 +116,8 @@
     "pushNotifyArrival": "Iritsiera",
     "pushNotifyArrivalDesc": "Zure geltokira iritsi baino ~10 minutu lehenago abisatu",
     "pushSave": "Gorde",
-    "pushCancel": "Utzi"
+    "pushCancel": "Utzi",
+    "pushNotifyArrivalNeedStop": "Zure geltokira iritsi baino 10 minutu lehenago abisatzen du. Ireki tren hau zure Alertak ataletik hura finkatzeko."
   },
   "auth": {
     "login": "Saioa hasi",

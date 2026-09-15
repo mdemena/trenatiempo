@@ -13,6 +13,8 @@ interface Subscription {
   train_number: string | null
   route_id: string | null
   endpoint: string
+  /** Estación objetivo de la alerta de llegada (para reabrirlo en el viaje). */
+  station_id: string | null
   /** Navegador/dispositivo que registró la suscripción. */
   device_browser: string | null
   device_os: string | null
@@ -133,7 +135,7 @@ export default function AlertasPage() {
                   </p>
                 </div>
                 <Link
-                  href={`/viaje/${sub.trip_code}${sub.service_date ? `?fecha=${sub.service_date}` : ''}`}
+                  href={tripHref(sub)}
                   className="mr-2 text-xs text-rail-amber/70 hover:text-rail-amber"
                 >
                   {t('view')}
@@ -153,6 +155,14 @@ export default function AlertasPage() {
       </main>
     </div>
   )
+}
+
+function tripHref(sub: Subscription): string {
+  const params = new URLSearchParams()
+  if (sub.station_id) params.set('stopId', sub.station_id)
+  if (sub.service_date) params.set('fecha', sub.service_date)
+  const qs = params.toString()
+  return `/viaje/${sub.trip_code}${qs ? `?${qs}` : ''}`
 }
 
 function EmptyState() {

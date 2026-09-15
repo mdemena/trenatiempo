@@ -116,7 +116,8 @@
     "pushNotifyArrival": "Arrivée",
     "pushNotifyArrivalDesc": "Prévient ~10 minutes avant l'arrivée à votre arrêt",
     "pushSave": "Enregistrer",
-    "pushCancel": "Annuler"
+    "pushCancel": "Annuler",
+    "pushNotifyArrivalNeedStop": "Alerte environ 10 minutes avant qu'il n'atteigne votre gare. Ouvrez ce train depuis Alertes pour la définir."
   },
   "auth": {
     "login": "Se connecter",

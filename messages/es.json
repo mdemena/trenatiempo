@@ -116,7 +116,8 @@
     "pushNotifyArrival": "Llegada",
     "pushNotifyArrivalDesc": "Avisa unos 10 minutos antes de que llegue a tu parada",
     "pushSave": "Guardar",
-    "pushCancel": "Cancelar"
+    "pushCancel": "Cancelar",
+    "pushNotifyArrivalNeedStop": "Avisa unos 10 minutos antes de que llegue a tu parada. Abre este tren desde tus Alertas para fijarla."
   },
   "auth": {
     "login": "Iniciar sesión",
