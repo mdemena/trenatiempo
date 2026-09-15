@@ -116,7 +116,8 @@
     "pushNotifyArrival": "Arrival",
     "pushNotifyArrivalDesc": "Notify about 10 minutes before it reaches your stop",
     "pushSave": "Save",
-    "pushCancel": "Cancel"
+    "pushCancel": "Cancel",
+    "pushNotifyArrivalNeedStop": "Alerts you about 10 minutes before it reaches your stop. Open this train from Alerts to set one."
   },
   "auth": {
     "login": "Log in",
@@ -215,7 +216,12 @@
     "view": "View",
     "loadError": "Could not load your alerts",
     "device": "Alert to {device}",
-    "deviceUnknown": "the browser"
+    "deviceUnknown": "the browser",
+    "notifyDelay": "Delay",
+    "notifyArrival": "Arrival",
+    "notifyInactive": "Alerts paused",
+    "toggleDelayAria": "Enable delay alerts for train {id}",
+    "toggleArrivalAria": "Enable arrival alert for train {id}"
   },
   "cookies": {
     "title": "Your privacy matters",

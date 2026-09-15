@@ -279,6 +279,72 @@ test.describe('Push subscription — client flow', () => {
     }
   })
 
+  test('editing preferences toggles alert types and keeps the subscription', async ({
+    page,
+  }) => {
+    const errors = createPageErrorCollector(page)
+    const deviceModel = `Pixel 8-${Date.now()}`
+    let endpoint: string | null = null
+    try {
+      await loginAs(page, E2E_USER.email, E2E_USER.password)
+      await page.evaluate(
+        (m) => localStorage.setItem('__e2e_device', JSON.stringify({ model: m, browser: 'Chrome' })),
+        deviceModel
+      )
+      await page.goto(`/es/viaje/${PUSH_TRIP_ID}`)
+      await subscribe(page)
+      endpoint = await page.evaluate(
+        (tp) => localStorage.getItem(`push_sub_${tp}`),
+        PUSH_TRIP_ID
+      )
+
+      await page.goto('/es/alertas')
+      const row = page.locator('li').filter({ hasText: deviceModel })
+      await row.waitFor({ state: 'visible', timeout: 15_000 })
+
+      const toggles = row.locator('button[aria-pressed]')
+      // Suscrito desde el detalle sin parada → solo el retraso está activo
+      await expect(toggles.nth(0)).toHaveAttribute('aria-pressed', 'true')
+      await expect(toggles.nth(1)).toHaveAttribute('aria-pressed', 'false')
+
+      // Apagar el retraso → ambas en off: la fila persiste y marca la pausa
+      await toggles.nth(0).click()
+      await expect(toggles.nth(0)).toHaveAttribute('aria-pressed', 'false')
+      await expect(row).toContainText('Alertas pausadas')
+
+      // Reactivar el retraso → la pausa desaparece sin borrar la suscripción
+      await toggles.nth(0).click()
+      await expect(toggles.nth(0)).toHaveAttribute('aria-pressed', 'true')
+      await expect(row).not.toContainText('Alertas pausadas')
+
+      // Activar también la llegada y comprobar que el servidor lo persiste
+      await toggles.nth(1).click()
+      await expect(toggles.nth(1)).toHaveAttribute('aria-pressed', 'true')
+      await page.waitForFunction(
+        (ep) =>
+          fetch('/api/push/subscriptions')
+            .then((r) => r.json())
+            .then(
+              (list: Array<{
+                endpoint: string
+                notify_delay: boolean
+                notify_arrival: boolean
+              }>) => {
+                const sub = list.find((s) => s.endpoint === ep)
+                return !!sub && sub.notify_delay === true && sub.notify_arrival === true
+              }
+            ),
+        endpoint
+      )
+
+      await expectNoServerError(page)
+      expect(errors.getErrors()).toEqual([])
+    } finally {
+      await cleanupSubscription(page, endpoint)
+      errors.dispose()
+    }
+  })
+
   test('unauthenticated bell click redirects to login', async ({ page }) => {
     await page.goto(`/es/viaje/${PUSH_TRIP_ID}`)
     const bell = page.getByRole('button', { name: 'Suscribirme a este tren' })

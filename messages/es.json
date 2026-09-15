@@ -116,7 +116,8 @@
     "pushNotifyArrival": "Llegada",
     "pushNotifyArrivalDesc": "Avisa unos 10 minutos antes de que llegue a tu parada",
     "pushSave": "Guardar",
-    "pushCancel": "Cancelar"
+    "pushCancel": "Cancelar",
+    "pushNotifyArrivalNeedStop": "Avisa unos 10 minutos antes de que llegue a tu parada. Abre este tren desde tus Alertas para fijarla."
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -215,7 +216,12 @@
     "view": "Ver",
     "loadError": "No se pudieron cargar tus alertas",
     "device": "Aviso en {device}",
-    "deviceUnknown": "el navegador"
+    "deviceUnknown": "el navegador",
+    "notifyDelay": "Retrasos",
+    "notifyArrival": "Llegada",
+    "notifyInactive": "Alertas pausadas",
+    "toggleDelayAria": "Activar aviso de retrasos para el tren {id}",
+    "toggleArrivalAria": "Activar aviso de llegada para el tren {id}"
   },
   "cookies": {
     "title": "Tu privacidad importa",

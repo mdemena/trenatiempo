@@ -3,6 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // ─── Mock Supabase server client ──────────────────────────────────────────────
 
 const mockUpsert = vi.fn()
+let mockPatchArg: unknown = undefined
+const mockPatchChain: Array<{
+  eq: ReturnType<typeof vi.fn>
+  select: ReturnType<typeof vi.fn>
+}> = []
 
 function makeChain() {
   const selectDelete = vi.fn().mockResolvedValue({ data: [{ id: 'sub-1' }], error: null })
@@ -17,6 +22,17 @@ function makeChain() {
 
 const mockDeleteChain: Array<{ eq: ReturnType<typeof vi.fn>; select: ReturnType<typeof vi.fn> }> = []
 
+function makePatchChain() {
+  const selectPatch = vi.fn().mockResolvedValue({ data: [{ id: 'sub-1' }], error: null })
+  const eq = vi.fn(() => chain)
+  const chain = {
+    eq,
+    select: selectPatch,
+  }
+  mockPatchChain.push(chain)
+  return chain
+}
+
 function makeClient(user: { id: string } | null) {
   return {
     auth: {
@@ -26,6 +42,10 @@ function makeClient(user: { id: string } | null) {
     },
     from: vi.fn().mockReturnValue({
       upsert: mockUpsert,
+      update: (patch: unknown) => {
+        mockPatchArg = patch
+        return makePatchChain()
+      },
       delete: () => makeChain(),
     }),
   }
@@ -214,6 +234,7 @@ describe('DELETE /api/push/subscribe', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockDeleteChain.length = 0
+    mockPatchChain.length = 0
     vi.mocked(createClient as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
       makeClient({ id: USER_ID })
     )
@@ -280,5 +301,85 @@ describe('DELETE /api/push/subscribe', () => {
     expect(chain.eq).toHaveBeenCalledWith('train_number', '001921')
     expect(chain.eq).not.toHaveBeenCalledWith('route_id', expect.anything())
     expect(chain.eq).not.toHaveBeenCalledWith('trip_code', expect.anything())
+  })
+})
+
+describe('PATCH /api/push/subscribe', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockDeleteChain.length = 0
+    mockPatchChain.length = 0
+    mockPatchArg = undefined
+    vi.mocked(createClient as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+      makeClient({ id: USER_ID })
+    )
+  })
+
+  it('devuelve 401 sin sesión', async () => {
+    vi.mocked(createClient as unknown as ReturnType<typeof vi.fn>).mockReturnValue(makeClient(null))
+    const { PATCH } = await import('@/app/api/push/subscribe/route')
+    const res = await PATCH(
+      makeRequest('PATCH', 'http://localhost/api/push/subscribe', {
+        endpoint: FAKE_SUB.endpoint,
+        trainNumber: '15726',
+        routeId: 'R11',
+        notifyDelay: false,
+        notifyArrival: true,
+      })
+    )
+    expect(res.status).toBe(401)
+    expect(mockPatchChain.length).toBe(0)
+  })
+
+  it('actualiza preferencias por identidad de tren sin recrear la fila', async () => {
+    mockPatchArg = undefined
+    const { PATCH } = await import('@/app/api/push/subscribe/route')
+    const res = await PATCH(
+      makeRequest('PATCH', 'http://localhost/api/push/subscribe', {
+        endpoint: FAKE_SUB.endpoint,
+        trainNumber: '15726',
+        routeId: 'R11',
+        notifyDelay: false,
+        notifyArrival: true,
+      })
+    )
+    expect(res.status).toBe(200)
+    expect(mockUpsert).not.toHaveBeenCalled()
+    expect(mockPatchArg).toEqual({ notify_delay: false, notify_arrival: true })
+    const chain = mockPatchChain[0]
+    expect(chain.eq).toHaveBeenCalledWith('endpoint', FAKE_SUB.endpoint)
+    expect(chain.eq).toHaveBeenCalledWith('user_id', USER_ID)
+    expect(chain.eq).toHaveBeenCalledWith('train_number', '15726')
+    expect(chain.eq).toHaveBeenCalledWith('route_id', 'R11')
+    expect(chain.select).toHaveBeenCalledWith('id')
+  })
+
+  it('actualiza con tripCode para filas legacy', async () => {
+    const { PATCH } = await import('@/app/api/push/subscribe/route')
+    const res = await PATCH(
+      makeRequest('PATCH', 'http://localhost/api/push/subscribe', {
+        endpoint: FAKE_SUB.endpoint,
+        tripCode: '5142X15734R11',
+        notifyDelay: true,
+        notifyArrival: false,
+      })
+    )
+    expect(res.status).toBe(200)
+    const chain = mockPatchChain[0]
+    expect(chain.eq).toHaveBeenCalledWith('endpoint', FAKE_SUB.endpoint)
+    expect(chain.eq).toHaveBeenCalledWith('user_id', USER_ID)
+    expect(chain.eq).toHaveBeenCalledWith('trip_code', '5142X15734R11')
+    expect(chain.eq).not.toHaveBeenCalledWith('train_number', expect.anything())
+  })
+
+  it('rechaza sin campo a actualizar ni tren', async () => {
+    const { PATCH } = await import('@/app/api/push/subscribe/route')
+    const res = await PATCH(
+      makeRequest('PATCH', 'http://localhost/api/push/subscribe', {
+        endpoint: FAKE_SUB.endpoint,
+      })
+    )
+    expect(res.status).toBe(400)
+    expect(mockPatchChain.length).toBe(0)
   })
 })

@@ -7,6 +7,9 @@ import {
   DELAY_THRESHOLD_DEFAULT_SEC,
   ARRIVAL_THRESHOLD_DEFAULT_SEC,
 } from '@/lib/push/monitor'
+import type { Database } from '@/types/database'
+
+type PushSubUpdate = Database['public']['Tables']['push_subscriptions']['Update']
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -60,6 +63,22 @@ const subscriptionSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ['stationId'],
       message: 'El aviso de llegada requiere una estación',
+    })
+  }
+})
+
+const patchSchema = z.object({
+  endpoint: z.string().url(),
+  tripCode: z.string().optional(),
+  trainNumber: z.string().regex(/^\d{1,8}$/).optional(),
+  routeId: z.string().max(20).optional(),
+  notifyDelay: z.boolean().optional(),
+  notifyArrival: z.boolean().optional(),
+}).superRefine((data, ctx) => {
+  if (data.notifyDelay === undefined && data.notifyArrival === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Envía al menos un campo a actualizar (notifyDelay o notifyArrival)',
     })
   }
 })
@@ -153,6 +172,62 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true, trainNumber, routeId })
+}
+
+// ─── PATCH /api/push/subscribe ────────────────────────────────────────────────
+// Actualiza preferencias (notify_delay / notify_arrival) de una suscripción
+// existente sin borrarla ni recrearla. Localiza la fila por endpoint + tren;
+// si el usuario deja ambas preferencias en off la fila persiste inactiva y
+// puede reactivarse en cualquier momento.
+
+export async function PATCH(request: Request) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json().catch(() => null)
+  const parsed = patchSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? 'Bad Request' },
+      { status: 400 }
+    )
+  }
+
+  const update: PushSubUpdate = {}
+  if (parsed.data.notifyDelay !== undefined) update.notify_delay = parsed.data.notifyDelay
+  if (parsed.data.notifyArrival !== undefined) update.notify_arrival = parsed.data.notifyArrival
+
+  let query = supabase
+    .from('push_subscriptions')
+    .update(update)
+    .eq('endpoint', parsed.data.endpoint)
+    .eq('user_id', user.id)
+
+  if (parsed.data.trainNumber) {
+    query = query.eq('train_number', parsed.data.trainNumber)
+    if (parsed.data.routeId) query = query.eq('route_id', parsed.data.routeId)
+  } else if (parsed.data.tripCode) {
+    query = query.eq('trip_code', parsed.data.tripCode)
+  } else {
+    return NextResponse.json(
+      { error: 'Identifica el tren: envía tripCode o trainNumber' },
+      { status: 400 }
+    )
+  }
+
+  const { error, data } = await query.select('id')
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true, updated: data ?? [] })
 }
 
 // ─── DELETE /api/push/subscribe ───────────────────────────────────────────────

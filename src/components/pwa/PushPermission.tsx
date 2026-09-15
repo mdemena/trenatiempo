@@ -20,6 +20,34 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 type Status = 'idle' | 'requesting' | 'subscribed' | 'denied'
 
+// El listado de horarios monta UNA campana por tren (decenas en estaciones
+// grandes); el check de suscripción es el mismo para todas. Compartimos la
+// petición (single-flight) cacheándola por usuario para no disparar una
+// llamada idéntica por cola, y la invalidamos al suscribir/desuscribir.
+interface PushSubRow {
+  trip_code: string | null
+  train_number: string | null
+  route_id: string | null
+  endpoint: string
+}
+
+let subsFetch: { key: string; promise: Promise<PushSubRow[]> } | null = null
+
+async function fetchMySubscriptions(userId: string): Promise<PushSubRow[]> {
+  const key = `user:${userId}`
+  if (subsFetch?.key === key) return subsFetch.promise
+  const promise = fetch('/api/push/subscriptions').then((r) => {
+    if (!r.ok) return []
+    return r.json() as Promise<PushSubRow[]>
+  })
+  subsFetch = { key, promise }
+  return promise
+}
+
+function invalidateSubscriptions() {
+  subsFetch = null
+}
+
 interface PushPermissionProps {
   tripCode: string
   /** Identidad durable del tren (número + línea). La suscripción es al tren,
@@ -91,19 +119,13 @@ export function PushPermission({
     if (!user || fetchedRef.current) return
     fetchedRef.current = true
 
-    fetch('/api/push/subscriptions')
-      .then((r) => (r.ok ? r.json() : []))
+    fetchMySubscriptions(user.id)
       .then(async (subs) => {
         // Solo encender si la suscripción es de ESTE navegador/dispositivo.
         // Puede haber varias filas para el mismo tren (otros dispositivos), así
         // que buscamos la que coincide con el endpoint local, no la primera.
         const currentEndpoint = await getCurrentDeviceEndpoint(tripCode)
-        const match = (subs as Array<{
-          trip_code: string | null
-          train_number: string | null
-          route_id: string | null
-          endpoint: string
-        }>).find(
+        const match = subs.find(
           (s) =>
             currentEndpoint &&
             s.endpoint === currentEndpoint &&
@@ -148,6 +170,7 @@ export function PushPermission({
         ),
       })
     }
+    invalidateSubscriptions()
     localStorage.removeItem(`push_sub_${tripCode}`)
     setEndpoint(null)
     setStatus('idle')
@@ -223,6 +246,7 @@ export function PushPermission({
       })
 
       const ep = sub.endpoint
+      invalidateSubscriptions()
       localStorage.setItem(`push_sub_${tripCode}`, ep)
       setEndpoint(ep)
       setStatus('subscribed')
@@ -342,23 +366,27 @@ export function PushPermission({
                   />
                 </div>
 
-                {stationId && (
-                  <div className="flex items-center justify-between gap-4 rounded-xl bg-rail-surface px-3.5 py-3 ring-1 ring-rail-border">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-rail-cream/80">
-                        {t('pushNotifyArrival')}
-                      </p>
-                      <p className="text-[12px] leading-relaxed text-rail-cream/45">
-                        {t('pushNotifyArrivalDesc')}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifyArrival}
-                      onChange={setNotifyArrival}
-                      label={t('pushNotifyArrival')}
-                    />
+                <div
+                  className={cn(
+                    'flex items-center justify-between gap-4 rounded-xl bg-rail-surface px-3.5 py-3 ring-1 ring-rail-border',
+                    !stationId && 'opacity-70'
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-rail-cream/80">
+                      {t('pushNotifyArrival')}
+                    </p>
+                    <p className="text-[12px] leading-relaxed text-rail-cream/45">
+                      {stationId ? t('pushNotifyArrivalDesc') : t('pushNotifyArrivalNeedStop')}
+                    </p>
                   </div>
-                )}
+                  <Switch
+                    checked={notifyArrival}
+                    onChange={setNotifyArrival}
+                    label={t('pushNotifyArrival')}
+                    disabled={!stationId}
+                  />
+                </div>
               </div>
 
               {/* Footer */}
