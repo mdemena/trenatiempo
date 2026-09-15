@@ -117,7 +117,14 @@
     "pushNotifyArrivalDesc": "Avisa uns 10 minuts abans que arribi a la teva parada",
     "pushSave": "Desa",
     "pushCancel": "Cancel·la",
-    "pushNotifyArrivalNeedStop": "Avisa uns 10 minuts abans que arribi a la teva parada. Obre aquest tren des de les teves Alertes per fixar-la."
+    "pushNotifyArrivalNeedStop": "Avisa uns 10 minuts abans que arribi a la teva parada. Obre aquest tren des de les teves Alertes per fixar-la.",
+    "pushGotIt": "Entès",
+    "pushDeniedTitle": "Notificacions bloquejades",
+    "pushDeniedDesc": "Has bloquejat les notificacions de TrenATiempo en aquest navegador. Per tornar-les a activar: a Chrome toca la icona del cadenat a la barra d'adreces i permet les notificacions.",
+    "pushSupportTitle": "Notificacions no disponibles",
+    "pushSupportDesc": "Aquest navegador no admet notificacions push. Per rebre alertes de trens, usa la versió instal·lada de l'app o un navegador compatible (Chrome, Edge o Safari).",
+    "pushIosInstallTitle": "Instal·la TrenATiempo per rebre alertes",
+    "pushIosInstallDesc": "A l'iPhone o l'iPad, les alertes només arriben si instal·les l'app a la pantalla d'inici: toca Comparteix → Afegeix a la pantalla d'inici."
   },
   "auth": {
     "login": "Inicia sessió",

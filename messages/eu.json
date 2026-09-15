@@ -117,7 +117,14 @@
     "pushNotifyArrivalDesc": "Zure geltokira iritsi baino ~10 minutu lehenago abisatu",
     "pushSave": "Gorde",
     "pushCancel": "Utzi",
-    "pushNotifyArrivalNeedStop": "Zure geltokira iritsi baino 10 minutu lehenago abisatzen du. Ireki tren hau zure Alertak ataletik hura finkatzeko."
+    "pushNotifyArrivalNeedStop": "Zure geltokira iritsi baino 10 minutu lehenago abisatzen du. Ireki tren hau zure Alertak ataletik hura finkatzeko.",
+    "pushGotIt": "Ulertuta",
+    "pushDeniedTitle": "Jakinarazpenak blokeatuta",
+    "pushDeniedDesc": "TrenATiempo-ren jakinarazpenak blokeatu dituzu nabigatzaile honetan. Berriro aktibatzeko: Chrome-n, giltzaren ikonoa sakatu helbide-barran eta baimendu jakinarazpenak.",
+    "pushSupportTitle": "Jakinarazpenak ez daude eskuragarri",
+    "pushSupportDesc": "Nabigatzaile honek ez ditu push jakinarazpenak onartzen. Tren-alertak jasotzeko, erabili app-a instalatuta duen bertsioa edo nabigatzaile bateragarri bat (Chrome, Edge edo Safari).",
+    "pushIosInstallTitle": "Aplikazioa instalatu tren-alertak jasotzeko",
+    "pushIosInstallDesc": "iPhone edo iPad-ean, alertak soilik app-a hasierako pantailan instalatzen baduzu iristen dira: sakatu Partekatu → Gehitu hasierako pantailara."
   },
   "auth": {
     "login": "Saioa hasi",

@@ -117,7 +117,14 @@
     "pushNotifyArrivalDesc": "Notify about 10 minutes before it reaches your stop",
     "pushSave": "Save",
     "pushCancel": "Cancel",
-    "pushNotifyArrivalNeedStop": "Alerts you about 10 minutes before it reaches your stop. Open this train from Alerts to set one."
+    "pushNotifyArrivalNeedStop": "Alerts you about 10 minutes before it reaches your stop. Open this train from Alerts to set one.",
+    "pushGotIt": "Got it",
+    "pushDeniedTitle": "Notifications blocked",
+    "pushDeniedDesc": "You blocked TrenATiempo notifications in this browser. To turn them back on: in Chrome tap the lock icon in the address bar and allow notifications.",
+    "pushSupportTitle": "Notifications unavailable",
+    "pushSupportDesc": "This browser does not support push notifications. To get train alerts, use the installed version of the app or a compatible browser (Chrome, Edge or Safari).",
+    "pushIosInstallTitle": "Install TrenATiempo to get alerts",
+    "pushIosInstallDesc": "On iPhone or iPad, alerts are delivered only when you install the app to your Home Screen: tap Share → Add to Home Screen."
   },
   "auth": {
     "login": "Log in",

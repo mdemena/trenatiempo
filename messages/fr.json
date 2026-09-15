@@ -117,7 +117,14 @@
     "pushNotifyArrivalDesc": "Prévient ~10 minutes avant l'arrivée à votre arrêt",
     "pushSave": "Enregistrer",
     "pushCancel": "Annuler",
-    "pushNotifyArrivalNeedStop": "Alerte environ 10 minutes avant qu'il n'atteigne votre gare. Ouvrez ce train depuis Alertes pour la définir."
+    "pushNotifyArrivalNeedStop": "Alerte environ 10 minutes avant qu'il n'atteigne votre gare. Ouvrez ce train depuis Alertes pour la définir.",
+    "pushGotIt": "Compris",
+    "pushDeniedTitle": "Notifications bloquées",
+    "pushDeniedDesc": "Vous avez bloqué les notifications de TrenATiempo dans ce navigateur. Pour les réactiver : sur Chrome, touchez l'icône du cadenas dans la barre d'adresse et autorisez les notifications.",
+    "pushSupportTitle": "Notifications non disponibles",
+    "pushSupportDesc": "Ce navigateur ne prend pas en charge les notifications push. Pour recevoir des alertes de train, utilisez la version installée de l'app ou un navigateur compatible (Chrome, Edge ou Safari).",
+    "pushIosInstallTitle": "Installez TrenATiempo pour recevoir les alertes",
+    "pushIosInstallDesc": "Sur iPhone ou iPad, les alertes ne sont envoyées que si l'app est installée sur l'écran d'accueil : touchez Partager → Ajouter à l'écran d'accueil."
   },
   "auth": {
     "login": "Se connecter",
