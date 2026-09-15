@@ -77,8 +77,19 @@ const runtimeCaching: RuntimeCaching[] = [
   ...defaultCache,
 ]
 
+// Serwist inyecta en el manifest dos artefactos de su página offline
+// (`/public/offline` y `/fallback-*.js`) que en Vercel no existen como fichero
+// servido: el middleware de locale los redirige a /es/... y acaban en 404, lo
+// que hace que workbox `cache.addAll` falle y el install del SW nunca complete
+// (SW sin activar → pushManager.subscribe → AbortError → campana nunca
+// enciende). `offline.html` (que sí se sirve) ya cubre el fallback offline.
+const precacheEntries = (self.__SW_MANIFEST ?? []).filter((entry) => {
+  const url = typeof entry === 'string' ? entry : entry.url
+  return url !== '/public/offline' && !url.startsWith('/fallback-')
+})
+
 const serwist = new Serwist({
-  precacheEntries: self.__SW_MANIFEST,
+  precacheEntries,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
