@@ -216,7 +216,12 @@
     "view": "View",
     "loadError": "Could not load your alerts",
     "device": "Alert to {device}",
-    "deviceUnknown": "the browser"
+    "deviceUnknown": "the browser",
+    "notifyDelay": "Delay",
+    "notifyArrival": "Arrival",
+    "notifyInactive": "Alerts paused",
+    "toggleDelayAria": "Enable delay alerts for train {id}",
+    "toggleArrivalAria": "Enable arrival alert for train {id}"
   },
   "cookies": {
     "title": "Your privacy matters",

@@ -216,7 +216,12 @@
     "view": "Ikusi",
     "loadError": "Ezin izan dira zure alertak kargatu",
     "device": "Avisua {device}-n",
-    "deviceUnknown": "nabigatzailean"
+    "deviceUnknown": "nabigatzailean",
+    "notifyDelay": "Atsazkenak",
+    "notifyArrival": "Irisiera",
+    "notifyInactive": "Alertak geldirik",
+    "toggleDelayAria": "Aktibatu atsazkenen abisua {id} trenerako",
+    "toggleArrivalAria": "Aktibatu iritsiera abisua {id} trenerako"
   },
   "cookies": {
     "title": "Zure pribatutasuna garrantzitsua da",

@@ -216,7 +216,12 @@
     "view": "Ver",
     "loadError": "Non se puideron cargar as túas alertas",
     "device": "Aviso en {device}",
-    "deviceUnknown": "o navegador"
+    "deviceUnknown": "o navegador",
+    "notifyDelay": "Retrasos",
+    "notifyArrival": "Chegada",
+    "notifyInactive": "Alertas en pausa",
+    "toggleDelayAria": "Activar aviso de atraso do tren {id}",
+    "toggleArrivalAria": "Activar aviso de chegada do tren {id}"
   },
   "cookies": {
     "title": "A túa privacidade importa",

@@ -15,6 +15,9 @@ interface Subscription {
   endpoint: string
   /** Estación objetivo de la alerta de llegada (para reabrirlo en el viaje). */
   station_id: string | null
+  /** Preferencias de aviso. Ambas en off = suscripción inactiva pero persistente. */
+  notify_delay: boolean
+  notify_arrival: boolean
   /** Navegador/dispositivo que registró la suscripción. */
   device_browser: string | null
   device_os: string | null
@@ -31,6 +34,7 @@ export default function AlertasPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [removing, setRemoving] = useState<string | null>(null)
+  const [toggling, setToggling] = useState<string | null>(null)
   // Reintento: incrementarlo re-ejecuta el effect que carga las alertas.
   const [attempt, setAttempt] = useState(0)
 
@@ -61,6 +65,38 @@ export default function AlertasPage() {
     setLoading(true)
     setError(false)
     setAttempt((a) => a + 1)
+  }
+
+  /** Actualiza una preferencia (notify_delay / notify_arrival) de forma
+   *  optimista. La suscripción persiste aunque ambas queden en off — solo se
+   *  pausa y puede reactivarse después. */
+  async function handleToggle(sub: Subscription, field: 'notify_delay' | 'notify_arrival') {
+    setToggling(sub.id)
+    const previous = sub
+    const next = { ...sub, [field]: !sub[field] }
+    setSubs((prev) => prev.map((s) => (s.id === sub.id ? next : s)))
+
+    const body = JSON.stringify({
+      endpoint: sub.endpoint,
+      ...(sub.train_number
+        ? { trainNumber: sub.train_number, routeId: sub.route_id }
+        : { tripCode: sub.trip_code }),
+      notifyDelay: next.notify_delay,
+      notifyArrival: next.notify_arrival,
+    })
+
+    try {
+      const res = await fetch('/api/push/subscribe', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      })
+      if (!res.ok) throw new Error(`PATCH subscribe → ${res.status}`)
+    } catch {
+      setSubs((prev) => prev.map((s) => (s.id === previous.id ? previous : s)))
+    } finally {
+      setToggling(null)
+    }
   }
 
   async function handleRemove(sub: Subscription) {
@@ -115,39 +151,87 @@ export default function AlertasPage() {
             {subs.map((sub) => (
               <li
                 key={sub.id}
-                className="flex items-center gap-3 rounded-xl border border-rail-border bg-rail-surface px-4 py-3"
+                className="rounded-xl border border-rail-border bg-rail-surface px-4 py-3"
               >
-                <Bell className="h-4 w-4 shrink-0 text-rail-amber" aria-hidden />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-rail-cream">
-                    {t('train', { id: sub.train_number ?? sub.trip_code })}
-                  </p>
-                  <p className="text-xs text-rail-cream/40">{t('everyDay')}</p>
-                  <p className="mt-0.5 text-xs text-rail-cream/30">
-                    {t('device', {
-                      device:
-                        deviceLabel({
-                          browser: sub.device_browser,
-                          os: sub.device_os,
-                          model: sub.device_model,
-                        }) ?? t('deviceUnknown'),
-                    })}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <Bell
+                    className="h-4 w-4 shrink-0 text-rail-amber"
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-rail-cream">
+                      {t('train', { id: sub.train_number ?? sub.trip_code })}
+                    </p>
+                    <p className="text-xs text-rail-cream/40">{t('everyDay')}</p>
+                    <p className="mt-0.5 text-xs text-rail-cream/30">
+                      {t('device', {
+                        device:
+                          deviceLabel({
+                            browser: sub.device_browser,
+                            os: sub.device_os,
+                            model: sub.device_model,
+                          }) ?? t('deviceUnknown'),
+                      })}
+                    </p>
+                  </div>
+                  <Link
+                    href={tripHref(sub)}
+                    className="mr-2 text-xs text-rail-amber/70 hover:text-rail-amber"
+                  >
+                    {t('view')}
+                  </Link>
+                  <button
+                    onClick={() => handleRemove(sub)}
+                    disabled={removing === sub.id || toggling === sub.id}
+                    aria-label={t('unsubscribe')}
+                    className="rounded-full p-1.5 text-rail-cream/30 transition hover:bg-white/10 hover:text-red-400 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-amber"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <Link
-                  href={tripHref(sub)}
-                  className="mr-2 text-xs text-rail-amber/70 hover:text-rail-amber"
-                >
-                  {t('view')}
-                </Link>
-                <button
-                  onClick={() => handleRemove(sub)}
-                  disabled={removing === sub.id}
-                  aria-label={t('unsubscribe')}
-                  className="rounded-full p-1.5 text-rail-cream/30 transition hover:bg-white/10 hover:text-red-400 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-amber"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 pl-1">
+                  <button
+                    type="button"
+                    aria-pressed={sub.notify_delay}
+                    aria-label={t('toggleDelayAria', {
+                      id: sub.train_number ?? sub.trip_code,
+                    })}
+                    onClick={() => handleToggle(sub, 'notify_delay')}
+                    disabled={toggling === sub.id}
+                    className={
+                      'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 transition disabled:opacity-50 ' +
+                      (sub.notify_delay
+                        ? 'bg-rail-amber/15 text-rail-amber ring-rail-amber/30'
+                        : 'bg-white/6 text-rail-cream/40 ring-white/10')
+                    }
+                  >
+                    {sub.notify_delay ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
+                    {t('notifyDelay')}
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={sub.notify_arrival}
+                    aria-label={t('toggleArrivalAria', {
+                      id: sub.train_number ?? sub.trip_code,
+                    })}
+                    onClick={() => handleToggle(sub, 'notify_arrival')}
+                    disabled={toggling === sub.id}
+                    className={
+                      'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 transition disabled:opacity-50 ' +
+                      (sub.notify_arrival
+                        ? 'bg-rail-amber/15 text-rail-amber ring-rail-amber/30'
+                        : 'bg-white/6 text-rail-cream/40 ring-white/10')
+                    }
+                  >
+                    {sub.notify_arrival ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
+                    {t('notifyArrival')}
+                  </button>
+                  {!sub.notify_delay && !sub.notify_arrival && (
+                    <span className="text-xs text-rail-cream/30">
+                      {t('notifyInactive')}
+                    </span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

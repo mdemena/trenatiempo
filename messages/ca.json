@@ -207,7 +207,12 @@
     "view": "Veure",
     "loadError": "No s'han pogut carregar les teves alertes",
     "device": "Avís a {device}",
-    "deviceUnknown": "el navegador"
+    "deviceUnknown": "el navegador",
+    "notifyDelay": "Retards",
+    "notifyArrival": "Arribada",
+    "notifyInactive": "Alertes en pausa",
+    "toggleDelayAria": "Activa l'avís de retards del tren {id}",
+    "toggleArrivalAria": "Activa l'avís d'arribada del tren {id}"
   },
   "errors": {
     "notFound": "Pàgina no trobada",
