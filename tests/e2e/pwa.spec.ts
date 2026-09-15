@@ -230,6 +230,55 @@ test.describe('Push subscription — client flow', () => {
     }
   })
 
+  test('alerts list shows the device and removing the alert unlights the bell', async ({
+    page,
+  }) => {
+    const errors = createPageErrorCollector(page)
+    // Modelo único por test: los 4 tests de este describe se suscriben al mismo
+    // tren y comparten usuaria E2E en Supabase, así que la fila de ESTE test se
+    // filtra por su dispositivo en vez del número de tren (que matchea varias).
+    const deviceModel = `Pixel 8-${Date.now()}`
+    let endpoint: string | null = null
+    try {
+      await loginAs(page, E2E_USER.email, E2E_USER.password)
+      // Las stubs de `getDeviceInfo` leen `__e2e_device` de localStorage, así la
+      // fila que cree ESTE test es distinguible de las de los otros tests.
+      await page.evaluate((m) => localStorage.setItem('__e2e_device', JSON.stringify({ model: m, browser: 'Chrome' })), deviceModel)
+      await page.goto(`/es/viaje/${PUSH_TRIP_ID}`)
+      await subscribe(page)
+      endpoint = await page.evaluate(
+        (tp) => localStorage.getItem(`push_sub_${tp}`),
+        PUSH_TRIP_ID
+      )
+
+      // La lista de alertas muestra el navegador/dispositivo que recibirá la push
+      await page.goto('/es/alertas')
+      const row = page.locator('li').filter({ hasText: deviceModel })
+      await row.waitFor({ state: 'visible', timeout: 15_000 })
+      await expect(row).toContainText('Aviso en')
+      await expect(row).toContainText(deviceModel)
+      await expect(row).toContainText('Chrome')
+
+      // Eliminar la alerta desde la lista (DELETE por endpoint)
+      await row.getByRole('button', { name: 'Cancelar alerta' }).click()
+      await expect(
+        page.locator('li').filter({ hasText: deviceModel })
+      ).toHaveCount(0)
+
+      // La campana del viaje vuelve a estar apagada
+      await page.goto(`/es/viaje/${PUSH_TRIP_ID}`)
+      await page
+        .getByRole('button', { name: 'Suscribirme a este tren' })
+        .waitFor({ state: 'visible', timeout: 15_000 })
+
+      await expectNoServerError(page)
+      expect(errors.getErrors()).toEqual([])
+    } finally {
+      await cleanupSubscription(page, endpoint)
+      errors.dispose()
+    }
+  })
+
   test('unauthenticated bell click redirects to login', async ({ page }) => {
     await page.goto(`/es/viaje/${PUSH_TRIP_ID}`)
     const bell = page.getByRole('button', { name: 'Suscribirme a este tren' })
