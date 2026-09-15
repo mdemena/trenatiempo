@@ -20,6 +20,89 @@ export const REF_TRIP = {
 
 export const CONSENT_COOKIE = 'trenatiempo_consent'
 
+/** Usuario de test seedado en Supabase (documentado en .env / .env.example).
+ *  Permite sobreescribir vía env (p. ej. en CI con un usuario distinto). */
+export const E2E_USER = {
+  email: process.env.E2E_USER_EMAIL ?? 'user@trenatiempo.com',
+  password: process.env.E2E_USER_PASSWORD ?? 'alnobara',
+}
+
+/**
+ * Hace login como el usuario E2E y espera a salir de /login con autoreparación:
+ * si el click cae antes de que el `onSubmit` esté montado (submit nativo a
+ * `/login?`), se re-sincroniza con `findSettledInput` y se reintenta.
+ */
+export async function loginAs(page: Page, email: string, password: string) {
+  const deadline = Date.now() + 25_000
+  while (Date.now() < deadline) {
+    await page.goto('/es/login', { waitUntil: 'domcontentloaded' })
+    await page.waitForSelector('form', { state: 'visible', timeout: 15_000 })
+    const emailInput = page.locator('input[type="email"]')
+    const passInput = page.locator('input[type="password"]')
+    await findSettledInput(page, emailInput, email)
+    await findSettledInput(page, passInput, password)
+    await page.getByRole('button', { name: /iniciar sesión|iniciar sesion/i }).click()
+    try {
+      await page.waitForURL((u) => !u.pathname.match(/\/login\/?(\?.*)?$/), { timeout: 8_000 })
+      return
+    } catch {
+      // submit nativo (onSubmit no montado todavía): reintentar el ciclo
+    }
+  }
+  await expect(page).not.toHaveURL(/\/es\/login/)
+}
+
+/**
+ * Hace determinista el flujo de suscripción push en Chromium automatizado.
+ *
+ * Playwright `grantPermissions(['notifications'])` y el CDP
+ * `Browser.setPermission` NO hacen que `pushManager.subscribe` funcione en el
+ * Chromium de Playwright (se queda en "Registration failed - permission
+ * denied" incluso con `Notification.permission === 'granted'`; verificado
+ * empíricamente). Es un artefacto de la automatización, no de la app — en un
+ * navegador real con permiso concedido funciona.
+ *
+ * Para testear NUESTRO flujo (dialógo → subscribe → POST → campana encendida →
+ * persistencia en /alertas) sin depender de ese artefacto, este init script
+ * stubea solo las dos APIs atómicas del navegador:
+ *  - `Notification.requestPermission` → 'granted' (el usuario concede).
+ *  - `PushManager.prototype.subscribe` → un PushSubscription simulado.
+ *
+ * El service worker se deja REAL (activándose ya gracias al fix del precache),
+ * y el POST a /api/push/subscribe + el GET de /alertas se ejecutan contra el
+ * servidor real. La suscripción creada usa un endpoint `https://fakepush.local/`
+ * que el servidor acepta y que el test limpia con DELETE al terminar.
+ */
+export async function installPushStubs(page: Page) {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'Notification', {
+      value: { permission: 'granted', requestPermission: async () => 'granted' },
+      configurable: true,
+    })
+    if ('PushManager' in window) {
+      Object.defineProperty(PushManager.prototype, 'subscribe', {
+        value: async function () {
+          const endpoint =
+            'https://fakepush.local/e2e-' +
+            Date.now() +
+            '-' +
+            Math.random().toString(36).slice(2, 10)
+          return {
+            endpoint,
+            expirationTime: null,
+            getKey: (name: string) => new Uint8Array(name === 'p256dh' ? 65 : 16),
+            toJSON: () => ({
+              endpoint,
+              keys: { p256dh: 'ZXllcA==', auth: 'YXV0aA==' },
+            }),
+          }
+        },
+        configurable: true,
+      })
+    }
+  })
+}
+
 /** Regex que captura las líneas de Cercanías / MD del área. */
 export const ROUTE_REGEX = /R2|R2N|R8|R11|R13|REGIONAL|R4/i
 
