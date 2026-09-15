@@ -117,7 +117,14 @@
     "pushNotifyArrivalDesc": "Avisa uns 10 minutos antes de que chegue á túa parada",
     "pushSave": "Gardar",
     "pushCancel": "Cancelar",
-    "pushNotifyArrivalNeedStop": "Avisa uns 10 minutos antes de que chegue á túa parada. Abre este tren desde as túas Alertas para fixala."
+    "pushNotifyArrivalNeedStop": "Avisa uns 10 minutos antes de que chegue á túa parada. Abre este tren desde as túas Alertas para fixala.",
+    "pushGotIt": "Entendido",
+    "pushDeniedTitle": "Notificacións bloqueadas",
+    "pushDeniedDesc": "Bloqueaches as notificacións de TrenATiempo neste navegador. Para volver activalas: en Chrome toca a icona do cadeado na barra de enderezos e permite as notificacións.",
+    "pushSupportTitle": "Notificacións non dispoñibles",
+    "pushSupportDesc": "Este navegador non admite notificacións push. Para recibir alertas de trens, usa a versión instalada da app ou un navegador compatible (Chrome, Edge ou Safari).",
+    "pushIosInstallTitle": "Instala TrenATiempo para recibir alertas",
+    "pushIosInstallDesc": "No iPhone ou iPad, as alertas só chegan se instalas a app na pantalla de inicio: toca Compartir → Engadir á pantalla de inicio."
   },
   "auth": {
     "login": "Iniciar sesión",

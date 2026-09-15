@@ -1,12 +1,17 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, BellOff, BellRing, X } from 'lucide-react'
+import { Bell, BellOff, BellRing, X, Smartphone, ShieldAlert } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { AnimatePresence, motion } from 'motion/react'
 import { useUserStore } from '@/store/userStore'
 import { getDeviceInfo } from '@/lib/push/device'
+import {
+  getPushSupport,
+  safeNotificationPermission,
+  safeRequestNotificationPermission,
+} from '@/lib/push/support'
 import { cn } from '@/lib/utils'
 import { Spinner } from '@/components/ui/Spinner'
 import { Switch } from '@/components/ui/Switch'
@@ -80,20 +85,17 @@ export function PushPermission({
   // sin soporte push o en algunos modos privados). Acceder a él sin guardarlo
   // lanzaba un ReferenceError durante el render que tiraba toda la página de
   // estación al error boundary ("Error del servidor").
-  const [status, setStatus] = useState<Status>(() => {
-    if (
-      typeof window !== 'undefined' &&
-      typeof Notification !== 'undefined' &&
-      Notification.permission === 'denied'
-    ) {
-      return 'denied'
-    }
-    return 'idle'
-  })
+  const [status, setStatus] = useState<Status>(() =>
+    safeNotificationPermission() === 'denied' ? 'denied' : 'idle'
+  )
   const [endpoint, setEndpoint] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [notifyDelay, setNotifyDelay] = useState(true)
   const [notifyArrival, setNotifyArrival] = useState(true)
+  // Diálogo informativo cuando el push no está disponible o está bloqueado:
+  // en vez de deshabilitar la campana en silencio, explicamos qué pasa y cómo
+  // arreglarlo (instalar la app en iOS, activar notificaciones, etc.).
+  const [infoOpen, setInfoOpen] = useState<'denied' | 'unsupported' | 'ios' | null>(null)
   const fetchedRef = useRef(false)
 
   // Endpoint de ESTE navegador: el push llega al endpoint del navegador que se
@@ -185,7 +187,19 @@ export function PushPermission({
       await handleUnsubscribe()
       return
     }
-    if (status === 'denied') return
+
+    // Nunca un fallo silencioso: si el push no es posible en este navegador
+    // (p.ej. Safari de iPhone sin la app instalada) o las notificaciones están
+    // bloqueadas, la campana sigue clicable y explica cómo arreglarlo.
+    const support = getPushSupport()
+    if (!support.supported) {
+      setInfoOpen(support.reason === 'ios_not_installed' ? 'ios' : 'unsupported')
+      return
+    }
+    if (safeNotificationPermission() === 'denied') {
+      setInfoOpen('denied')
+      return
+    }
     openDialog()
   }
 
@@ -196,8 +210,8 @@ export function PushPermission({
     setStatus('requesting')
 
     try {
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
+      const permission = await safeRequestNotificationPermission()
+      if (permission === 'unavailable' || permission !== 'granted') {
         setStatus('denied')
         return
       }
@@ -209,6 +223,9 @@ export function PushPermission({
           setStatus('idle')
           return
         }
+      }
+      if (!swRegistration.active) {
+        swRegistration = await navigator.serviceWorker.ready
       }
       const sub = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -261,6 +278,19 @@ export function PushPermission({
   const isLoading = status === 'requesting'
   const canSave = notifyDelay || notifyArrival
 
+  const infoTitle =
+    infoOpen === 'denied'
+      ? t('pushDeniedTitle')
+      : infoOpen === 'ios'
+        ? t('pushIosInstallTitle')
+        : t('pushSupportTitle')
+  const infoDesc =
+    infoOpen === 'denied'
+      ? t('pushDeniedDesc')
+      : infoOpen === 'ios'
+        ? t('pushIosInstallDesc')
+        : t('pushSupportDesc')
+
   const secondaryBtn =
     'flex w-full items-center justify-center gap-2 rounded-xl bg-rail-surface px-4 py-2.5 text-sm font-medium text-rail-cream/70 ring-1 ring-rail-border transition hover:bg-white/5 light:hover:bg-black/5 active:scale-[0.98]'
   const primaryBtn =
@@ -270,7 +300,7 @@ export function PushPermission({
     <>
       <button
         onClick={handleClick}
-        disabled={isLoading || isDenied}
+        disabled={isLoading}
         title={isDenied ? t('pushDenied') : isSubscribed ? t('unsubscribe') : t('subscribe')}
         aria-label={isDenied ? t('pushDenied') : isSubscribed ? t('unsubscribe') : t('subscribe')}
         aria-pressed={isSubscribed}
@@ -400,6 +430,73 @@ export function PushPermission({
                   className={cn(primaryBtn, 'flex-[1.4]')}
                 >
                   {t('pushSave')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Diálogo informativo: push no disponible o bloqueado */}
+      <AnimatePresence>
+        {infoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+          >
+            <motion.div
+              aria-hidden="true"
+              className="absolute inset-0 bg-rail-navy/80 backdrop-blur-sm"
+              onClick={() => setInfoOpen(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={infoTitle}
+              className="relative w-full max-w-md overflow-hidden rounded-2xl border border-rail-border bg-rail-surface shadow-2xl shadow-black/50"
+            >
+              <div className="pointer-events-none absolute -top-16 -right-8 h-36 w-36 rounded-full bg-rail-amber/10 blur-3xl" />
+
+              <div className="relative flex items-start gap-3 p-5 pb-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rail-amber/10 ring-1 ring-rail-amber/20">
+                  {infoOpen === 'denied' ? (
+                    <ShieldAlert className="h-5 w-5 text-rail-amber" />
+                  ) : infoOpen === 'ios' ? (
+                    <Smartphone className="h-5 w-5 text-rail-amber" />
+                  ) : (
+                    <BellOff className="h-5 w-5 text-rail-amber" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <h2 className="font-display text-base font-bold leading-tight text-rail-cream">
+                    {infoTitle}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setInfoOpen(null)}
+                  aria-label={t('pushCancel')}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition hover:bg-white/5"
+                >
+                  <X className="h-4 w-4 text-rail-cream/50" />
+                </button>
+              </div>
+
+              <div className="relative px-5 pb-4">
+                <p className="text-[13px] leading-relaxed text-rail-cream/60">
+                  {infoDesc}
+                </p>
+              </div>
+
+              <div className="relative flex gap-2 border-t border-rail-border p-5 pt-4">
+                <button onClick={() => setInfoOpen(null)} className={primaryBtn}>
+                  {t('pushGotIt')}
                 </button>
               </div>
             </motion.div>
