@@ -213,7 +213,9 @@
     "train": "Trena {id}",
     "everyDay": "Egun guztietan",
     "view": "Ikusi",
-    "loadError": "Ezin izan dira zure alertak kargatu"
+    "loadError": "Ezin izan dira zure alertak kargatu",
+    "device": "Avisua {device}-n",
+    "deviceUnknown": "nabigatzailean"
   },
   "cookies": {
     "title": "Zure pribatutasuna garrantzitsua da",

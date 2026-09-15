@@ -204,7 +204,9 @@
     "train": "Tren {id}",
     "everyDay": "Tots els dies",
     "view": "Veure",
-    "loadError": "No s'han pogut carregar les teves alertes"
+    "loadError": "No s'han pogut carregar les teves alertes",
+    "device": "Avís a {device}",
+    "deviceUnknown": "el navegador"
   },
   "errors": {
     "notFound": "Pàgina no trobada",

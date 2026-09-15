@@ -213,7 +213,9 @@
     "train": "Train {id}",
     "everyDay": "Tous les jours",
     "view": "Voir",
-    "loadError": "Impossible de charger vos alertes"
+    "loadError": "Impossible de charger vos alertes",
+    "device": "Avertissement sur {device}",
+    "deviceUnknown": "le navigateur"
   },
   "cookies": {
     "title": "Votre vie privée compte",

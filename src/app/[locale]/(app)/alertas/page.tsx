@@ -5,6 +5,7 @@ import { Bell, BellOff, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Spinner } from '@/components/ui/Spinner'
+import { deviceLabel } from '@/lib/push/device'
 
 interface Subscription {
   id: string
@@ -12,6 +13,10 @@ interface Subscription {
   train_number: string | null
   route_id: string | null
   endpoint: string
+  /** Navegador/dispositivo que registró la suscripción. */
+  device_browser: string | null
+  device_os: string | null
+  device_model: string | null
   /** Fecha desde la que se suscribió (informativa). */
   service_date: string | null
   created_at: string
@@ -116,6 +121,16 @@ export default function AlertasPage() {
                     {t('train', { id: sub.train_number ?? sub.trip_code })}
                   </p>
                   <p className="text-xs text-rail-cream/40">{t('everyDay')}</p>
+                  <p className="mt-0.5 text-xs text-rail-cream/30">
+                    {t('device', {
+                      device:
+                        deviceLabel({
+                          browser: sub.device_browser,
+                          os: sub.device_os,
+                          model: sub.device_model,
+                        }) ?? t('deviceUnknown'),
+                    })}
+                  </p>
                 </div>
                 <Link
                   href={`/viaje/${sub.trip_code}${sub.service_date ? `?fecha=${sub.service_date}` : ''}`}

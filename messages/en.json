@@ -213,7 +213,9 @@
     "train": "Train {id}",
     "everyDay": "Every day",
     "view": "View",
-    "loadError": "Could not load your alerts"
+    "loadError": "Could not load your alerts",
+    "device": "Alert to {device}",
+    "deviceUnknown": "the browser"
   },
   "cookies": {
     "title": "Your privacy matters",

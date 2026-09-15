@@ -75,27 +75,82 @@ export async function loginAs(page: Page, email: string, password: string) {
  */
 export async function installPushStubs(page: Page) {
   await page.addInitScript(() => {
+    // Los tests comparten tren/usuaria en el mismo Supabase y corren en
+    // paralelo (Desktop+Mobile); que cada uno pueda distinguirse por dispositivo
+    // el test escribe `__e2e_device` ({model,browser}) en localStorage del origen
+    // antes de la navegación clave. Por defecto: Pixel 8 / Google Chrome.
+    const device = (() => {
+      try {
+        const stored = localStorage.getItem('__e2e_device')
+        if (stored) return JSON.parse(stored)
+      } catch {
+        /* por defecto */
+      }
+      return { model: 'Pixel 8', browser: 'Google Chrome' }
+    })()
+
+    Object.defineProperty(navigator, 'userAgentData', {
+      value: {
+        mobile: false,
+        platform: 'Linux',
+        brands: [
+          { brand: 'Chromium', version: '126' },
+          { brand: device.browser, version: '126' },
+        ],
+        getHighEntropyValues: async (hints: string[]) => ({
+          platform: 'Linux',
+          model: device.model,
+          fullVersionList: [
+            { brand: 'Chromium', version: '126.0.0.0' },
+            { brand: device.browser, version: '126.0.0.0' },
+          ],
+          ...(hints ? {} : {}),
+        }),
+      },
+      configurable: true,
+    })
     Object.defineProperty(window, 'Notification', {
       value: { permission: 'granted', requestPermission: async () => 'granted' },
       configurable: true,
     })
     if ('PushManager' in window) {
+      const PERSIST_KEY = '__e2e_push_sub'
+
+      const loadStored = () => {
+        try {
+          return JSON.parse(localStorage.getItem(PERSIST_KEY) ?? 'null')
+        } catch {
+          return null
+        }
+      }
+
       Object.defineProperty(PushManager.prototype, 'subscribe', {
         value: async function () {
-          const endpoint =
-            'https://fakepush.local/e2e-' +
-            Date.now() +
-            '-' +
-            Math.random().toString(36).slice(2, 10)
-          return {
-            endpoint,
-            expirationTime: null,
-            getKey: (name: string) => new Uint8Array(name === 'p256dh' ? 65 : 16),
-            toJSON: () => ({
+          let sub = loadStored()
+          if (!sub) {
+            const endpoint =
+              'https://fakepush.local/e2e-' +
+              Date.now() +
+              '-' +
+              Math.random().toString(36).slice(2, 10)
+            sub = {
               endpoint,
-              keys: { p256dh: 'ZXllcA==', auth: 'YXV0aA==' },
-            }),
+              expirationTime: null,
+              getKey: (name: string) => new Uint8Array(name === 'p256dh' ? 65 : 16),
+              toJSON: () => ({
+                endpoint,
+                keys: { p256dh: 'ZXllcA==', auth: 'YXV0aA==' },
+              }),
+            }
+            localStorage.setItem(PERSIST_KEY, JSON.stringify(sub))
           }
+          return sub
+        },
+        configurable: true,
+      })
+      Object.defineProperty(PushManager.prototype, 'getSubscription', {
+        value: async function () {
+          return loadStored()
         },
         configurable: true,
       })

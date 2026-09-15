@@ -14,7 +14,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('push_subscriptions')
     .select(
-      'id, trip_code, train_number, route_id, station_id, notify_delay, notify_arrival, service_date, endpoint, created_at'
+      'id, trip_code, train_number, route_id, station_id, notify_delay, notify_arrival, service_date, endpoint, device_browser, device_os, device_model, created_at'
     )
     .eq('user_id', user.id)
     .eq('active', true)
