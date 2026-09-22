@@ -14,7 +14,10 @@
     "test:e2e": "playwright test",
     "analyze": "ANALYZE=true next build",
     "seed:stations": "node scripts/seed-stations.mjs",
-    "seed:horarios": "node scripts/seed-horarios.mjs"
+    "seed:horarios": "node scripts/seed-horarios.mjs",
+    "monitor:push": "tsx scripts/push-monitor.ts",
+    "monitor:push:dry": "tsx scripts/push-monitor.ts --dry-run",
+    "cleanup:db": "node scripts/cleanup.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
@@ -55,6 +58,7 @@
     "jsdom": "^29.1.0",
     "serwist": "^9.5.12",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5.8.3",
     "vitest": "^3.2.7"
   },

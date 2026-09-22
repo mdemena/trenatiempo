@@ -1,0 +1,61 @@
+name: Push Monitor (cron local)
+
+# Monitor periódico de alertas push, ejecutado directamente en el runner de
+# GitHub Actions (no vía HTTP), conectando contra la BD real de Supabase como
+# hacen los seeds. Sustituye al cron de Vercel (en Hobby solo corre 1×/día a las
+# 5:00, hora sin trenes activos en el feed) y requiere minutos ilimitados (el
+# repo es público).
+#
+# ⚠️ Los `schedule` de GitHub Actions solo corren en la rama por defecto (main)
+# y, en repos sin actividad en los últimos 60 días, se desactivan. También
+# pueden retrasarse unos minutos según la carga de runners; el piggyback de
+# /horarios y /viaje y el anti-duplicado de `push_events` cubren esos huecos.
+#
+# Requiere estos secrets en GitHub (Settings → Secrets and variables → Actions),
+# con los MISMO valores que las env vars de Vercel:
+#   NEXT_PUBLIC_SUPABASE_URL
+#   SUPABASE_SERVICE_ROLE_KEY
+#   NEXT_PUBLIC_VAPID_PUBLIC_KEY
+#   VAPID_PRIVATE_KEY
+#   VAPID_MAILTO
+
+on:
+  schedule:
+    # Cada 5 minutos, UTC (mínimo permitido). UTC = Madrid solo en invierno; en
+    # verano Madrid va +2. Los trenes se evalúan por calendario GTFS, no por cron.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: push-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Run push monitor
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+      VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+      VAPID_MAILTO: ${{ secrets.VAPID_MAILTO }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run push monitor
+        run: pnpm exec tsx scripts/push-monitor.ts

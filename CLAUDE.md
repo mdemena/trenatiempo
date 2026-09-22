@@ -658,12 +658,26 @@ Flujo completo:
    (migración `008`; columnas `train_number`/`route_id` backfilleadas desde
    `trip_code` identificando la línea y el número). Un dispositivo puede seguir
    varios trenes.
-2. **Monitor** — `/api/cron/monitor-push` (schedule diario en `vercel.json`,
-   autenticado con `Bearer CRON_SECRET`). Como Hobby limita los crons a 1/día,
-   además hay **piggyback** fire-and-forget (`maybeRunPushMonitor`,
-   `src/lib/push/monitor-run.ts`) desde `/api/renfe/horarios` y `/api/renfe/viaje`
-   cuando la consulta es de hoy, throttled 30s vía `adif_cache`. En Vercel Pro,
-   subir el schedule a `* * * * *`.
+2. **Monitor** — se ejecuta en el runner de GitHub Actions (`.github/workflows/
+   push-monitor.yml`, schedule `*/5 * * * *`, solo en `main`), NO vía HTTP:
+   `pnpm exec tsx scripts/push-monitor.ts` conecta directamente con la BD real
+   vía `runPushMonitor` (mismo patrón que los seeds en `seeds.yml`). Nace del
+   problema de que el cron de Vercel no garantiza ejecución: en Hobby solo corre
+   1×/día a las 5:00 (hora a la que no hay trenes activos en el feed, por lo que
+   prácticamente nunca envía) y en Pro la frecuencia está limitada por plan.
+   GitHub Actions (repo público → minutos ilimitados) permite el mínimo de 5
+   min. Requiere secrets en GitHub con los MISMO valores que las env vars de
+   Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+   `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_MAILTO`. ⚠️ Los
+   schedules solo corren en `main` y se desactivan en repos inactivos (60 días);
+   también pueden retrasarse unos minutos (el piggyback y el anti-duplicado de
+   `push_events` cubren los huecos). En local: `pnpm monitor:push` (envía) o
+   `pnpm monitor:push:dry`. El endpoint `/api/cron/monitor-push` queda solo para
+   triggers manuales.
+   - **Piggyback** fire-and-forget (`maybeRunPushMonitor`,
+     `src/lib/push/monitor-run.ts`) desde `/api/renfe/horarios` y
+     `/api/renfe/viaje` cuando la consulta es de hoy, throttled 30s vía
+     `adif_cache`.
 3. **Decisión** — `runPushMonitor` carga TODAS las suscripciones activas (sin
    filtro por día), las agrupa por `(train_number, route_id)` y por tren resuelve
    el `trip_id` de HOY: `gtfs_trips` (`ilike %num%` + `route_id`) cruzado con el
@@ -790,6 +804,13 @@ pnpm test:e2e       # Playwright E2E (Chromium: Desktop Chrome + Mobile Chrome)
 # Build producción
 pnpm build
 pnpm start
+
+# Crons (ejecución local contra la BD real — ver §13 "Crons")
+pnpm seed:stations      # importar estaciones GTFS
+pnpm seed:horarios      # importar horarios GTFS + limpiar servicios expirados
+pnpm monitor:push       # monitor push (envía notificaciones)
+pnpm monitor:push:dry   # monitor push sin enviar (solo decide)
+pnpm cleanup:db         # borrar caché expirada + suscripciones inactivas >30 días
 ```
 
 > **Nota:** La Supabase CLI no se usa en este proyecto (Docker no disponible). Ver sección 12b para el workflow manual.
@@ -924,6 +945,23 @@ El job `deploy` **no usa Vercel CLI**: dispara el **Deploy Hook** (webhook) de V
 ```bash
 VERCEL_DEPLOY_HOOK    # URL del Deploy Hook creado en Vercel → Settings → Deploy Hooks
 ```
+
+### Crons (migrados de Vercel a GitHub Actions)
+
+Los cronjobs ya **no viven en `vercel.json`**: se ejecutan en el runner de
+GitHub Actions **contra la BD real de Supabase** (mismo patrón que `seeds.yml`,
+sin pasar por un Route Handler HTTP). Cada workflow requiere sus secrets en
+GitHub con los mismos valores que las env vars de Vercel:
+
+| Workflow | Schedule (UTC) | Comando | Secrets |
+|---|---|---|---|
+| `seeds.yml` | `0 5 * * *` | `npm run seed:stations` + `npm run seed:horarios` | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
+| `cleanup.yml` | `30 5 * * *` | `node scripts/cleanup.mjs` | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
+| `push-monitor.yml` | `*/5 * * * *` | `pnpm exec tsx scripts/push-monitor.ts` | + `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_MAILTO` |
+
+Los endpoints `/api/cron/*` quedan solo para triggers manuales. ⚠️ Los schedules
+de GitHub Actions solo corren en `main` y se desactivan en repos inactivos
+(60 días); los del monitor además pueden retrasarse unos minutos bajo carga.
 
 ### Pull Requests — política de generación (obligatorio)
 
