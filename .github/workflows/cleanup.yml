@@ -1,0 +1,43 @@
+name: DB Cleanup (cron local)
+
+# Limpieza periódica de la BD, ejecutada directamente en el runner de GitHub
+# Actions (no vía HTTP) contra la BD real de Supabase. Migrado de
+# /api/cron/cleanup de Vercel:
+#   - Borra filas de `adif_cache` expiradas.
+#   - Borra suscripciones push inactivas con más de 30 días.
+#
+# Corre después del seed diario (seeds.yml a las 5:00 UTC).
+#
+# ⚠️ Los `schedule` de GitHub Actions solo corren en la rama por defecto (main) y
+# se desactivan en repos inactivos (60 días).
+#
+# Requiere estos secrets en GitHub (mismos valores que las env vars de Vercel):
+#   NEXT_PUBLIC_SUPABASE_URL
+#   SUPABASE_SERVICE_ROLE_KEY
+
+on:
+  schedule:
+    - cron: '30 5 * * *' # 5:30 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Cleanup DB
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run cleanup
+        run: node scripts/cleanup.mjs
