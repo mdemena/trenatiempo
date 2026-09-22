@@ -658,26 +658,29 @@ Flujo completo:
    (migración `008`; columnas `train_number`/`route_id` backfilleadas desde
    `trip_code` identificando la línea y el número). Un dispositivo puede seguir
    varios trenes.
-2. **Monitor** — se ejecuta en el runner de GitHub Actions (`.github/workflows/
-   push-monitor.yml`, schedule `*/5 * * * *`, solo en `main`), NO vía HTTP:
-   `pnpm exec tsx scripts/push-monitor.ts` conecta directamente con la BD real
-   vía `runPushMonitor` (mismo patrón que los seeds en `seeds.yml`). Nace del
-   problema de que el cron de Vercel no garantiza ejecución: en Hobby solo corre
-   1×/día a las 5:00 (hora a la que no hay trenes activos en el feed, por lo que
-   prácticamente nunca envía) y en Pro la frecuencia está limitada por plan.
-   GitHub Actions (repo público → minutos ilimitados) permite el mínimo de 5
-   min. Requiere secrets en GitHub con los MISMO valores que las env vars de
-   Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
-   `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_MAILTO`. ⚠️ Los
-   schedules solo corren en `main` y se desactivan en repos inactivos (60 días);
-   también pueden retrasarse unos minutos (el piggyback y el anti-duplicado de
-   `push_events` cubren los huecos). En local: `pnpm monitor:push` (envía) o
-   `pnpm monitor:push:dry`. El endpoint `/api/cron/monitor-push` queda solo para
-   triggers manuales.
+2. **Monitor** — la cadencia fiable viene de un **cron externo** (cron-job.org,
+   itinerario cada 5 min en minutos impar, p.ej. `2,7,12,…,57`) que hace
+   `GET https://www.trenatiempo.com/api/cron/monitor-push` con header
+   `Authorization: Bearer $CRON_SECRET` (`maxDuration = 60`; responde el JSON de
+   `runPushMonitor`). Nace del problema de que ningún scheduler integrado
+   garantiza ejecución: el cron de Vercel en Hobby solo corre 1×/día a las 5:00
+   (hora a la que no hay trenes activos en el feed, por lo que prácticamente
+   nunca envía) y el `schedule` de GitHub Actions es **best-effort** — en este
+   repo hasta los seeds diarios (`0 5 * * *`) llevan llegando 4+ h tarde
+   (retrasos/coalesce/drop bajo carga, sin aviso). Un cron `*/5` bajo ese backlog
+   salía 0 veces/hora.
+   - **Backstop** — `.github/workflows/push-monitor.yml` (schedule `*/5 * * * *`,
+     solo en `main`) ejecuta local `pnpm exec tsx scripts/push-monitor.ts` contra
+     la BD real (requiere secrets `NEXT_PUBLIC_SUPABASE_URL`,
+     `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+     `VAPID_PRIVATE_KEY`, `VAPID_MAILTO`). Aceptado como best-effort; el
+     anti-duplicado de `push_events` y el piggyback cubren sus huecos.
    - **Piggyback** fire-and-forget (`maybeRunPushMonitor`,
      `src/lib/push/monitor-run.ts`) desde `/api/renfe/horarios` y
      `/api/renfe/viaje` cuando la consulta es de hoy, throttled 30s vía
-     `adif_cache`.
+     `adif_cache`: entrega en ≤30s mientras la app se usa.
+   En local: `pnpm monitor:push` (envía) o `pnpm monitor:push:dry`. El endpoint
+   `/api/cron/monitor-push` acepta también `?dryRun=1` para probar.
 3. **Decisión** — `runPushMonitor` carga TODAS las suscripciones activas (sin
    filtro por día), las agrupa por `(train_number, route_id)` y por tren resuelve
    el `trip_id` de HOY: `gtfs_trips` (`ilike %num%` + `route_id`) cruzado con el
@@ -957,11 +960,16 @@ GitHub con los mismos valores que las env vars de Vercel:
 |---|---|---|---|
 | `seeds.yml` | `0 5 * * *` | `npm run seed:stations` + `npm run seed:horarios` | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
 | `cleanup.yml` | `30 5 * * *` | `node scripts/cleanup.mjs` | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
-| `push-monitor.yml` | `*/5 * * * *` | `pnpm exec tsx scripts/push-monitor.ts` | + `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_MAILTO` |
+| `push-monitor.yml` | `*/5 * * * *` (backstop) | `pnpm exec tsx scripts/push-monitor.ts` | + `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_MAILTO` |
 
-Los endpoints `/api/cron/*` quedan solo para triggers manuales. ⚠️ Los schedules
+El **monitor push** no depende de este workflow: su cadencia real la da un cron
+externo (cron-job.org) contra `/api/cron/monitor-push` (ver §8). El GH Action
+queda como backstop best-effort (el dedup de `push_events` absorbe el solape).
+
+Los endpoints `/api/cron/*` quedan solo para triggers manuales (el de monitor
+recibe el disparo del cron externo con `Bearer $CRON_SECRET`). ⚠️ Los schedules
 de GitHub Actions solo corren en `main` y se desactivan en repos inactivos
-(60 días); los del monitor además pueden retrasarse unos minutos bajo carga.
+(60 días); los del monitor además pueden retrasarse unas horas bajo carga.
 
 ### Pull Requests — política de generación (obligatorio)
 
